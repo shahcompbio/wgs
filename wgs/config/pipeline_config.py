@@ -285,26 +285,34 @@ def shahlab_config(reference):
     variant_calling = {
         'chromosomes': ['22'],
         'reference': reference,
-        'snpeff_params': {
-            'snpeff_config': '/shahlab/pipelines/reference/snpEff.config'
-        },
-        'mutation_assessor_params': {
-            'db': '/shahlab/pipelines/reference/MA.hg19_v2/'
-        },
-        'dbsnp_params': {
-            'db': '/shahlab/pipelines/reference/dbsnp_142.human_9606.all.vcf.gz'
-         },
-        'thousandgen_params': {
-            'db': '/shahlab/pipelines/reference/1000G_release_20130502_genotypes.vcf.gz'
-        },
-        'cosmic_params': {
-            'db': '/shahlab/pipelines/reference/CosmicMutantExport.sorted.vcf.gz'
+        'annotation_params': {
+            'snpeff_params': {
+                'snpeff_config': '/shahlab/pipelines/reference/snpEff.config'
+            },
+            'mutation_assessor_params': {
+                'db': '/shahlab/pipelines/reference/MA.hg19_v2/'
+            },
+            'dbsnp_params': {
+                'db': '/shahlab/pipelines/reference/dbsnp_142.human_9606.all.vcf.gz'
+            },
+            'thousandgen_params': {
+                'db': '/shahlab/pipelines/reference/1000G_release_20130502_genotypes.vcf.gz'
+            },
+            'cosmic_params': {
+                'db': '/shahlab/pipelines/reference/CosmicMutantExport.sorted.vcf.gz'
+            },
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample':'/shahlab/pipelines/reference/single_sample_plot_data.txt'
+            'refdata_single_sample': '/shahlab/pipelines/reference/single_sample_plot_data.txt',
+            'thousandgen_params': {
+                'db': '/shahlab/pipelines/reference/1000G_release_20130502_genotypes.vcf.gz'
+            },
+            'dbsnp_params': {
+                'db': '/shahlab/pipelines/reference/dbsnp_142.human_9606.all.vcf.gz'
+            },
         },
-        'parse_strelka':{
+        'parse_strelka': {
             'keep_1000gen': True,
             ## TODO: why is this missing
             # 'keep_cosmic': True,
@@ -312,7 +320,7 @@ def shahlab_config(reference):
             'keep_dbsnp': True,
             'chromosomes': map(str, range(23)) + ['X'],
             'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
-         },
+        },
         'parse_museq': {
             'keep_1000gen': True,
             'keep_cosmic': True,
@@ -321,7 +329,19 @@ def shahlab_config(reference):
             'chromosomes': map(str, range(23)) + ['X'],
             'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
-         }
+        },
+        'museq_params': {
+            'threshold': 0.5,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 20,
+        }
     }
 
     sv_calling = {
