@@ -1,0 +1,16 @@
+networkx
+dill
+pyyaml
+pyvcf
+pysam
+pypeliner
+museq
+lumpy-sv
+scikit-learn
+bioconductor-titan
+destruct
+blossomv
+intervaltree
+bioconductor-genomeinfodb
+bioconductor-genomeinfodbdata
+bioconductor-snpchip
