@@ -41,8 +41,8 @@ def create_destruct_workflow(
         },
         func=tasks.filter_annotate_breakpoints,
         args=(
-            mgd.TempInputFile("breakpoints.csv"),
-            mgd.TempInputFile("library.csv"),
+            mgd.InputFile(raw_breakpoints),
+            mgd.InputFile(raw_library),
             [sample_id + 'N'],  # control_ids
             mgd.OutputFile(breakpoints),
             mgd.OutputFile(library),
