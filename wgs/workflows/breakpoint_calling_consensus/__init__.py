@@ -12,22 +12,23 @@ def create_consensus_workflow(
         destruct_breakpoints,
         lumpy_vcf,
         output,
-        config):
+        global_config,
+        svcalling_config):
 
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='parse_lumpy',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': config['memory']['high'],
-            'pool_id': config['pools']['highmem'],
+            'mem': global_config['memory']['high'],
+            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1,'walltime': '08:00'},
         func=tasks.parse_lumpy,
         args=(
             mgd.InputFile(lumpy_vcf),
             mgd.TempOutputFile('lumpy.csv'),
             mgd.TempOutputFile('lumpy_filt.csv'),
-            config["parse_lumpy"],
+            svcalling_config["parse_lumpy"],
         ),
     )
 
@@ -35,8 +36,8 @@ def create_consensus_workflow(
     workflow.transform(
         name='parse_destruct',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': config['memory']['high'],
-            'pool_id': config['pools']['highmem'],
+            'mem': global_config['memory']['high'],
+            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1,'walltime': '08:00'},
         func=tasks.parse_destruct,
         args=(
@@ -44,7 +45,7 @@ def create_consensus_workflow(
             mgd.TempInputFile('lumpy.csv'),
             mgd.TempOutputFile('destruct.csv'),
             mgd.OutputFile(output),
-            config["parse_destruct"],
+            svcalling_config["parse_destruct"],
         ),
     )
 
