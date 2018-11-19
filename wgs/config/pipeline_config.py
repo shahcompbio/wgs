@@ -355,7 +355,7 @@ def shahlab_config(reference):
             'chromosomes': map(str, range(23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
-            'tumour_read_support_threshold': 0,
+            'readsupport_threshold': 0,
             'project': None,
             'tumour_id': None,
             'confidence_interval_size': 500,
@@ -372,7 +372,7 @@ def shahlab_config(reference):
             'types': None,
             'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table_destruct.txt',
             'foldback_threshold': 30000,
-            'tumour_read_support_threshold': 4,
+            'readsupport_threshold': 4,
             'breakdistance_threshold': 30
         }
     }

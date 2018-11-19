@@ -10,7 +10,8 @@ import pypeliner.managed as mgd
 
 
 def create_destruct_workflow(
-        tumour_bam, normal_bam, breakpoints, library, reads,
+        tumour_bam, normal_bam, raw_breakpoints, raw_library,
+        breakpoints, library, reads,
         sample_id, global_config, sv_config):
 
     destruct_config = {}
@@ -23,8 +24,8 @@ def create_destruct_workflow(
         args=(
             {sample_id: mgd.InputFile(tumour_bam),
              sample_id + 'N': mgd.InputFile(normal_bam)},
-            mgd.TempOutputFile("breakpoints.csv"),
-            mgd.TempOutputFile("library.csv"),
+            mgd.OutputFile(raw_breakpoints),
+            mgd.OutputFile(raw_library),
             mgd.OutputFile(reads),
             destruct_config,
             sv_config['refdata_destruct']

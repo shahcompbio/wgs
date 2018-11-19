@@ -24,6 +24,10 @@ def sv_calling_workflow(args):
     destruct_outdir = os.path.join(args['out_dir'], '{sample_id}', 'destruct')
     destruct_breakpoints = os.path.join(destruct_outdir, 'destruct_breakpoints.csv')
     destruct_library = os.path.join(destruct_outdir, 'destruct_library.csv')
+
+    destruct_raw_breakpoints = os.path.join(destruct_outdir, 'destruct_raw_breakpoints.csv')
+    destruct_raw_library = os.path.join(destruct_outdir, 'destruct_raw_library.csv')
+
     destruct_reads = os.path.join(destruct_outdir, 'destruct_reads.csv')
     workflow.subworkflow(
         name='destruct',
@@ -34,6 +38,8 @@ def sv_calling_workflow(args):
                           extensions=['.bai'], axes_origin=[]),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
+            mgd.OutputFile(destruct_raw_breakpoints, 'sample_id'),
+            mgd.OutputFile(destruct_raw_library, 'sample_id'),
             mgd.OutputFile(destruct_breakpoints, 'sample_id'),
             mgd.OutputFile(destruct_library, 'sample_id'),
             mgd.OutputFile(destruct_reads, 'sample_id'),
