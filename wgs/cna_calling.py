@@ -3,9 +3,28 @@ import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import titan
+import pandas as pd
 
 
-def remixt_workflow(tumour_path, normal_path, breakpoints, sample_id, remixt_refdata, outdir):
+def filter_destruct_breakpoints(breakpoints, filtered_breakpoints, min_num_reads):
+    breakpoints = pd.read_csv(breakpoints)
+
+    breakpoints = breakpoints[breakpoints['num_reads'] >= min_num_reads]
+
+    breakpoints = breakpoints[[
+        'prediction_id',
+        'chromosome_1',
+        'strand_1',
+        'position_1',
+        'chromosome_2',
+        'strand_2',
+        'position_2',
+    ]]
+
+    breakpoints.to_csv(filtered_breakpoints, sep='\t', index=False)
+
+
+def remixt_workflow(tumour_path, normal_path, breakpoints, sample_id, remixt_refdata, outdir, min_num_reads):
     workflow = pypeliner.workflow.Workflow()
 
     remixt_dir = os.path.join(outdir, 'remixt')
@@ -13,6 +32,17 @@ def remixt_workflow(tumour_path, normal_path, breakpoints, sample_id, remixt_ref
 
     remixt_results_filename = os.path.join(remixt_dir, 'results.h5')
     remixt_raw_dir = os.path.join(remixt_dir, 'raw_data')
+
+    workflow.transform(
+        name='filter_breakpoints',
+        func=filter_destruct_breakpoints,
+        ctx={},
+        args=(
+            mgd.InputFile(breakpoints),
+            mgd.TempOutputFile('filtered_breakpoints.csv'),
+            min_num_reads,
+        )
+    )
 
     workflow.subworkflow(
         name='remixt',
@@ -77,6 +107,7 @@ def cna_calling_workflow(args):
             mgd.InputInstance('sample_id'),
             config['cna_calling']['remixt_refdata'],
             args['out_dir'],
+            config['cna_calling']['min_num_reads']
         ),
     )
 
