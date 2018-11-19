@@ -1,7 +1,7 @@
 import pypeliner
 
 
-def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config):
+def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, sample_id):
     '''
     Parse the input VCF file into a TSV file
 
@@ -12,7 +12,8 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config):
     cmd = ['vizutils_parse_destruct', '--infile', infile,
            '--pre_mappability_output', output,
            '--lumpy_data', lumpy_data,
-           '--output', low_map_filt_output]
+           '--output', low_map_filt_output,
+           '--case_id', sample_id]
 
     for key, val in config.iteritems():
         if val is None:
@@ -29,10 +30,11 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config):
     pypeliner.commandline.execute(*cmd)
 
 
-def parse_lumpy(infile, output, low_map_filt_output, config):
+def parse_lumpy(infile, output, low_map_filt_output, config, sample_id):
     cmd = ['vizutils_parse_lumpy', '--infile', infile,
            '--pre_mappability_output', output,
-           '--output', low_map_filt_output,]
+           '--output', low_map_filt_output,
+           '--case_id', sample_id]
 
     for key, val in config.iteritems():
         if val is None:

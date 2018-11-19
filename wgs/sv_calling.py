@@ -75,7 +75,8 @@ def sv_calling_workflow(args):
             mgd.InputFile(lumpy_vcf, 'sample_id'),
             mgd.OutputFile(parsed_csv, 'sample_id'),
             config['globals'],
-            config['sv_calling']
+            config['sv_calling'],
+            mgd.InputInstance('sample_id')
         ),
     )
 

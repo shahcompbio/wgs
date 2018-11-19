@@ -13,7 +13,8 @@ def create_consensus_workflow(
         lumpy_vcf,
         output,
         global_config,
-        svcalling_config):
+        svcalling_config,
+        sample_id):
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -29,6 +30,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('lumpy.csv'),
             mgd.TempOutputFile('lumpy_filt.csv'),
             svcalling_config["parse_lumpy"],
+            sample_id
         ),
     )
 
@@ -46,6 +48,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('destruct.csv'),
             mgd.OutputFile(output),
             svcalling_config["parse_destruct"],
+            sample_id
         ),
     )
 
