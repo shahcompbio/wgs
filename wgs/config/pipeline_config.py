@@ -377,6 +377,63 @@ def shahlab_config(reference):
         }
     }
 
+    cna_calling = {
+        "reference_genome": reference,
+        'chromosomes': ['22'],
+        'dbsnp_positions': '/shahlab/pipelines/reference/common_all_dbSNP138.pos',
+        'readcounter': {'w': 1000, 'q': 0},
+        'correction' : {
+            'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
+        },
+        'titan_intervals': [
+            {'num_clusters': 1, 'ploidy': 2},
+            {'num_clusters': 2, 'ploidy': 2},
+            {'num_clusters': 3, 'ploidy': 2},
+            {'num_clusters': 4, 'ploidy': 2},
+            {'num_clusters': 5, 'ploidy': 2},
+            {'num_clusters': 1, 'ploidy': 4},
+            {'num_clusters': 2, 'ploidy': 4},
+            {'num_clusters': 3, 'ploidy': 4},
+            {'num_clusters': 4, 'ploidy': 4},
+            {'num_clusters': 5, 'ploidy': 4},
+        ],
+        'pygenes_gtf': '/shahlab/pipelines/reference/Homo_sapiens.GRCh37.73.gtf',
+        'remixt_refdata': '/shahlab/pipelines/reference/reference-grch37-decoys-remixt',
+        'museq_params': {
+            'threshold': 0.85,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 10,
+        },
+        'titan_params': {
+            'y_threshold': 20,
+            'genome_type': 'NCBI',
+            'map': '/shahlab/pipelines/reference/GRCh37-lite.map.ws_1000.wig',
+            'num_cores': 4,
+            'myskew': 0,
+            'estimate_ploidy': 'TRUE',
+            'normal_param_nzero': 0.5,
+            'normal_estimate_method': 'map',
+            'max_iters': 50,
+            'pseudo_counts': 1e-300,
+            'txn_exp_len': 1e16,
+            'txn_z_strength': 1e6,
+            'alpha_k': 15000,
+            'alpha_high': 20000,
+            'max_copynumber': 8,
+            'symmetric': 'TRUE',
+            'chrom': 'NULL',
+            'max_depth': 1000,
+        }
+    }
+
+
     config = locals()
 
     return config
