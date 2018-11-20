@@ -50,8 +50,9 @@ def create_titan_workflow(normal_bam, tumour_bam, outdir,
             mgd.InputFile(normal_bam, extensions=['.bai']),
             mgd.TempOutputFile('museq.vcf', 'interval'),
             mgd.TempOutputFile('museq.log', 'interval'),
-            config,
-            mgd.InputInstance('interval')
+            config['reference_genome'],
+            mgd.InputInstance('interval'),
+            config['museq_params']
         ),
     )
 
