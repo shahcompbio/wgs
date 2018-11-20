@@ -378,6 +378,7 @@ def shahlab_config(reference):
     }
 
     cna_calling = {
+        "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': ['22'],
         'dbsnp_positions': '/shahlab/pipelines/reference/common_all_dbSNP138.pos',
