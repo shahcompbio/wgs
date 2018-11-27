@@ -399,7 +399,7 @@ def shahlab_config(reference):
             {'num_clusters': 5, 'ploidy': 4},
         ],
         'pygenes_gtf': '/shahlab/pipelines/reference/Homo_sapiens.GRCh37.73.gtf',
-        'remixt_refdata': '/shahlab/pipelines/reference/reference-grch37-decoys-remixt',
+        'remixt_refdata': '/shahlab/pipelines/reference/refdir_remixt_new_GRCh37/',
         'museq_params': {
             'threshold': 0.85,
             'verbose': True,
