@@ -109,7 +109,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, outfile, config):
 
     script = os.path.join(scripts_directory, 'correctReads.R')
     gc = config['correction']['gc']
-    map_wig = config['map']
+    map_wig = config['titan_params']['map']
     target_list = 'NULL'
     genome_type = config['titan_params']['genome_type']
 
@@ -126,7 +126,7 @@ def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_
     sample_id = os.path.basename(outfile).split('_')[0]
 
     cmd = ['Rscript', script, sample_id, infile, cnfile, map_wig, num_clusters,
-           titan_params['num_cores'], titan_params['ploidy'], outfile, outparam,
+           titan_params['num_cores'], ploidy, outfile, outparam,
            titan_params['myskew'], titan_params['estimate_ploidy'], titan_params['normal_param_nzero'],
            titan_params['normal_estimate_method'], titan_params['max_iters'], titan_params['pseudo_counts'],
            titan_params['txn_exp_len'], titan_params['txn_z_strength'], titan_params['alpha_k'],

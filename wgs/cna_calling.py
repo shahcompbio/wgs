@@ -7,7 +7,7 @@ import pandas as pd
 
 
 def filter_destruct_breakpoints(breakpoints, filtered_breakpoints, min_num_reads):
-    breakpoints = pd.read_csv(breakpoints)
+    breakpoints = pd.read_csv(breakpoints, sep='\t')
 
     breakpoints = breakpoints[breakpoints['num_reads'] >= min_num_reads]
 
