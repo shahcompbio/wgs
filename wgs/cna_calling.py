@@ -3,66 +3,56 @@ import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import titan
-import pandas as pd
+from wgs.workflows import remixt
 
 
-def filter_destruct_breakpoints(breakpoints, filtered_breakpoints, min_num_reads):
-    breakpoints = pd.read_csv(breakpoints, sep='\t')
+def call_copynumber(
+        samples, config, normals, tumours, breakpoints,
+        titan_raw_dir, remixt_results,
+        remixt_raw_dir,
+):
+    breakpoints = dict([(sampid, breakpoints[sampid])
+                       for sampid in samples])
+    remixt_results = dict([(sampid, remixt_results[sampid])
+                          for sampid in samples])
 
-    breakpoints = breakpoints[breakpoints['num_reads'] >= min_num_reads]
-
-    breakpoints = breakpoints[[
-        'prediction_id',
-        'chromosome_1',
-        'strand_1',
-        'position_1',
-        'chromosome_2',
-        'strand_2',
-        'position_2',
-    ]]
-
-    breakpoints.to_csv(filtered_breakpoints, sep='\t', index=False)
-
-
-def remixt_workflow(tumour_path, normal_path, breakpoints, sample_id, remixt_refdata, outdir, min_num_reads):
     workflow = pypeliner.workflow.Workflow()
 
-    remixt_dir = os.path.join(outdir, 'remixt')
-    remixt_config = {}
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=samples)
 
-    remixt_results_filename = os.path.join(remixt_dir, 'results.h5')
-    remixt_raw_dir = os.path.join(remixt_dir, 'raw_data')
-
-    workflow.transform(
-        name='filter_breakpoints',
-        func=filter_destruct_breakpoints,
-        ctx={},
+    workflow.subworkflow(
+        name='titan',
+        func=titan.create_titan_workflow,
+        axes=('sample_id',),
         args=(
-            mgd.InputFile(breakpoints),
-            mgd.TempOutputFile('filtered_breakpoints.csv'),
-            min_num_reads,
-        )
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.Template(titan_raw_dir, 'sample_id'),
+            config['globals'],
+            config['cna_calling'],
+            config['cna_calling']['titan_intervals'],
+        ),
     )
 
     workflow.subworkflow(
         name='remixt',
-        func="remixt.workflow.create_remixt_bam_workflow",
+        func=remixt.create_remixt_workflow,
+        axes=('sample_id',),
         args=(
-            mgd.InputFile(breakpoints),
-            {sample_id: mgd.InputFile(tumour_path),
-             sample_id + 'N': mgd.InputFile(normal_path)},
-            {sample_id: mgd.OutputFile(remixt_results_filename)},
-            remixt_raw_dir,
-            remixt_config,
-            remixt_refdata,
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('breakpoints', 'sample_id', fnames=breakpoints),
+            mgd.InputInstance('sample_id'),
+            config['cna_calling']['remixt_refdata'],
+            mgd.OutputFile('remixt_results', 'sample_id', fnames=remixt_results),
+            mgd.Template(remixt_raw_dir, 'sample_id'),
+            config['cna_calling']['min_num_reads']
         ),
-        kwargs={
-            'normal_id': sample_id + 'N',
-        }
     )
 
     return workflow
-
 
 
 def cna_calling_workflow(args):
@@ -77,40 +67,24 @@ def cna_calling_workflow(args):
     normals = {sample: inputs[sample]['normal'] for sample in samples}
     breakpoints = {sample: inputs[sample]['breakpoints'] for sample in samples}
 
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples)
-
+    cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
+    remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
+    remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
     workflow.subworkflow(
-        name='titan',
-        func=titan.create_titan_workflow,
-        axes=('sample_id',),
+        name='copynumber_calling',
+        func=call_copynumber,
         args=(
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            args['out_dir'],
-            config['globals'],
-            config['cna_calling'],
-            config['cna_calling']['titan_intervals'],
-            mgd.InputInstance("sample_id")
-        ),
+            samples,
+            config,
+            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                          extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                          extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], fnames=breakpoints),
+            cna_outdir,
+            mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[], template=remixt_results_filename),
+            remixt_raw_dir,
+        )
     )
-
-    workflow.subworkflow(
-        name='remixt',
-        func=remixt_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('breakpoints', 'sample_id', fnames=breakpoints),
-            mgd.InputInstance('sample_id'),
-            config['cna_calling']['remixt_refdata'],
-            args['out_dir'],
-            config['cna_calling']['min_num_reads']
-        ),
-    )
-
-
 
     pyp.run(workflow)

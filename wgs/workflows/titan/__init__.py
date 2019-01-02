@@ -2,26 +2,26 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 import tasks
-import yaml
 
-def create_titan_workflow(normal_bam, tumour_bam, outdir,
-                          global_config, config, intervals, sample_id):
+def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
+                          global_config, config, intervals):
 
-    igv_template = os.path.join(outdir, sample_id, 'clusters_{numclusters}', 'ploidy_{ploidy}', 'igv_segs.txt')
-    outfile_template = os.path.join(outdir, sample_id, 'clusters_{numclusters}', 'ploidy_{ploidy}', 'titan_markers.txt')
-    params_template = os.path.join(outdir, sample_id, 'clusters_{numclusters}', 'ploidy_{ploidy}', 'titan_params.txt')
-    segs_template = os.path.join(outdir, sample_id, 'clusters_{numclusters}', 'ploidy_{ploidy}', 'titan_segs.txt')
-    plots_template = os.path.join(outdir, sample_id, 'clusters_{numclusters}', 'ploidy_{ploidy}', 'titan_plots.tar.gz')
+    titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
+    igv_template = os.path.join(titan_outdir, 'igv_segs.txt')
+    outfile_template = os.path.join(titan_outdir, 'titan_markers.txt')
+    params_template = os.path.join(titan_outdir, 'titan_params.txt')
+    segs_template = os.path.join(titan_outdir, 'titan_segs.txt')
+    plots_template = os.path.join(titan_outdir, 'titan_plots.tar.gz')
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
     workflow = pypeliner.workflow.Workflow()
 
+
     workflow.setobj(
         obj=mgd.OutputChunks('numclusters', 'ploidy'),
         value=chunks,
     )
-
 
     workflow.transform(
         name='generate_intervals',

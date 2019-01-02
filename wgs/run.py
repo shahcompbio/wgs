@@ -10,6 +10,8 @@ from cmdline import parse_args
 from variant_calling import variant_calling_workflow
 from sv_calling import sv_calling_workflow
 from cna_calling import cna_calling_workflow
+from wgs_workflow import wgs_workflow
+from alignment import alignment_workflow
 from wgs.config import pipeline_config
 from wgs.config import batch_config
 
@@ -33,19 +35,25 @@ def main():
     if args["which"] == "generate_config":
         generate_config(args)
 
+    if args["which"] == "alignment":
+        args = generate_config(args)
+        alignment_workflow(args)
+
     if args["which"] == "variant_calling":
         args = generate_config(args)
         variant_calling_workflow(args)
 
-    if args["which"] == "sv_calling":
+    if args["which"] == "breakpoint_calling":
         args = generate_config(args)
         sv_calling_workflow(args)
 
-    if args["which"] == "cna_calling":
+    if args["which"] == "copynumber_calling":
         args = generate_config(args)
         cna_calling_workflow(args)
 
-
+    if args["which"] == "all":
+        args = generate_config(args)
+        wgs_workflow(args)
 
 
 if __name__ == "__main__":

@@ -11,5 +11,5 @@ setup(
     author='Diljot Grewal',
     author_email='diljot.grewal@gmail.com',
     entry_points={'console_scripts': ['wgs = wgs.run:main']},
-    package_data={'':['scripts/*.py', 'scripts/*.R', 'scripts/*.npz', "config/*.yaml", "data/*"]}
+    package_data={'':['scripts/*.py', 'scripts/*.R', 'scripts/*.npz', 'scripts/*.pl', "config/*.yaml", "data/*"]}
 )

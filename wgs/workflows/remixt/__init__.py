@@ -1,0 +1,59 @@
+'''
+Created on Feb 21, 2018
+
+@author: dgrewal
+'''
+import os
+import tasks
+import pypeliner
+import pypeliner.managed as mgd
+
+
+
+
+
+def create_remixt_workflow(
+        tumour_path,
+        normal_path,
+        breakpoints,
+        sample_id,
+        remixt_refdata,
+        remixt_results_filename,
+        remixt_raw_dir,
+        min_num_reads
+):
+    workflow = pypeliner.workflow.Workflow()
+
+    remixt_config = {}
+
+
+    workflow.transform(
+        name='filter_breakpoints',
+        func=tasks.filter_destruct_breakpoints,
+        ctx={},
+        args=(
+            mgd.InputFile(breakpoints),
+            mgd.TempOutputFile('filtered_breakpoints.csv'),
+            min_num_reads,
+        )
+    )
+
+    workflow.subworkflow(
+        name='remixt',
+        func="remixt.workflow.create_remixt_bam_workflow",
+        args=(
+            mgd.InputFile(breakpoints),
+            {sample_id: mgd.InputFile(tumour_path),
+             sample_id + 'N': mgd.InputFile(normal_path)},
+            {sample_id: mgd.OutputFile(remixt_results_filename)},
+            remixt_raw_dir,
+            remixt_config,
+            remixt_refdata,
+        ),
+        kwargs={
+            'normal_id': sample_id + 'N',
+        }
+    )
+
+    return workflow
+

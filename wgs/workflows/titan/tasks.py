@@ -87,7 +87,7 @@ def run_readcounter(bam, outfile, config):
     :param config: dictionary of parameters for the run
     '''
 
-    readcounter = os.path.join(scripts_directory, 'readCounter')
+    readcounter = 'readCounter'
     w = config['readcounter']['w']
     q = config['readcounter']['q']
     chrs = ','.join(config['chromosomes'])

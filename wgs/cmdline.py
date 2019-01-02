@@ -43,6 +43,13 @@ def parse_args():
     subparsers = parser.add_subparsers()
 
     #================
+    # copy number calling
+    #================
+    alignment = subparsers.add_parser("alignment")
+    alignment.set_defaults(which='alignment')
+    alignment = add_global_args(alignment)
+
+    #================
     # variant calling
     #================
     variant_calling = subparsers.add_parser("variant_calling")
@@ -53,16 +60,28 @@ def parse_args():
     #================
     # breakpoints calling
     #================
-    sv_calling = subparsers.add_parser("sv_calling")
-    sv_calling.set_defaults(which='sv_calling')
+    sv_calling = subparsers.add_parser("breakpoint_calling")
+    sv_calling.set_defaults(which='breakpoint_calling')
     sv_calling = add_global_args(sv_calling)
 
     #================
     # copy number calling
     #================
-    cna_calling = subparsers.add_parser("cna_calling")
-    cna_calling.set_defaults(which='cna_calling')
+    cna_calling = subparsers.add_parser("copynumber_calling")
+    cna_calling.set_defaults(which='copynumber_calling')
     cna_calling = add_global_args(cna_calling)
+
+
+    #================
+    # copy number calling
+    #================
+    all_wgs = subparsers.add_parser("all")
+    all_wgs.set_defaults(which='all')
+    all_wgs = add_global_args(all_wgs)
+    all_wgs.add_argument('--alignment',
+                         default=False,
+                         action='store_true',
+                         help='start with fastqs and run alignment')
 
     #======================================
     # generates pipeline and batch configs

@@ -348,14 +348,14 @@ def shahlab_config(reference):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/shahlab/pipelines/reference/reference-grch37-decoys-destruct/',
+        'refdata_destruct': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/',
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
             'chromosomes': map(str, range(23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
-            'readsupport_threshold': 0,
+            'tumour_read_support_threshold': 0,
             'project': None,
             'tumour_id': None,
             'confidence_interval_size': 500,
@@ -383,7 +383,7 @@ def shahlab_config(reference):
         'chromosomes': ['22'],
         'dbsnp_positions': '/shahlab/pipelines/reference/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
-        'correction' : {
+        'correction': {
             'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
         },
         'titan_intervals': [
@@ -434,6 +434,19 @@ def shahlab_config(reference):
         }
     }
 
+    alignment = {
+        "ref_genome":{
+            'file': reference,
+            'header':{
+                'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
+                'AS': 'hg19/1000genomes',
+                'SP': 'Homo sapiens'
+            }
+        },
+        'threads': 8,
+        'aligner': 'bwa-mem',
+        'split_size': 1e6
+    }
 
     config = locals()
 
