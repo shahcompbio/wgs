@@ -43,13 +43,11 @@ def align_samples(
     return workflow
 
 
-def align_sample(config, fastq_1, fastq_2, out_file, sample_id, outdir):
+def align_sample(config, fastq_1, fastq_2, out_file, outdir):
 
     ref_genome = pypeliner.managed.InputFile(config['ref_genome']['file'])
 
     read_group_config = config.get('read_group', {})
-
-    outdir = os.path.join(outdir, sample_id)
 
     markdups_metrics = os.path.join(outdir, 'markdups_metrics.pdf')
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')

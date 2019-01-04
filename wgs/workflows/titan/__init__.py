@@ -3,8 +3,9 @@ import pypeliner
 import pypeliner.managed as mgd
 import tasks
 
-def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
-                          global_config, config, intervals):
+def create_titan_workflow(
+        tumour_bam, normal_bam, titan_raw_dir, segments, params, markers,
+        global_config, config, intervals):
 
     titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
     igv_template = os.path.join(titan_outdir, 'igv_segs.txt')
@@ -12,6 +13,7 @@ def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
     params_template = os.path.join(titan_outdir, 'titan_params.txt')
     segs_template = os.path.join(titan_outdir, 'titan_segs.txt')
     plots_template = os.path.join(titan_outdir, 'titan_plots.tar.gz')
+    museq_vcf = os.path.join(titan_raw_dir, 'museq.vcf')
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
@@ -67,7 +69,7 @@ def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
         func=tasks.merge_vcfs,
         args=(
             mgd.TempInputFile('museq.vcf', 'interval'),
-            mgd.TempOutputFile('museq.vcf'),
+            mgd.OutputFile(museq_vcf),
         )
     )
 
@@ -80,7 +82,7 @@ def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
              # 'walltime_retry_increment': 2},
         func=tasks.convert_museq_vcf2counts,
         args=(
-            mgd.TempInputFile('museq.vcf'),
+            mgd.InputFile(museq_vcf),
             mgd.TempOutputFile('museq_postprocess.txt'),
             config,
         ),
@@ -197,5 +199,51 @@ def create_titan_workflow(normal_bam, tumour_bam, titan_raw_dir,
             config,
         ),
     )
+
+
+    workflow.transform(
+        name='segments_h5',
+        ctx={'mem': global_config['memory']['low'],
+             'pool_id': global_config['pools']['standard'],
+             'ncpus': 1, 'walltime':'02:00'},
+             # 'walltime_retry_increment': 2},
+        func=tasks.merge_to_h5,
+        args=(
+            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+            mgd.OutputFile(segments),
+            intervals
+        ),
+    )
+
+    workflow.transform(
+        name='params_h5',
+        ctx={'mem': global_config['memory']['low'],
+             'pool_id': global_config['pools']['standard'],
+             'ncpus': 1, 'walltime':'02:00'},
+             # 'walltime_retry_increment': 2},
+        func=tasks.merge_to_h5,
+        args=(
+            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
+            mgd.OutputFile(params),
+            intervals
+        ),
+    )
+
+    workflow.transform(
+        name='markers_h5',
+        ctx={'mem': global_config['memory']['low'],
+             'pool_id': global_config['pools']['standard'],
+             'ncpus': 1, 'walltime':'02:00'},
+             # 'walltime_retry_increment': 2},
+        func=tasks.merge_to_h5,
+        args=(
+            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+            mgd.OutputFile(markers),
+            intervals
+        ),
+        kwargs={'dtype': {'Chr': str}}
+    )
+
+
 
     return workflow

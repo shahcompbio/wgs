@@ -18,26 +18,34 @@ def luna_config(reference):
     }
 
     variant_calling = {
-        'chromosomes': ['22'],
+        'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
-        'snpeff_params': {
-            'snpeff_config': '//ifs/work/leukgen/home/grewald/reference/snpEff.config'
-        },
-        'mutation_assessor_params': {
-            'db': '/ifs/work/leukgen/home/grewald/reference/MA.hg19_v2/'
-        },
-        'dbsnp_params': {
-            'db': '/ifs/work/leukgen/home/grewald/reference/dbsnp_142.human_9606.all.vcf.gz'
-         },
-        'thousandgen_params': {
-            'db': '/ifs/work/leukgen/home/grewald/reference/1000G_release_20130502_genotypes.vcf.gz'
-        },
-        'cosmic_params': {
-            'db': '/ifs/work/leukgen/home/grewald/reference/CosmicMutantExport.sorted.vcf.gz'
+        'annotation_params': {
+            'snpeff_params': {
+                'snpeff_config': '//ifs/work/leukgen/home/grewald/reference/snpEff.config'
+            },
+            'mutation_assessor_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/MA.hg19_v2/'
+            },
+            'dbsnp_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/dbsnp_142.human_9606.all.vcf.gz'
+             },
+            'thousandgen_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/1000G_release_20130502_genotypes.vcf.gz'
+            },
+            'cosmic_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/CosmicMutantExport.sorted.vcf.gz'
+            },
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample':'/refdata/single_sample_plot_data.txt'
+            'refdata_single_sample':'/refdata/single_sample_plot_data.txt',
+            'thousandgen_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/1000G_release_20130502_genotypes.vcf.gz'
+            },
+            'dbsnp_params': {
+                'db': '/ifs/work/leukgen/home/grewald/reference/dbsnp_142.human_9606.all.vcf.gz'
+            },
         },
         'parse_strelka':{
             'keep_1000gen': True,
@@ -45,18 +53,30 @@ def luna_config(reference):
             # 'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
-            'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
+            'chromosomes': map(str, range(1, 23)) + ['X'],
+            'mappability_ref': '/juno/work/shah/reference/mask_regions_blacklist_crg_align36_table.txt',
          },
         'parse_museq': {
             'keep_1000gen': True,
             'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
-            'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
+            'chromosomes': map(str, range(1, 23)) + ['X'],
+            'mappability_ref': '/juno/work/shah/reference/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
-         }
+         },
+        'museq_params': {
+            'threshold': 0.5,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 20,
+        }
     }
 
     sv_calling = {
@@ -67,7 +87,7 @@ def luna_config(reference):
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
             'readsupport_threshold': 0,
@@ -81,15 +101,86 @@ def luna_config(reference):
             'case_id': None,
             'genes': None,
             'gene_locations': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
             'project': None,
             'types': None,
-            'mappability_ref': '/mask_regions_blacklist_crg_align36_table_destruct.txt',
+            'mappability_ref': '/juno/work/shah/reference/mask_regions_blacklist_crg_align36_table_destruct.txt',
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
             'breakdistance_threshold': 30,
         },
+    }
+
+    cna_calling = {
+        "min_num_reads": 5,
+        "reference_genome": reference,
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'dbsnp_positions': '/juno/work/shah/reference/common_all_dbSNP138.pos',
+        'readcounter': {'w': 1000, 'q': 0},
+        'correction': {
+            'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
+        },
+        'titan_intervals': [
+            {'num_clusters': 1, 'ploidy': 2},
+            {'num_clusters': 2, 'ploidy': 2},
+            {'num_clusters': 3, 'ploidy': 2},
+            {'num_clusters': 4, 'ploidy': 2},
+            {'num_clusters': 5, 'ploidy': 2},
+            {'num_clusters': 1, 'ploidy': 4},
+            {'num_clusters': 2, 'ploidy': 4},
+            {'num_clusters': 3, 'ploidy': 4},
+            {'num_clusters': 4, 'ploidy': 4},
+            {'num_clusters': 5, 'ploidy': 4},
+        ],
+        'pygenes_gtf': '/juno/work/shah/reference/Homo_sapiens.GRCh37.73.gtf',
+        'remixt_refdata': '/juno/work/shah/reference/reference-grch37-decoys-remixt',
+        'museq_params': {
+            'threshold': 0.85,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 10,
+        },
+        'titan_params': {
+            'y_threshold': 20,
+            'genome_type': 'NCBI',
+            'map': '/juno/work/shah/reference/GRCh37-lite.map.ws_1000.wig',
+            'num_cores': 4,
+            'myskew': 0,
+            'estimate_ploidy': 'TRUE',
+            'normal_param_nzero': 0.5,
+            'normal_estimate_method': 'map',
+            'max_iters': 50,
+            'pseudo_counts': 1e-300,
+            'txn_exp_len': 1e16,
+            'txn_z_strength': 1e6,
+            'alpha_k': 15000,
+            'alpha_high': 20000,
+            'max_copynumber': 8,
+            'symmetric': 'TRUE',
+            'chrom': 'NULL',
+            'max_depth': 1000,
+        }
+    }
+
+    alignment = {
+        "ref_genome":{
+            'file': reference,
+            'header':{
+                'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
+                'AS': 'hg19/1000genomes',
+                'SP': 'Homo sapiens'
+            }
+        },
+        'threads': 8,
+        'aligner': 'bwa-mem',
+        'split_size': 1e6
     }
 
     config = locals()
@@ -111,7 +202,7 @@ def azure_config(reference):
     }
 
     variant_calling = {
-        'chromosomes': ['22'],
+        'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {
             'snpeff_params': {
@@ -146,7 +237,7 @@ def azure_config(reference):
             # 'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
+            'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
          },
         'parse_museq': {
@@ -154,7 +245,7 @@ def azure_config(reference):
             'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
+            'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
          },
@@ -180,7 +271,7 @@ def azure_config(reference):
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
             'readsupport_threshold': 0,
@@ -194,7 +285,7 @@ def azure_config(reference):
             'case_id': None,
             'genes': None,
             'gene_locations': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
             'project': None,
             'types': None,
@@ -207,7 +298,7 @@ def azure_config(reference):
 
     cna_calling = {
         "reference_genome": reference,
-        'chromosomes': ['22'],
+        'chromosomes': map(str, range(1, 23) + ['X']),
         'dbsnp_positions': '/datadrive/refdata/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
         'correction' : {
@@ -283,7 +374,7 @@ def shahlab_config(reference):
     }
 
     variant_calling = {
-        'chromosomes': ['22'],
+        'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {
             'snpeff_params': {
@@ -318,7 +409,7 @@ def shahlab_config(reference):
             # 'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
+            'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
         },
         'parse_museq': {
@@ -326,7 +417,7 @@ def shahlab_config(reference):
             'keep_cosmic': True,
             'remove_duplicates': False,
             'keep_dbsnp': True,
-            'chromosomes': map(str, range(23)) + ['X'],
+            'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
         },
@@ -352,7 +443,7 @@ def shahlab_config(reference):
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
             'tumour_read_support_threshold': 0,
@@ -366,7 +457,7 @@ def shahlab_config(reference):
             'case_id': None,
             'genes': None,
             'gene_locations': None,
-            'chromosomes': map(str, range(23) + ['X']),
+            'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
             'project': None,
             'types': None,
@@ -380,7 +471,7 @@ def shahlab_config(reference):
     cna_calling = {
         "min_num_reads": 5,
         "reference_genome": reference,
-        'chromosomes': ['22'],
+        'chromosomes': map(str, range(1, 23) + ['X']),
         'dbsnp_positions': '/shahlab/pipelines/reference/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
         'correction': {
@@ -456,10 +547,12 @@ def get_config(override):
 
     if override["cluster"] == "shahlab":
         config = shahlab_config(override["reference"])
-    elif override["cluster"] == "luna":
+    elif override["cluster"] == "juno":
         config = luna_config(override["reference"])
     elif override["cluster"] == "azure":
         config = azure_config(override["reference"])
+    else:
+        raise Exception()
 
     return config
 

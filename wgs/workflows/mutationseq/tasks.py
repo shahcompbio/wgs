@@ -62,10 +62,11 @@ def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
 def merge_vcfs(inputs, outfile, tempdir):

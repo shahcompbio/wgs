@@ -5,6 +5,7 @@ import subprocess
 from wgs.utils import vcfutils, helpers
 import pysam
 import tarfile
+import pandas as pd
 
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
@@ -48,10 +49,11 @@ def run_museq(tumour_bam, normal_bam, out, log, reference, interval, museq_param
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
 
@@ -173,3 +175,28 @@ def annot_pygenes(infile, outfile, config):
 
     helpers.run_cmd(cmd)
 
+
+
+def merge_to_h5(inputs, output, intervals, dtype=None):
+    """
+
+    :param inputs:
+    :type inputs:
+    :param output:
+    :type output:
+    :param intervals:
+    :type intervals:
+    :return:
+    :rtype:
+    """
+
+    with pd.HDFStore(output, 'w', complevel=9, complib='blosc') as h5output:
+        for interval in intervals:
+            num_clusters = interval['num_clusters']
+            ploidy = interval['ploidy']
+            input_file = inputs[(num_clusters, ploidy)]
+
+            input_df = pd.read_csv(input_file, sep='\t', dtype=dtype)
+
+            tablename = '/cluster_{}/ploidy_{}'.format(num_clusters, ploidy)
+            h5output.put(tablename, input_df, format='table')

@@ -7,11 +7,24 @@ import pypeliner.managed as mgd
 
 
 def paired_alignment(
-        config, tumours, normals, tumour_fastqs_r1,
+        config, tumours, normals, samples, tumour_fastqs_r1,
         tumour_fastqs_r2, normal_fastqs_r1, normal_fastqs_r2,
         outdir_template_normal, outdir_template_tumour
 ):
+    tumours = dict([(sampid, tumours[sampid])
+                   for sampid in samples])
+    normals = dict([(sampid, normals[sampid])
+                   for sampid in samples])
+    tumours_index = dict([(sampid, tumours[sampid]+'.bai')
+                   for sampid in samples])
+    normals_index = dict([(sampid, normals[sampid]+'.bai')
+                   for sampid in samples])
+
+
     workflow = pypeliner.workflow.Workflow()
+
+    global_config = config['globals']
+    config = config['alignment']
 
     workflow.setobj(
         obj=mgd.OutputChunks('tum_sample_id', 'tum_lane'),
@@ -38,12 +51,13 @@ def paired_alignment(
 
     workflow.transform(
         name='merge_tumour_lanes',
-        ctx={'mem': config['memory']['med'], 'ncpus': 1},
+        ctx={'mem': global_config['memory']['med'], 'ncpus': 1},
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('tum_sample_id',),
         args=(
             mgd.TempInputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
             mgd.OutputFile('output.bam', 'tum_sample_id', fnames=tumours),
+            mgd.OutputFile('output.bam.bai', 'tum_sample_id', fnames=tumours_index),
             None
         )
     )
@@ -63,12 +77,13 @@ def paired_alignment(
 
     workflow.transform(
         name='merge_normal_lanes',
-        ctx={'mem': config['memory']['med'], 'ncpus': 1},
+        ctx={'mem': global_config['memory']['med'], 'ncpus': 1},
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('norm_sample_id',),
         args=(
             mgd.TempInputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
             mgd.OutputFile('output.bam', 'norm_sample_id', fnames=normals),
+            mgd.OutputFile('output.bam.bai', 'norm_sample_id', fnames=normals_index),
             None
         )
     )

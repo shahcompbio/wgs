@@ -18,7 +18,7 @@ def markdups(input, output, metrics, tempdir):
     pypeliner.commandline.execute(*cmd)
 
 
-def merge_bams(inputs, output, mem="2G", **kwargs):
+def picard_merge_bams(inputs, output, mem="2G", **kwargs):
     if isinstance(inputs, dict):
         inputs = inputs.values()
 
@@ -47,7 +47,8 @@ def bam_index(infile, outfile, **kwargs):
         **kwargs)
 
 
-def merge_bams(inputs, output, containers):
-    output_index = output + '.bai'
-    merge_bams(inputs, output, docker_image=containers['picard'])
-    bam_index(output, output_index, docker_image=containers['samtools'])
+def merge_bams(inputs, output, output_index, containers):
+    if not containers:
+        containers = {}
+    picard_merge_bams(inputs, output, docker_image=containers.get('picard'))
+    bam_index(output, output_index, docker_image=containers.get('samtools'))

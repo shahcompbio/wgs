@@ -22,11 +22,11 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, samp
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
 
@@ -43,9 +43,10 @@ def parse_lumpy(infile, output, low_map_filt_output, config, sample_id):
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 

@@ -58,16 +58,13 @@ def _get_files_for_chrom(infiles, intervals, chrom):
     return outfiles
 
 
-def get_known_chromosome_sizes(size_file, chromosomes):
+def get_known_chromosome_sizes(size_file):
     sizes = {}
 
     with open(size_file, 'r') as fh:
         reader = csv.DictReader(fh, ['path', 'chrom', 'known_size', 'size'], delimiter='\t')
 
         for row in reader:
-            if row['chrom'] not in chromosomes:
-                continue
-
             sizes[row['chrom']] = int(row['known_size'])
 
     return sizes
@@ -105,7 +102,8 @@ def call_somatic_variants(
 
     chrom, beg, end = interval.split('_')
 
-    known_chrom_sizes = known_sizes[chrom]
+    genome_size = sum(known_sizes.values())
+
     beg = int(beg)
     beg = beg+1 if beg == 0 else beg
     end = int(end)
@@ -123,7 +121,7 @@ def call_somatic_variants(
         '-report-range-end', end,
         '-clobber',
         '-filter-unanchored',
-        '-genome-size', known_chrom_sizes,
+        '-genome-size', genome_size,
         '-indel-nonsite-match-prob', 0.5,
         '-max-indel-size', 50,
         '-max-window-mismatch', 3, 20,
@@ -334,7 +332,6 @@ def filter_indel_file_list(
         'tumour_window_filtered',
         'tumour_window_submap'
     )
-
 
     known_chrom_size = known_chrom_size[chrom]
 

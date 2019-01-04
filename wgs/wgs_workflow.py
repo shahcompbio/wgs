@@ -6,6 +6,8 @@ from wgs.utils import helpers
 import os
 import pypeliner.managed as mgd
 from alignment import paired_alignment
+from workflows import titan
+from workflows import remixt
 
 def get_fastqs(inputs, samples, sample_type):
     fq1 = {}
@@ -41,10 +43,10 @@ def wgs_workflow(args):
         normal_fastqs_r1, normal_fastqs_r2 = get_fastqs(inputs, samples, 'normal')
 
         normal_alignment_template = os.path.join(
-            args['out_dir'], 'alignment', '{sample_id}', '{lane}', 'normal'
+            args['out_dir'], 'alignment', '{norm_sample_id}', '{norm_lane}', 'normal'
         )
         tumour_alignment_template = os.path.join(
-            args['out_dir'], 'alignment', '{sample_id}', '{lane}', 'tumour'
+            args['out_dir'], 'alignment', '{tum_sample_id}', '{tum_lane}', 'tumour'
         )
 
         workflow.subworkflow(
@@ -56,6 +58,7 @@ def wgs_workflow(args):
                                extensions=['.bai'], axes_origin=[]),
                 mgd.OutputFile("normal.bam", 'sample_id', fnames=normals,
                                extensions=['.bai'], axes_origin=[]),
+                samples,
                 tumour_fastqs_r1,
                 tumour_fastqs_r2,
                 normal_fastqs_r1,
@@ -126,25 +129,42 @@ def wgs_workflow(args):
         )
     )
 
-
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
-    remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
     remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
+    titan_raw_dir = os.path.join(cna_outdir, 'titan')
+    remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
+    titan_segments_filename = os.path.join(titan_raw_dir, 'segments.h5')
+    titan_markers_filename = os.path.join(titan_raw_dir, 'markers.h5')
+    titan_params_filename = os.path.join(titan_raw_dir, 'params.h5')
     workflow.subworkflow(
-        name='copynumber_calling',
-        func=call_copynumber,
+        name='titan',
+        func=titan.create_titan_workflow,
+        axes=('sample_id',),
         args=(
-            samples,
-            config,
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], template=destruct_breakpoints),
-            cna_outdir,
-            mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[], template=remixt_results_filename),
-            remixt_raw_dir,
-        )
+            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.Template(titan_raw_dir, 'sample_id'),
+            mgd.OutputFile('titan_segments_filename', 'sample_id', axes_origin=[], template=titan_segments_filename),
+            mgd.OutputFile('titan_params_filename', 'sample_id', axes_origin=[], template=titan_params_filename),
+            mgd.OutputFile('titan_markers_filename', 'sample_id', axes_origin=[], template=titan_markers_filename),
+            config['globals'],
+            config['cna_calling'],
+            config['cna_calling']['titan_intervals'],
+        ),
     )
-
+    workflow.subworkflow(
+        name='remixt',
+        func=remixt.create_remixt_workflow,
+        axes=('sample_id',),
+        args=(
+            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], template=destruct_breakpoints),
+            mgd.InputInstance('sample_id'),
+            config['cna_calling']['remixt_refdata'],
+            mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[], template=remixt_results_filename),
+            mgd.Template(remixt_raw_dir, 'sample_id'),
+            config['cna_calling']['min_num_reads']
+        ),
+    )
     pyp.run(workflow)

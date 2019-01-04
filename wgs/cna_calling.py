@@ -7,13 +7,19 @@ from wgs.workflows import remixt
 
 
 def call_copynumber(
-        samples, config, normals, tumours, breakpoints,
+        samples, config, tumours, normals, breakpoints,
         titan_raw_dir, remixt_results,
-        remixt_raw_dir,
+        remixt_raw_dir, titan_segments, titan_params, titan_markers
 ):
     breakpoints = dict([(sampid, breakpoints[sampid])
                        for sampid in samples])
     remixt_results = dict([(sampid, remixt_results[sampid])
+                          for sampid in samples])
+    titan_segments = dict([(sampid, titan_segments[sampid])
+                          for sampid in samples])
+    titan_params = dict([(sampid, titan_params[sampid])
+                          for sampid in samples])
+    titan_markers = dict([(sampid, titan_markers[sampid])
                           for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
@@ -27,9 +33,12 @@ def call_copynumber(
         func=titan.create_titan_workflow,
         axes=('sample_id',),
         args=(
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.Template(titan_raw_dir, 'sample_id'),
+            mgd.OutputFile('titan_segments', 'sample_id', fnames=titan_segments),
+            mgd.OutputFile('titan_params', 'sample_id', fnames=titan_params),
+            mgd.OutputFile('titan_markers', 'sample_id', fnames=titan_markers),
             config['globals'],
             config['cna_calling'],
             config['cna_calling']['titan_intervals'],
@@ -41,8 +50,8 @@ def call_copynumber(
         func=remixt.create_remixt_workflow,
         axes=('sample_id',),
         args=(
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.InputFile('breakpoints', 'sample_id', fnames=breakpoints),
             mgd.InputInstance('sample_id'),
             config['cna_calling']['remixt_refdata'],

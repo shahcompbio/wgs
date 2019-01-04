@@ -18,11 +18,11 @@ def parse_museq(infile, output, low_map_filt_output, config):
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
 
@@ -36,10 +36,11 @@ def parse_strelka(infile, output, low_map_filt_output, config):
             if val:
                 cmd.append('--{}'.format(key))
         else:
+            cmd.append('--{}'.format(key))
             if isinstance(val, list):
-                val = ' '.join(val)
-            cmd.extend(['--{}'.format(key), val])
-
+                cmd.extend(val)
+            else:
+                cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
 def merge_overlap(infiles, outfile):

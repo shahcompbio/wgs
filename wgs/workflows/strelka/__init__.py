@@ -63,7 +63,6 @@ def create_strelka_workflow(
         ret=mgd.TempOutputObj('known_sizes'),
         args=(
               mgd.TempInputFile('ref_base_counts.tsv'),
-              chromosomes,
         ),
     )
 
