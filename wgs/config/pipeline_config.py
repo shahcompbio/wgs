@@ -195,6 +195,17 @@ def luna_config(reference):
         }
     }
 
+    ichorcna = {
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
+        'map': '/juno/work/shah/reference/GRCh37-lite.map.ws_1000.wig',
+        'centromere': '/juno/work/shah/reference/GRCh37-lite.map.ws_1000.wig',
+        'chrTrain': map(str, range(1, 23)),
+        'estimateNormal': True,
+    }
+
+
+
     config = locals()
 
     return config

@@ -1,7 +1,10 @@
 import os
 import sys
 import pypeliner
-from pypeliner_utils import helpers, pdfutils
+from wgs.utils import helpers
+import shutil
+
+
 import glob
 
 scripts = os.path.join(
@@ -27,12 +30,33 @@ def hmmcopy_readcounter(input_bam, output_wig, config):
     helpers.run_cmd(cmd, output=output_wig)
 
 
-def run_ichorcna(input_wig, output_file, output_obj, config):
+def run_ichorcna(input_wig, normal_panel, segments,
+                 params, depth, centromere,
+                 gc_wig, map_wig, sample_id, plots_dir,
+                 plots_tar,
+                 txnE=None, chromosomes=None):
     cmd = [
         'Rscript', os.path.join(scripts, 'run_ichorcna.R'),
         input_wig,
-        config['calc_corr']['gc'],
-        config['calc_corr']['map'],
+        normal_panel,
+        centromere,
+        gc_wig,
+        map_wig,
+        sample_id,
+        txnE,
+        '--outDir',
+        plots_dir
     ]
 
     pypeliner.commandline.execute(*cmd)
+
+    segfile = os.path.join(plots_dir, '{}.seg'.format(sample_id))
+    shutil.move(segfile, segments)
+
+    paramsfile = os.path.join(plots_dir, '{}.params.txt'.format(sample_id))
+    shutil.move(paramsfile, params)
+
+    depthfile = os.path.join(plots_dir, '{}.correctedDepth.txt'.format(sample_id))
+    shutil.move(depthfile, depth)
+
+    helpers.make_tarfile(plots_tar, plots_dir)

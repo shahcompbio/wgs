@@ -2,24 +2,15 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.workflows import titan
-from wgs.workflows import remixt
-
+from wgs.workflows import ichorcna
 
 def call_cfdna_copynumber(
-        samples, config, tumours, normals, breakpoints,
-        titan_raw_dir, remixt_results,
-        remixt_raw_dir, titan_segments, titan_params, titan_markers
+        samples, config, tumours, normals,
+        segments, params, depth
 ):
-    breakpoints = dict([(sampid, breakpoints[sampid])
-                       for sampid in samples])
-    remixt_results = dict([(sampid, remixt_results[sampid])
-                          for sampid in samples])
-    titan_segments = dict([(sampid, titan_segments[sampid])
-                          for sampid in samples])
-    titan_params = dict([(sampid, titan_params[sampid])
-                          for sampid in samples])
-    titan_markers = dict([(sampid, titan_markers[sampid])
+
+    config = config['ichorcna']
+    segments = dict([(sampid, segments[sampid])
                           for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
@@ -29,55 +20,43 @@ def call_cfdna_copynumber(
         value=samples)
 
     workflow.subworkflow(
-        name='titan',
-        func=titan.create_titan_workflow,
+        name='ichorcna',
+        func=ichorcna.create_ichorcna_workflow,
         axes=('sample_id',),
         args=(
             mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
-            mgd.Template(titan_raw_dir, 'sample_id'),
-            mgd.OutputFile('titan_segments', 'sample_id', fnames=titan_segments),
-            mgd.OutputFile('titan_params', 'sample_id', fnames=titan_params),
-            mgd.OutputFile('titan_markers', 'sample_id', fnames=titan_markers),
-            config['globals'],
-            config['cna_calling'],
-            config['cna_calling']['titan_intervals'],
+            mgd.InputFile('normal_panel', 'sample_id', fnames=normals),
+            mgd.OutputFile('segments', 'sample_id', fnames=segments),
+            mgd.OutputFile('params', 'sample_id', fnames=params),
+            mgd.OutputFile('depth', 'sample_id', fnames=depth),
+            config,
+            mgd.InputInstance('sample_id')
         ),
     )
 
-    workflow.subworkflow(
-        name='remixt',
-        func=remixt.create_remixt_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
-            mgd.InputFile('breakpoints', 'sample_id', fnames=breakpoints),
-            mgd.InputInstance('sample_id'),
-            config['cna_calling']['remixt_refdata'],
-            mgd.OutputFile('remixt_results', 'sample_id', fnames=remixt_results),
-            mgd.Template(remixt_raw_dir, 'sample_id'),
-            config['cna_calling']['min_num_reads']
-        ),
-    )
 
     return workflow
 
 
 def cfdna_cna_calling_workflow(args):
+
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
 
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
+    config = config['ichorcna']
+
     samples = inputs.keys()
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
     normals = {sample: inputs[sample]['normal'] for sample in samples}
 
     cna_outdir = os.path.join(args['out_dir'], 'cfdna_copynumber', '{sample_id}')
-    remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
-    remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
+    ichor_segments = os.path.join(cna_outdir, 'ichor', 'segments.seg')
+    ichor_params = os.path.join(cna_outdir, 'ichor', 'params.txt')
+    ichor_corrected_depth = os.path.join(cna_outdir, 'remixt', 'ichor_corrected_depth.txt')
+
     workflow.subworkflow(
         name='cfdna_copynumber_calling',
         func=call_cfdna_copynumber,
@@ -86,12 +65,11 @@ def cfdna_cna_calling_workflow(args):
             config,
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                           extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], fnames=breakpoints),
-            cna_outdir,
-            mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[], template=remixt_results_filename),
-            remixt_raw_dir,
+            mgd.InputFile("normal.panel", 'sample_id', fnames=normals,
+                          axes_origin=[]),
+            mgd.OutputFile('ichor_segments', 'sample_id', axes_origin=[], template=ichor_segments),
+            mgd.OutputFile('ichor_params', 'sample_id', axes_origin=[], template=ichor_params),
+            mgd.OutputFile('ichor_corrected_depth', 'sample_id', axes_origin=[], template=ichor_corrected_depth),
         )
     )
 
