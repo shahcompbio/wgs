@@ -3,6 +3,7 @@ Created on Feb 21, 2018
 
 @author: pwalters
 '''
+import os
 import pypeliner
 import pypeliner.managed as mgd
 
@@ -37,7 +38,7 @@ def create_destruct_workflow(
             'mem': 4,
             'ncpus': 1,
         },
-        func=tasks.filter_annotate_breakpoints,
+        func='wgs.workflows.destruct.tasks.filter_annotate_breakpoints',
         args=(
             mgd.InputFile(raw_breakpoints),
             mgd.InputFile(raw_library),

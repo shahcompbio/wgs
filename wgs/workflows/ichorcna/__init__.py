@@ -4,7 +4,8 @@ import pypeliner
 import pypeliner.managed as mgd
 
 
-def create_ichorcna_workflow(tumour_bam, normal_panel, segments,params, depth, config, sample_id, plots_tar):
+def create_ichorcna_workflow(
+		tumour_bam, normal_panel, segments,params, depth, config, sample_id, plots_tar):
 	workflow = pypeliner.workflow.Workflow()
 
 	workflow.transform(
