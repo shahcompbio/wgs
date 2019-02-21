@@ -73,9 +73,9 @@ def call_variants(
             mgd.InputInstance('sample_id')
         ),
         kwargs={
-            'tumour_bam': mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                                        extensions=['.bai'], axes_origin=[]),
-            'normal_bam': None
+            'tumour_bam': None,
+            'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                                        extensions=['.bai'], axes_origin=[])
         }
     )
 
