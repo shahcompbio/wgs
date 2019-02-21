@@ -12,7 +12,7 @@ from cna_calling import cna_calling_workflow
 from sv_calling import sv_calling_workflow
 from variant_calling import variant_calling_workflow
 from wgs_workflow import wgs_workflow
-
+from cfdna_cna_calling import cfdna_cna_calling_workflow
 
 def generate_config(args):
     if args['which'] == 'generate_config':
@@ -49,6 +49,11 @@ def main():
     if args["which"] == "copynumber_calling":
         args = generate_config(args)
         cna_calling_workflow(args)
+
+    if args["which"] == "cfdna_copynumber_calling":
+        args = generate_config(args)
+        cfdna_cna_calling_workflow(args)
+
 
     if args["which"] == "all":
         args = generate_config(args)

@@ -68,9 +68,17 @@ def parse_args():
     cna_calling.set_defaults(which='copynumber_calling')
     cna_calling = add_global_args(cna_calling)
 
-    # ================
-    # copy number calling
-    # ================
+    #================
+    # cfdna
+    #================
+    cfdna_cna_calling = subparsers.add_parser("cfdna_copynumber_calling")
+    cfdna_cna_calling.set_defaults(which='cfdna_copynumber_calling')
+    cfdna_cna_calling = add_global_args(cfdna_cna_calling)
+
+
+    #==================
+    # full WGS workflow
+    # =================
     all_wgs = subparsers.add_parser("all")
     all_wgs.set_defaults(which='all')
     all_wgs = add_global_args(all_wgs)
