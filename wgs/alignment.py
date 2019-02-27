@@ -20,7 +20,6 @@ def paired_alignment(
     normals_index = dict([(sampid, normals[sampid]+'.bai')
                    for sampid in samples])
 
-
     workflow = pypeliner.workflow.Workflow()
 
     global_config = config['globals']
@@ -45,7 +44,9 @@ def paired_alignment(
             mgd.InputFile('input.r1.fastq.gz', 'tum_sample_id', 'tum_lane', fnames=tumour_fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'tum_sample_id', 'tum_lane',fnames=tumour_fastqs_r2),
             mgd.TempOutputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
-            mgd.Template(outdir_template_tumour, 'tum_sample_id', 'tum_lane')
+            mgd.Template(outdir_template_tumour, 'tum_sample_id', 'tum_lane'),
+            [mgd.InputInstance('tum_sample_id'),
+             mgd.InputInstance('tum_lane')]
         ),
     )
 
@@ -72,6 +73,8 @@ def paired_alignment(
             mgd.InputFile('input.r2.fastq.gz', 'norm_sample_id', 'norm_lane',fnames=normal_fastqs_r2),
             mgd.TempOutputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
             mgd.Template(outdir_template_normal, 'norm_sample_id', 'norm_lane')
+            [mgd.InputInstance('norm_sample_id'),
+             mgd.InputInstance('norm_lane')]
         ),
     )
 

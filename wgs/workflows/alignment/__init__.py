@@ -10,6 +10,7 @@ import biowrappers.components.io.fastq.tasks
 import biowrappers.components.io.bam.tasks
 import biowrappers.pipelines.realignment.tasks
 
+
 def align_samples(
         config,
         fastq1_inputs,
@@ -43,7 +44,7 @@ def align_samples(
     return workflow
 
 
-def align_sample(config, fastq_1, fastq_2, out_file, outdir):
+def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     ref_genome = pypeliner.managed.InputFile(config['ref_genome']['file'])
 
@@ -53,9 +54,6 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir):
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
     out_bai = out_file+'.bai'
-
-    if 'ID' not in read_group_config:
-        read_group_config['ID'] = hash(fastq_1 + fastq_2) % int(1e6)
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -90,16 +88,15 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir):
         name='align_bwa_mem',
         axes=('split',),
         ctx={'mem': 8, 'ncpus': config['threads'], 'walltime': '08:00'},
+        func=tasks.align_bwa_mem,
         args=(
-            'bwa', 'mem', '-M',
-            ref_genome,
             pypeliner.managed.TempInputFile('read_1', 'split'),
             pypeliner.managed.TempInputFile('read_2', 'split'),
-            '-t', config['threads'], '|',
-            'samtools', 'view', '-bSh', '-',
-            '>',
+            ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam', 'split'),
-        )
+            config['threads'],
+        ),
+        kwargs={'sample_id': ids[0], 'lane_id': ids[1], 'read_group_info': config['read_group_info']}
     )
 
     workflow.transform(

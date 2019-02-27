@@ -536,7 +536,10 @@ def shahlab_config(reference):
         },
         'threads': 8,
         'aligner': 'bwa-mem',
-        'split_size': 1e6
+        'split_size': 1e6,
+        'read_group_info': {
+            'ID': '{sample_id}'
+        }
     }
 
     config = locals()
