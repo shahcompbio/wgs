@@ -13,7 +13,10 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, samp
            '--pre_mappability_output', output,
            '--lumpy_data', lumpy_data,
            '--output', low_map_filt_output,
-           '--case_id', sample_id]
+           '--case_id', sample_id,
+           '--tumour_id', sample_id,
+           '--normal_id', sample_id+'N',
+           ]
 
     for key, val in config.iteritems():
         if val is None:
