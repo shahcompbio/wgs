@@ -84,7 +84,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
         ),
     )
 
-    workflow.commandline(
+    workflow.transform(
         name='align_bwa_mem',
         axes=('split',),
         ctx={'mem': 8, 'ncpus': config['threads'], 'walltime': '08:00'},

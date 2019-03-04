@@ -72,7 +72,7 @@ def paired_alignment(
             mgd.InputFile('input.r1.fastq.gz', 'norm_sample_id', 'norm_lane', fnames=normal_fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'norm_sample_id', 'norm_lane',fnames=normal_fastqs_r2),
             mgd.TempOutputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
-            mgd.Template(outdir_template_normal, 'norm_sample_id', 'norm_lane')
+            mgd.Template(outdir_template_normal, 'norm_sample_id', 'norm_lane'),
             [mgd.InputInstance('norm_sample_id'),
              mgd.InputInstance('norm_lane')]
         ),

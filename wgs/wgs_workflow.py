@@ -167,4 +167,5 @@ def wgs_workflow(args):
             config['cna_calling']['min_num_reads']
         ),
     )
+
     pyp.run(workflow)

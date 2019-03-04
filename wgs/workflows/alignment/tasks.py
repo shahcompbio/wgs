@@ -57,7 +57,7 @@ def merge_bams(inputs, output, output_index, containers):
 def align_bwa_mem(read_1, read_2, ref_genome, aligned_bam, threads, sample_id=None, lane_id=None, read_group_info=None):
 
     if read_group_info:
-        rg_id = read_group_info['ID'].format({'sample_id': sample_id, 'lane_id': lane_id})
+        rg_id = read_group_info['ID'].format(**{'sample_id': sample_id, 'lane_id': lane_id})
         read_group = ['@RG', 'ID:{0}'.format(rg_id)]
         for key, value in sorted(read_group_info.items()):
             if key == 'ID':
