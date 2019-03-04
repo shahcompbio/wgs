@@ -7,12 +7,11 @@ from wgs.utils import helpers
 def luna_config(reference):
 
     if reference == 'grch37':
-        reference = "/ifs/work/leukgen/ref/homo_sapiens/GRCh37d5/genome/gr37.fasta"
+        reference = "/juno/work/shah/reference/gr37.fasta"
     else:
         reference = None
 
     globals = {
-        'pools': {'standard': None, 'highmem': None, 'multicore': None},
         'memory': {'low': 5, 'med': 10, 'high': 15,},
         'threads': 1,
     }
@@ -22,29 +21,29 @@ def luna_config(reference):
         'reference': reference,
         'annotation_params': {
             'snpeff_params': {
-                'snpeff_config': '//ifs/work/leukgen/home/grewald/reference/snpEff.config'
+                'snpeff_config': '/juno/work/shah/reference/snpEff.config'
             },
             'mutation_assessor_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/MA.hg19_v2/'
+                'db': '/juno/work/shah/reference/MA.hg19_v2/'
             },
             'dbsnp_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/dbsnp_142.human_9606.all.vcf.gz'
+                'db': '/juno/work/shah/reference/dbsnp_142.human_9606.all.vcf.gz'
              },
             'thousandgen_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/1000G_release_20130502_genotypes.vcf.gz'
+                'db': '/juno/work/shah/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
             'cosmic_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/CosmicMutantExport.sorted.vcf.gz'
+                'db': '/juno/work/shah/reference/CosmicMutantExport.sorted.vcf.gz'
             },
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample':'/refdata/single_sample_plot_data.txt',
+            'refdata_single_sample':'/juno/work/shah/reference/single_sample_plot_data.txt',
             'thousandgen_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/1000G_release_20130502_genotypes.vcf.gz'
+                'db': '/juno/work/shah/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
             'dbsnp_params': {
-                'db': '/ifs/work/leukgen/home/grewald/reference/dbsnp_142.human_9606.all.vcf.gz'
+                'db': '/juno/work/shah/reference/dbsnp_142.human_9606.all.vcf.gz'
             },
         },
         'parse_strelka':{
@@ -83,7 +82,7 @@ def luna_config(reference):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/ifs/work/leukgen/home/grewald/reference/reference-grch37-decoys-destruct/',
+        'refdata_destruct': '/juno/work/shah/reference/',
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
@@ -180,7 +179,10 @@ def luna_config(reference):
         },
         'threads': 8,
         'aligner': 'bwa-mem',
-        'split_size': 1e6
+        'split_size': 1e6,
+        'read_group_info': {
+            'ID': '{sample_id}'
+        }
     }
 
     config = locals()
