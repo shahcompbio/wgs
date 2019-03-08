@@ -5,7 +5,7 @@ import tasks
 
 def create_titan_workflow(
         tumour_bam, normal_bam, titan_raw_dir, segments, params, markers,
-        global_config, config, intervals):
+        global_config, config, intervals, sample_id):
 
     titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
     igv_template = os.path.join(titan_outdir, 'igv_segs.txt')
@@ -13,6 +13,7 @@ def create_titan_workflow(
     params_template = os.path.join(titan_outdir, 'titan_params.txt')
     segs_template = os.path.join(titan_outdir, 'titan_segs.txt')
     plots_template = os.path.join(titan_outdir, 'titan_plots.tar.gz')
+    parsed_template = os.path.join(titan_outdir, 'titan_parsed.csv')
     museq_vcf = os.path.join(titan_raw_dir, 'museq.vcf')
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
@@ -199,6 +200,24 @@ def create_titan_workflow(
             config,
         ),
     )
+
+    workflow.transform(
+        name='parse_titan',
+        axes=('numclusters', 'ploidy'),
+        ctx={'mem': global_config['memory']['low'],
+             'pool_id': global_config['pools']['standard'],
+             'ncpus': 1, 'walltime':'02:00'},
+        func=tasks.annot_pygenes,
+        args=(
+            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
+            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+            mgd.OutputFile('titan_parsed.csv', 'numclusters', 'ploidy', template=parsed_template),
+            config['parse_titan'],
+            sample_id,
+        ),
+    )
+
 
 
     workflow.transform(

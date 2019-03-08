@@ -165,6 +165,12 @@ def luna_config(reference):
             'symmetric': 'TRUE',
             'chrom': 'NULL',
             'max_depth': 1000,
+        },
+        'parse_titan': {
+            'segment_size_threshold': 5000,
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'genes': None,
+            'types': None,
         }
     }
 
@@ -351,9 +357,13 @@ def azure_config(reference):
             'symmetric': 'TRUE',
             'chrom': 'NULL',
             'max_depth': 1000,
+        },
+        'parse_titan': {
+            'segment_size_threshold': 5000,
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'genes': None,
+            'types': None,
         }
-
-
     }
 
     config = locals()
@@ -524,6 +534,12 @@ def shahlab_config(reference):
             'symmetric': 'TRUE',
             'chrom': 'NULL',
             'max_depth': 1000,
+        },
+        'parse_titan': {
+            'segment_size_threshold': 5000,
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'genes': None,
+            'types': None,
         }
     }
 

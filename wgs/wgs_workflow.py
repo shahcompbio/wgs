@@ -150,6 +150,7 @@ def wgs_workflow(args):
             config['globals'],
             config['cna_calling'],
             config['cna_calling']['titan_intervals'],
+            mgd.InputInstance('sample_id'),
         ),
     )
     workflow.subworkflow(

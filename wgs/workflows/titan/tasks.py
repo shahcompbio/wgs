@@ -200,3 +200,36 @@ def merge_to_h5(inputs, output, intervals, dtype=None):
 
             tablename = '/cluster_{}/ploidy_{}'.format(num_clusters, ploidy)
             h5output.put(tablename, input_df, format='table')
+
+def parse_titan(infile, params_file, titan_file, output, config, sample_id):
+        '''
+        Parse the input VCF file into a TSV file
+
+        :param infile: temporary input VCF file
+        :param output: path to the output TSV file
+        '''
+
+        cmd = [
+            'vizutils_parse_titan',
+            '--infile', infile,
+            '--paramsfile', params_file,
+            '--titanfile', titan_file,
+            '--output', output,
+            '--case_id', sample_id,
+            '--tumour_id', sample_id,
+            '--normal_id', sample_id + 'N',
+        ]
+
+        for key, val in config.iteritems():
+            if val is None:
+                continue
+            elif isinstance(val, bool):
+                if val:
+                    cmd.append('--{}'.format(key))
+            else:
+                cmd.append('--{}'.format(key))
+                if isinstance(val, list):
+                    cmd.extend(val)
+                else:
+                    cmd.append(val)
+        pypeliner.commandline.execute(*cmd)

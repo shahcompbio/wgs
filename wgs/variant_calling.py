@@ -186,6 +186,11 @@ def variant_calling_workflow(args):
     museq_single_pdf = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.pdf')
     museq_single_pdf_txt = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.txt')
 
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=samples,
+    )
+
     workflow.subworkflow(
         name='variant_calling',
         func=call_variants,
