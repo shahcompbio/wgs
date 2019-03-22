@@ -24,8 +24,14 @@ def create_remixt_workflow(
 ):
     workflow = pypeliner.workflow.Workflow()
 
-    remixt_config = {}
+    if not breakpoints:
+        # just setting a random obj so that we dont return empty workflow
+        workflow.setobj(
+            obj=mgd.OutputChunks('some_random_value'),
+            value='another_random_string')
+        return workflow
 
+    remixt_config = {}
 
     workflow.transform(
         name='filter_breakpoints',
