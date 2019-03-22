@@ -108,6 +108,11 @@ def sv_calling_workflow(args):
     destruct_reads = os.path.join(sv_outdir, 'destruct_reads.csv')
     lumpy_vcf = os.path.join(sv_outdir, 'lumpy.vcf')
     parsed_csv = os.path.join(sv_outdir, 'filtered_consensus_calls.csv')
+
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=samples)
+
     workflow.subworkflow(
         name="call_breakpoints",
         func=call_breakpoints,
