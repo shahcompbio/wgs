@@ -207,7 +207,7 @@ def create_titan_workflow(
         ctx={'mem': global_config['memory']['low'],
              'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
-        func=tasks.annot_pygenes,
+        func=tasks.parse_titan,
         args=(
             mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
             mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
