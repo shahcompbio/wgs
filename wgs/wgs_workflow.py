@@ -141,8 +141,8 @@ def wgs_workflow(args):
         func=titan.create_titan_workflow,
         axes=('sample_id',),
         args=(
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile('tumour.bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal.bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.Template(titan_raw_dir, 'sample_id'),
             mgd.OutputFile('titan_segments_filename', 'sample_id', axes_origin=[], template=titan_segments_filename),
             mgd.OutputFile('titan_params_filename', 'sample_id', axes_origin=[], template=titan_params_filename),
@@ -158,8 +158,8 @@ def wgs_workflow(args):
         func=remixt.create_remixt_workflow,
         axes=('sample_id',),
         args=(
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile('tumour.bam', 'sample_id', fnames=tumours, extensions=['.bai']),
+            mgd.InputFile('normal.bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], template=destruct_breakpoints),
             mgd.InputInstance('sample_id'),
             config['cna_calling']['remixt_refdata'],
