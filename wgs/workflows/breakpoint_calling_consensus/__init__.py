@@ -22,7 +22,6 @@ def create_consensus_workflow(
         name='parse_lumpy',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1,'walltime': '08:00'},
         func=tasks.parse_lumpy,
         args=(
@@ -39,7 +38,6 @@ def create_consensus_workflow(
         name='parse_destruct',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1,'walltime': '08:00'},
         func=tasks.parse_destruct,
         args=(

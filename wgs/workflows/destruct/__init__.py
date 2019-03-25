@@ -36,7 +36,6 @@ def create_destruct_workflow(
         name='filter_annotate_breakpoints',
         ctx={
             'mem': 4,
-            'pool_id': 'standard',
             'ncpus': 1,
         },
         func=tasks.filter_annotate_breakpoints,

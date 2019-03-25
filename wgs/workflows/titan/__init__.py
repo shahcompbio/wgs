@@ -30,7 +30,6 @@ def create_titan_workflow(
         name='generate_intervals',
         func=tasks.generate_intervals,
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime': '02:00'},
              # 'walltime_retry_increment': 2},
         ret=mgd.OutputChunks('interval'),
@@ -43,7 +42,6 @@ def create_titan_workflow(
     workflow.transform(
         name='run_museq',
         ctx={'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['multicore'],
              'ncpus': global_config['threads'], 'walltime': '02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.run_museq,
@@ -64,7 +62,6 @@ def create_titan_workflow(
         name='merge_vcfs',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
              'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['multicore'],
              'ncpus': 1},
              # 'walltime': '02:00', 'walltime_retry_increment': 2},
         func=tasks.merge_vcfs,
@@ -78,7 +75,6 @@ def create_titan_workflow(
     workflow.transform(
         name='convert_museq_vcf2counts',
         ctx={'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['highmem'],
              'ncpus': 1, 'walltime': '02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.convert_museq_vcf2counts,
@@ -92,7 +88,6 @@ def create_titan_workflow(
     workflow.transform(
         name='run_readcounter_tumour',
         ctx={'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['highmem'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.run_readcounter,
@@ -106,7 +101,6 @@ def create_titan_workflow(
     workflow.transform(
         name='run_readcounter_normal',
         ctx={'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['highmem'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.run_readcounter,
@@ -120,7 +114,6 @@ def create_titan_workflow(
     workflow.transform(
         name='calc_correctreads_wig',
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.calc_correctreads_wig,
@@ -136,7 +129,6 @@ def create_titan_workflow(
         name='run_titan',
         axes=('numclusters', 'ploidy'),
         ctx={'mem': global_config['memory']['high'],
-             'pool_id': global_config['pools']['highmem'],
              'ncpus': 1, 'walltime': '06:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.run_titan,
@@ -156,7 +148,6 @@ def create_titan_workflow(
         name='plot_titan',
         axes=('numclusters', 'ploidy'),
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.plot_titan,
@@ -175,7 +166,6 @@ def create_titan_workflow(
         name='calc_cnsegments_titan',
         axes=('numclusters', 'ploidy'),
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.calc_cnsegments_titan,
@@ -190,7 +180,6 @@ def create_titan_workflow(
         name='annot_pygenes',
         axes=('numclusters', 'ploidy'),
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.annot_pygenes,
@@ -205,7 +194,6 @@ def create_titan_workflow(
         name='parse_titan',
         axes=('numclusters', 'ploidy'),
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
         func=tasks.parse_titan,
         args=(
@@ -223,7 +211,6 @@ def create_titan_workflow(
     workflow.transform(
         name='segments_h5',
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.merge_to_h5,
@@ -237,7 +224,6 @@ def create_titan_workflow(
     workflow.transform(
         name='params_h5',
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.merge_to_h5,
@@ -251,7 +237,6 @@ def create_titan_workflow(
     workflow.transform(
         name='markers_h5',
         ctx={'mem': global_config['memory']['low'],
-             'pool_id': global_config['pools']['standard'],
              'ncpus': 1, 'walltime':'02:00'},
              # 'walltime_retry_increment': 2},
         func=tasks.merge_to_h5,

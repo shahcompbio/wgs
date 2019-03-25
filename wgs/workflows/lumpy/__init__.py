@@ -10,7 +10,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_view_normal',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_view,
             args=(
                 mgd.InputFile(normal_bam),
@@ -21,7 +21,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_lumpy_extract_split_reads_bwamem_normal',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_lumpy_extract_split_reads_bwamem,
             args=(
                 mgd.InputFile(normal_bam),
@@ -33,7 +33,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_sort_discordants_normal',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
@@ -44,7 +44,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_sort_splitters_normal',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
@@ -56,7 +56,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_view_tumour',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_view,
             args=(
                 mgd.InputFile(tumour_bam),
@@ -67,7 +67,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_lumpy_extract_split_reads_bwamem_tumour',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_lumpy_extract_split_reads_bwamem,
             args=(
                 mgd.InputFile(tumour_bam),
@@ -79,7 +79,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_sort_discordants_tumour',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('tumour.discordants.unsorted.bam'),
@@ -90,7 +90,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_samtools_sort_splitters_tumour',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('tumour.splitters.unsorted.bam'),
@@ -102,7 +102,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_lumpyexpress_unpaired_tumour',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_lumpyexpress,
             args=(
                 mgd.OutputFile(lumpy_vcf),
@@ -118,7 +118,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_lumpyexpress_unpaired_normal',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_lumpyexpress,
             args=(
                 mgd.OutputFile(lumpy_vcf),
@@ -134,7 +134,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         workflow.transform(
             name='run_lumpyexpress_paired',
             ctx={'mem': global_config['memory']['med'],
-                 'pool_id': global_config['pools']['standard'], 'ncpus': 1},
+                 'ncpus': 1},
             func=tasks.run_lumpyexpress,
             args=(
                 mgd.OutputFile(lumpy_vcf),

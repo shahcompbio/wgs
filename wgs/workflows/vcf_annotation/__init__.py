@@ -21,7 +21,6 @@ def create_annotation_workflow(
         name='run_snpeff',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1,'walltime': '08:00'},
         func=tasks.run_snpeff,
         args=(
@@ -35,7 +34,6 @@ def create_annotation_workflow(
         name='run_mutation_assessor',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['low'],
-            'pool_id': global_config['pools']['standard'],
             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_mutation_assessor,
         args=(
@@ -49,7 +47,6 @@ def create_annotation_workflow(
         name='run_DBSNP',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_DBSNP,
         args=(
@@ -63,7 +60,6 @@ def create_annotation_workflow(
         name='run_1000gen',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_1000gen,
         args=(
@@ -77,7 +73,6 @@ def create_annotation_workflow(
         name='run_cosmic',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_cosmic,
         args=(
@@ -91,7 +86,6 @@ def create_annotation_workflow(
         name='finalize',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
             'mem': global_config['memory']['high'],
-            'pool_id': global_config['pools']['highmem'],
             'ncpus': 1, 'walltime': '08:00'},
         func=vcf_tasks.finalise_vcf,
         args=(
