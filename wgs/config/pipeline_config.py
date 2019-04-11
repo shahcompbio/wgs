@@ -187,7 +187,10 @@ def luna_config(reference):
         'aligner': 'bwa-mem',
         'split_size': 1e7,
         'read_group_info': {
-            'ID': '{sample_id}'
+            'ID': '{sample_id}',
+            'SM': '{sample_id}',
+            'CN': 'IGO_MSKCC',
+            'PL': 'ILLUMINA',
         }
     }
 
@@ -556,7 +559,10 @@ def shahlab_config(reference):
         'aligner': 'bwa-mem',
         'split_size': 1e7,
         'read_group_info': {
-            'ID': '{sample_id}'
+            'ID': '{sample_id}',
+            'SM': '{sample_id}',
+            'CN': 'IGO_MSKCC',
+            'PL': 'ILLUMINA',
         }
     }
 
