@@ -12,10 +12,8 @@ from wgs.utils import vcf_tasks
 def create_museq_workflow(
         snv_vcf,
         museqportrait_pdf,
-        museqportrait_txt,
         global_config,
         varcall_config,
-        sample_id,
         tumour_bam=None,
         normal_bam=None):
 
@@ -134,11 +132,10 @@ def create_museq_workflow(
         args=(
             mgd.InputFile(snv_vcf),
             mgd.OutputFile(museqportrait_pdf),
-            mgd.OutputFile(museqportrait_txt),
+            mgd.TempOutputFile('museqportrait.txt'),
             mgd.TempOutputFile('museqportrait.log'),
             single,
             varcall_config['plot_params'],
-            sample_id
         ),
     )
 

@@ -75,15 +75,12 @@ def wgs_workflow(args):
     strelka_indel_vcf = os.path.join(museq_dir, '{sample_id}', 'strelka_indel_annotated.vcf.gz')
     parsed_snv_csv = os.path.join(museq_dir, '{sample_id}', 'allcalls.csv')
     museq_paired_pdf = os.path.join(museq_dir, '{sample_id}', 'paired_museqportrait.pdf')
-    museq_paired_pdf_txt = os.path.join(museq_dir, '{sample_id}', 'paired_museqportrait.txt')
     museq_single_pdf = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.pdf')
-    museq_single_pdf_txt = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.txt')
     workflow.subworkflow(
         name='variant_calling',
         func=call_variants,
         args=(
             samples,
-            museq_dir,
             config,
             mgd.OutputFile('parsed_snv_csv', 'sample_id', template=parsed_snv_csv, axes_origin=[]),
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
@@ -95,9 +92,7 @@ def wgs_workflow(args):
             mgd.OutputFile('strelka_snv', 'sample_id', template=strelka_snv_vcf, axes_origin=[]),
             mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
             mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
-            mgd.OutputFile('museq_paired_pdf_txt', 'sample_id', template=museq_paired_pdf_txt, axes_origin=[]),
             mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
-            mgd.OutputFile('museq_single_pdf_txt', 'sample_id', template=museq_single_pdf_txt, axes_origin=[]),
         )
     )
 

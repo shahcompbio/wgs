@@ -9,11 +9,10 @@ from wgs.workflows import variant_calling_consensus
 
 
 def call_variants(
-        samples, output_dir, config, parsed_csv,
+        samples, config, parsed_csv,
         tumours, normals, museq_vcf, museq_ss_vcf,
         strelka_snv_vcf, strelka_indel_vcf,
-        museq_paired_pdf, museq_paired_pdf_txt,
-        museq_single_pdf, museq_single_pdf_txt,
+        museq_paired_pdf, museq_single_pdf,
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
                          for sampid in samples])
@@ -25,11 +24,7 @@ def call_variants(
                          for sampid in samples])
     museq_paired_pdf = dict([(sampid, museq_paired_pdf[sampid])
                          for sampid in samples])
-    museq_paired_pdf_txt = dict([(sampid, museq_paired_pdf_txt[sampid])
-                         for sampid in samples])
     museq_single_pdf = dict([(sampid, museq_single_pdf[sampid])
-                         for sampid in samples])
-    museq_single_pdf_txt = dict([(sampid, museq_single_pdf_txt[sampid])
                          for sampid in samples])
     parsed_csv = dict([(sampid, parsed_csv[sampid])
                          for sampid in samples])
@@ -47,10 +42,8 @@ def call_variants(
         args=(
             mgd.TempOutputFile("museq_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_paired_pdf', 'sample_id', fnames=museq_paired_pdf),
-            mgd.OutputFile('museq_paired_pdf_txt', 'sample_id', fnames=museq_paired_pdf_txt),
             config['globals'],
             config['variant_calling'],
-            mgd.InputInstance('sample_id')
         ),
         kwargs={
             'tumour_bam': mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
@@ -67,10 +60,8 @@ def call_variants(
         args=(
             mgd.TempOutputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_single_pdf', 'sample_id', fnames=museq_single_pdf),
-            mgd.OutputFile('museq_single_pdf_txt', 'sample_id', fnames=museq_single_pdf_txt),
             config['globals'],
             config['variant_calling'],
-            mgd.InputInstance('sample_id')
         ),
         kwargs={
             'tumour_bam': None,

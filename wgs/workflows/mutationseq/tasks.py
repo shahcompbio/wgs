@@ -4,11 +4,10 @@ Created on Feb 21, 2018
 @author: pwalters
 '''
 import os
-import pysam
-import pypeliner
-import multiprocessing
-from wgs.utils import helpers, vcfutils
 
+import pypeliner
+import pysam
+from wgs.utils import helpers, vcfutils
 
 scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
@@ -24,10 +23,11 @@ def generate_intervals(ref, chromosomes, size=1000000):
     for name, length in zip(names, lengths):
         if name not in chromosomes:
             continue
-        for i in range(int((length/size)+1)):
-            intervals.append( name+ "_" + str(i*size) +"_"+ str((i+1)*size))
+        for i in range(int((length / size) + 1)):
+            intervals.append(name + "_" + str(i * size) + "_" + str((i + 1) * size))
 
     return intervals
+
 
 def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
               normal_bam=None):
@@ -69,13 +69,15 @@ def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
                 cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
+
 def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
     vcfutils.sort_vcf(mergedfile, outfile)
 
-def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config, sample):
+
+def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config):
     '''
     Run museqportrait script on the input VCF file
 
@@ -85,14 +87,17 @@ def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, 
     '''
 
     if single_mode:
-        script = os.path.join(scripts_directory, 'portraits_single_sample.py')
+        script = os.path.join(scripts_directory, 'singlesampleplot.py')
         cmd = ['python', script, '--thousand_gen', config["thousandgen_params"]["db"],
-               '--output', out_pdf, '--data', out_txt, '--threshold', config['threshold'],
-               '--dbsnp', config["dbsnp_params"]["db"], '--log_file', museqportrait_log,
-               '--ref_data', config['refdata_single_sample'], '--variant_label',
-               sample, '--variant_file', infile, '--tabix_path', 'tabix'
-        ]
+               '--output', out_pdf, '--threshold', config['threshold'],
+               '--dbsnp', config["dbsnp_params"]["db"],
+               '--ref_data', config['refdata_single_sample'],
+               '--variant_file', infile,
+               ]
         pypeliner.commandline.execute(*cmd)
+
+        # touch the txt file to avoid pypeliner errors
+        open(out_txt, 'w').close()
 
     else:
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
