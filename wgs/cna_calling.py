@@ -76,6 +76,7 @@ def cna_calling_workflow(args):
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
     normals = {sample: inputs[sample]['normal'] for sample in samples}
     breakpoints = {sample: inputs[sample].get('breakpoints') for sample in samples}
+    targets = {sample: inputs[sample].get('target_list') for sample in samples}
 
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
     remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
@@ -99,6 +100,8 @@ def cna_calling_workflow(args):
                           extensions=['.bai'], axes_origin=[]),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile("target_list", 'sample_id', fnames=targets,
+                          axes_origin=[]),
             mgd.Template(titan_raw_dir, 'sample_id'),
             mgd.OutputFile('titan_segments_filename', 'sample_id',
                            axes_origin=[], template=titan_segments_filename),

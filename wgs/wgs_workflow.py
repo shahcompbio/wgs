@@ -34,6 +34,8 @@ def wgs_workflow(args):
     samples = inputs.keys()
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
     normals = {sample: inputs[sample]['normal'] for sample in samples}
+    targets = {sample: inputs[sample].get('target_list') for sample in samples}
+
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
@@ -140,6 +142,7 @@ def wgs_workflow(args):
         args=(
             mgd.InputFile('tumour.bam', 'sample_id', fnames=tumours, extensions=['.bai']),
             mgd.InputFile('normal.bam', 'sample_id', fnames=normals, extensions=['.bai']),
+            mgd.InputFile("target_list", 'sample_id', fnames=targets, axes_origin=[]),
             mgd.Template(titan_raw_dir, 'sample_id'),
             mgd.OutputFile('titan_segments_filename', 'sample_id', axes_origin=[], template=titan_segments_filename),
             mgd.OutputFile('titan_params_filename', 'sample_id', axes_origin=[], template=titan_params_filename),

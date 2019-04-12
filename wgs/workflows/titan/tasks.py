@@ -99,7 +99,7 @@ def run_readcounter(bam, outfile, config):
     pypeliner.commandline.execute(*cmd)
 
 
-def calc_correctreads_wig(tumour_wig, normal_wig, outfile, config):
+def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config):
     '''
     Run script to calculate correct reads
 
@@ -112,7 +112,8 @@ def calc_correctreads_wig(tumour_wig, normal_wig, outfile, config):
     script = os.path.join(scripts_directory, 'correctReads.R')
     gc = config['correction']['gc']
     map_wig = config['titan_params']['map']
-    target_list = 'NULL'
+    if not target_list:
+        target_list = 'NULL'
     genome_type = config['titan_params']['genome_type']
 
     cmd = ['Rscript', script, tumour_wig, normal_wig, gc, map_wig,

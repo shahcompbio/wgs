@@ -7,7 +7,7 @@ import tasks
 
 
 def create_titan_workflow(
-        tumour_bam, normal_bam, titan_raw_dir,
+        tumour_bam, normal_bam, targets, titan_raw_dir,
         segments, params, markers,
         global_config, config,
         intervals, sample_id
@@ -115,6 +115,7 @@ def create_titan_workflow(
         args=(
             mgd.TempInputFile('tumour.wig'),
             mgd.TempInputFile('normal.wig'),
+            mgd.InputFile(targets),
             mgd.TempOutputFile('correct_reads.txt'),
             config,
         ),
