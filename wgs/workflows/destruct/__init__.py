@@ -3,17 +3,16 @@ Created on Feb 21, 2018
 
 @author: pwalters
 '''
-import os
-import tasks
 import pypeliner
 import pypeliner.managed as mgd
+
+import tasks
 
 
 def create_destruct_workflow(
         tumour_bam, normal_bam, raw_breakpoints, raw_library,
         breakpoints, library, reads,
         sample_id, global_config, sv_config):
-
     destruct_config = {}
 
     workflow = pypeliner.workflow.Workflow()

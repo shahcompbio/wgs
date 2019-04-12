@@ -3,13 +3,10 @@ Created on Feb 21, 2018
 
 @author: dgrewal
 '''
-import os
-import tasks
 import pypeliner
 import pypeliner.managed as mgd
 
-
-
+import tasks
 
 
 def create_remixt_workflow(
@@ -62,4 +59,3 @@ def create_remixt_workflow(
     )
 
     return workflow
-

@@ -29,7 +29,7 @@ def load_table(chrom):
 
     print 'loading table for chromosome {}'.format(chrom)
     ma_table = {}
-    chrom = chrom.replace('chr','')
+    chrom = chrom.replace('chr', '')
 
     if chrom != 'X' and chrom != 'Y':
         chrom = chrom.zfill(2)
@@ -89,7 +89,7 @@ def annot_insert(l, a):
     ''' insert ma annotation into the info section of the vcf line '''
 
     # info section in vcf is column 7 (zero-based)
-    info    = 7
+    info = 7
     l[info] = l[info] + a
 
     return '\t'.join(l)
@@ -98,18 +98,18 @@ def annot_insert(l, a):
 def write_annot_data(infile, out):
     ''' write the annotated data to out '''
 
-    ma_table     = None
-    chr_seen     = []
+    ma_table = None
+    chr_seen = []
     chr_no_table = []
-    chr_current  = None
-    chr_table    = None
+    chr_current = None
+    chr_table = None
 
     with open(infile, 'r') as vcf:
         for line in vcf:
             if line.startswith('#'):
                 continue
 
-            line        = line.rstrip().split('\t')
+            line = line.rstrip().split('\t')
             chr_current = line[0]
 
             if chr_current in chr_no_table:
@@ -123,7 +123,7 @@ def write_annot_data(infile, out):
                     print chr_seen
 
                 try:
-                    ma_table  = load_table(chr_current)
+                    ma_table = load_table(chr_current)
                 except IOError:
                     print 'no matching table found for {}'.format(chr_current)
                     chr_no_table.append(chr_current)
@@ -133,12 +133,12 @@ def write_annot_data(infile, out):
                 chr_table = chr_current
                 chr_seen.append(chr_current)
 
-            pos   = line[1]
-            ref   = line[3]
-            alt   = line[4]
-            key   = '_'.join([chr_current, pos, ref, alt])
+            pos = line[1]
+            ref = line[3]
+            alt = line[4]
+            key = '_'.join([chr_current, pos, ref, alt])
             annot = annot_lookup(key, ma_table)
-            line  = annot_insert(line, annot) + '\n'
+            line = annot_insert(line, annot) + '\n'
 
             out.write(line)
 
@@ -146,16 +146,13 @@ def write_annot_data(infile, out):
 def _main():
     ''' main function '''
 
-    with open(args.output,'w') as out:
-
+    with open(args.output, 'w') as out:
         write_hdr(args.vcf, out)
         write_annot_data(args.vcf, out)
 
 
-
 if __name__ == '__main__':
     import argparse
-
 
     parser = argparse.ArgumentParser()
 
@@ -163,13 +160,12 @@ if __name__ == '__main__':
                         required=True,
                         help='input vcf file')
     parser.add_argument('--output',
-                        required = True,
-                        help = 'output vcf file')
+                        required=True,
+                        help='output vcf file')
     parser.add_argument('--db',
-                        required = True,
-                        help = 'mutation assessor db directory')
+                        required=True,
+                        help='mutation assessor db directory')
 
     args = parser.parse_args()
 
     _main()
-

@@ -5,8 +5,9 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-import tasks
 from wgs.utils import vcf_tasks
+
+import tasks
 
 
 def create_annotation_workflow(
@@ -14,14 +15,13 @@ def create_annotation_workflow(
         annotated_vcf,
         global_config,
         varcall_config):
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='run_snpeff',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1,'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_snpeff,
         args=(
             mgd.InputFile(input_vcf),
@@ -33,8 +33,8 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_mutation_assessor',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['low'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['low'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_mutation_assessor,
         args=(
             mgd.TempInputFile('museq_annotSnpEff.vcf'),
@@ -46,8 +46,8 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_DBSNP',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_DBSNP,
         args=(
             mgd.TempInputFile('museq_annotMA.vcf'),
@@ -59,8 +59,8 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_1000gen',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_1000gen,
         args=(
             mgd.TempInputFile('museq_flagDBsnp.vcf'),
@@ -72,8 +72,8 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_cosmic',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_cosmic,
         args=(
             mgd.TempInputFile('museq_flag1000gen.vcf'),
@@ -85,14 +85,13 @@ def create_annotation_workflow(
     workflow.transform(
         name='finalize',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=vcf_tasks.finalise_vcf,
         args=(
             mgd.TempInputFile('museq_cosmic.vcf'),
             mgd.OutputFile(annotated_vcf),
         ),
     )
-
 
     return workflow

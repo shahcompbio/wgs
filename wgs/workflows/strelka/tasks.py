@@ -5,14 +5,15 @@ Created on Nov 1, 2015
 '''
 from __future__ import division
 
-import os
 import csv
 import math
+import os
+import re
+
 import pandas as pd
 import pypeliner
-import re
-import vcf
 import pysam
+import vcf
 
 FILTER_ID_BASE = 'BCNoise'
 FILTER_ID_DEPTH = 'DP'
@@ -36,23 +37,22 @@ def generate_intervals(ref, chromosomes, size=100000000):
         if name not in chromosomes:
             continue
 
-        for i in range(int((length/size)+1)):
-            intervals.append( name+ "_" + str(i*size) +"_"+ str((i+1)*size))
+        for i in range(int((length / size) + 1)):
+            intervals.append(name + "_" + str(i * size) + "_" + str((i + 1) * size))
 
     return intervals
 
 
 def _get_files_for_chrom(infiles, intervals, chrom):
-
     if not isinstance(infiles, dict):
-        infiles = {ival:infiles[ival] for ival in intervals}
+        infiles = {ival: infiles[ival] for ival in intervals}
 
     outfiles = {}
 
     for interval in intervals:
         ival_chrom = interval.split("_")[0]
 
-        if ival_chrom==chrom:
+        if ival_chrom == chrom:
             outfiles[interval] = infiles[interval]
 
     return outfiles
@@ -69,8 +69,8 @@ def get_known_chromosome_sizes(size_file):
 
     return sizes
 
-def count_fasta_bases(ref_genome_fasta_file, out_file):
 
+def count_fasta_bases(ref_genome_fasta_file, out_file):
     cmd = [
         'countFastaBases',
         ref_genome_fasta_file,
@@ -99,13 +99,12 @@ def call_somatic_variants(
         ssnv_noise=0.0000005,
         ssnv_noise_strand_bias_frac=0.5,
         ssnv_prior=0.000001):
-
     chrom, beg, end = interval.split('_')
 
     genome_size = sum(known_sizes.values())
 
     beg = int(beg)
-    beg = beg+1 if beg == 0 else beg
+    beg = beg + 1 if beg == 0 else beg
     end = int(end)
 
     cmd = [
@@ -150,9 +149,9 @@ def call_somatic_variants(
     pypeliner.commandline.execute(*cmd)
 
 
-#=======================================================================================================================
+# =======================================================================================================================
 # SNV filtering
-#=======================================================================================================================
+# =======================================================================================================================
 
 
 def filter_snv_file_list(
@@ -167,8 +166,6 @@ def filter_snv_file_list(
         max_spanning_deletion_frac=0.75,
         quality_lower_bound=15,
         use_depth_filter=True):
-
-
     known_chrom_size = known_chrom_size[chrom]
 
     in_files = _get_files_for_chrom(in_files, intervals, chrom)
@@ -225,8 +222,7 @@ def filter_snv_file_list(
                 tumour_filtered_base_call_fraction = _get_filtered_base_call_fraction(tumour.data)
 
                 if (normal_filtered_base_call_fraction >= max_filtered_basecall_frac) or \
-                   (tumour_filtered_base_call_fraction >= max_filtered_basecall_frac):
-
+                        (tumour_filtered_base_call_fraction >= max_filtered_basecall_frac):
                     record.add_filter(FILTER_ID_BASE)
 
                 # Spanning deletion fraction
@@ -235,8 +231,7 @@ def filter_snv_file_list(
                 tumour_spanning_deletion_fraction = _get_spanning_deletion_fraction(tumour.data)
 
                 if (normal_spanning_deletion_fraction > max_spanning_deletion_frac) or \
-                   (tumour_spanning_deletion_fraction > max_spanning_deletion_frac):
-
+                        (tumour_spanning_deletion_fraction > max_spanning_deletion_frac):
                     record.add_filter(FILTER_ID_SPANNING_DELETION)
 
                 # Q-val filter
@@ -250,7 +245,6 @@ def filter_snv_file_list(
 
 
 def _get_max_normal_coverage(chrom, depth_filter_multiple, known_chrom_size, stats_files):
-
     normal_coverage = _get_normal_coverage(stats_files.values())
 
     normal_mean_coverage = normal_coverage / known_chrom_size
@@ -302,9 +296,10 @@ def _get_spanning_deletion_fraction(data):
 
     return frac
 
-#=======================================================================================================================
+
+# =======================================================================================================================
 # Indel filtering
-#=======================================================================================================================
+# =======================================================================================================================
 
 
 def filter_indel_file_list(
@@ -321,7 +316,6 @@ def filter_indel_file_list(
         max_window_filtered_basecall_frac=0.3,
         quality_lower_bound=30,
         use_depth_filter=True):
-
     window_cols = (
         'chrom',
         'coord',
@@ -348,7 +342,7 @@ def filter_indel_file_list(
             window = pd.read_csv(
                 window_files[key],
                 comment='#',
-                        converters={'chrom': str},
+                converters={'chrom': str},
                 header=None,
                 names=window_cols,
                 sep='\t')
@@ -473,8 +467,7 @@ def filter_indel_file_list(
                 tumour_filtered_base_call_fraction = _get_filtered_base_call_fraction_indel(tumour.data)
 
                 if (normal_filtered_base_call_fraction >= max_window_filtered_basecall_frac) or \
-                   (tumour_filtered_base_call_fraction >= max_window_filtered_basecall_frac):
-
+                        (tumour_filtered_base_call_fraction >= max_window_filtered_basecall_frac):
                     record.add_filter(FILTER_ID_BASE)
 
                 # Q-val filter
@@ -502,9 +495,9 @@ def _get_filtered_base_call_fraction_indel(data):
     return frac
 
 
-#=======================================================================================================================
+# =======================================================================================================================
 # Indel and SNV Flagging
-#=======================================================================================================================
+# =======================================================================================================================
 
 def run_snpeff(infile, output, config):
     '''
@@ -592,13 +585,14 @@ def run_cosmic(infile, output, config):
 
     pypeliner.commandline.execute(*cmd)
 
-#=======================================================================================================================
+
+# =======================================================================================================================
 # Parse strelka vcf into csv format
-#=======================================================================================================================
+# =======================================================================================================================
 
 def parse_strelka(infile, output):
     parser = ParseStrelka(infile=infile, tid='NA', nid='NA', output=output,
-                        keep_dbsnp=True,keep_1000gen=True,
-                        remove_duplicates=True)
+                          keep_dbsnp=True, keep_1000gen=True,
+                          remove_duplicates=True)
 
     parser.main()

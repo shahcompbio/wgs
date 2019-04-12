@@ -1,11 +1,10 @@
 import os
-import pypeliner
-import multiprocessing
-import subprocess
-from wgs.utils import vcfutils, helpers
-import pysam
 import tarfile
+
 import pandas as pd
+import pypeliner
+import pysam
+from wgs.utils import vcfutils, helpers
 
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
@@ -20,10 +19,11 @@ def generate_intervals(ref, chromosomes, size=1000000):
     for name, length in zip(names, lengths):
         if name not in chromosomes:
             continue
-        for i in range(int((length/size)+1)):
-            intervals.append( name+ "_" + str(i*size) +"_"+ str((i+1)*size))
+        for i in range(int((length / size) + 1)):
+            intervals.append(name + "_" + str(i * size) + "_" + str((i + 1) * size))
 
     return intervals
+
 
 def run_museq(tumour_bam, normal_bam, out, log, reference, interval, museq_params):
     '''
@@ -40,7 +40,7 @@ def run_museq(tumour_bam, normal_bam, out, log, reference, interval, museq_param
     interval = interval.split('_')
     interval = interval[0] + ':' + interval[1] + '-' + interval[2]
 
-    cmd = ['museq_het','normal:' + normal_bam, 'tumour:' + tumour_bam,
+    cmd = ['museq_het', 'normal:' + normal_bam, 'tumour:' + tumour_bam,
            'reference:' + reference, '--out', out,
            '--log', log, '--interval', interval, '--verbose']
 
@@ -57,9 +57,9 @@ def run_museq(tumour_bam, normal_bam, out, log, reference, interval, museq_param
     pypeliner.commandline.execute(*cmd)
 
 
-
 def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
+
 
 def convert_museq_vcf2counts(infile, outfile, config):
     '''
@@ -74,7 +74,7 @@ def convert_museq_vcf2counts(infile, outfile, config):
     positions_file = config['dbsnp_positions']
 
     cmd = ['python', script, '--infile', infile, '--outfile', outfile,
-            '--positions_file', positions_file]
+           '--positions_file', positions_file]
 
     pypeliner.commandline.execute(*cmd)
 
@@ -115,8 +115,8 @@ def calc_correctreads_wig(tumour_wig, normal_wig, outfile, config):
     target_list = 'NULL'
     genome_type = config['titan_params']['genome_type']
 
-    cmd = ['Rscript', script, tumour_wig, normal_wig, gc, map_wig, 
-            target_list, outfile, genome_type]
+    cmd = ['Rscript', script, tumour_wig, normal_wig, gc, map_wig,
+           target_list, outfile, genome_type]
 
     pypeliner.commandline.execute(*cmd)
 
@@ -138,9 +138,11 @@ def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_
 
     pypeliner.commandline.execute(*cmd)
 
+
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
 
 def plot_titan(obj_file, titan_input, output, tempdir, config, num_clusters, ploidy):
     script = os.path.join(scripts_directory, 'plot_titan.R')
@@ -153,6 +155,7 @@ def plot_titan(obj_file, titan_input, output, tempdir, config, num_clusters, plo
 
     make_tarfile(output, tempdir)
 
+
 def calc_cnsegments_titan(infile, outigv, outfile):
     script = os.path.join(scripts_directory, 'createTITANsegmentfiles.pl')
 
@@ -160,8 +163,8 @@ def calc_cnsegments_titan(infile, outigv, outfile):
     symmetric = '1'
 
     cmd = ['perl', script, '-id=' + sample_id, '-infile=' + infile,
-            '-outfile=' + outfile, '-outIGV=' + outigv, 
-            '-symmetric=' + symmetric]
+           '-outfile=' + outfile, '-outIGV=' + outigv,
+           '-symmetric=' + symmetric]
 
     helpers.run_cmd(cmd)
 
@@ -171,10 +174,9 @@ def annot_pygenes(infile, outfile, config):
     gene_sets_gtf = config['pygenes_gtf']
 
     cmd = ['python', script, '--infile', infile, '--outfile', outfile,
-            '--gene_sets_gtf', gene_sets_gtf]
+           '--gene_sets_gtf', gene_sets_gtf]
 
     helpers.run_cmd(cmd)
-
 
 
 def merge_to_h5(inputs, output, intervals, dtype=None):
@@ -201,35 +203,36 @@ def merge_to_h5(inputs, output, intervals, dtype=None):
             tablename = '/cluster_{}/ploidy_{}'.format(num_clusters, ploidy)
             h5output.put(tablename, input_df, format='table')
 
+
 def parse_titan(infile, params_file, titan_file, output, config, sample_id):
-        '''
-        Parse the input VCF file into a TSV file
+    '''
+    Parse the input VCF file into a TSV file
 
-        :param infile: temporary input VCF file
-        :param output: path to the output TSV file
-        '''
+    :param infile: temporary input VCF file
+    :param output: path to the output TSV file
+    '''
 
-        cmd = [
-            'vizutils_parse_titan',
-            '--infile', infile,
-            '--paramsfile', params_file,
-            '--titanfile', titan_file,
-            '--output', output,
-            '--case_id', sample_id,
-            '--tumour_id', sample_id,
-            '--normal_id', sample_id + 'N',
-        ]
+    cmd = [
+        'vizutils_parse_titan',
+        '--infile', infile,
+        '--paramsfile', params_file,
+        '--titanfile', titan_file,
+        '--output', output,
+        '--case_id', sample_id,
+        '--tumour_id', sample_id,
+        '--normal_id', sample_id + 'N',
+    ]
 
-        for key, val in config.iteritems():
-            if val is None:
-                continue
-            elif isinstance(val, bool):
-                if val:
-                    cmd.append('--{}'.format(key))
-            else:
+    for key, val in config.iteritems():
+        if val is None:
+            continue
+        elif isinstance(val, bool):
+            if val:
                 cmd.append('--{}'.format(key))
-                if isinstance(val, list):
-                    cmd.extend(val)
-                else:
-                    cmd.append(val)
-        pypeliner.commandline.execute(*cmd)
+        else:
+            cmd.append('--{}'.format(key))
+            if isinstance(val, list):
+                cmd.extend(val)
+            else:
+                cmd.append(val)
+    pypeliner.commandline.execute(*cmd)

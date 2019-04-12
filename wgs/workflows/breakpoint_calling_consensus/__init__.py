@@ -5,6 +5,7 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
+
 import tasks
 
 
@@ -15,14 +16,13 @@ def create_consensus_workflow(
         global_config,
         svcalling_config,
         sample_id):
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='parse_lumpy',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1,'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.parse_lumpy,
         args=(
             mgd.InputFile(lumpy_vcf),
@@ -33,12 +33,11 @@ def create_consensus_workflow(
         ),
     )
 
-
     workflow.transform(
         name='parse_destruct',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': 1,'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.parse_destruct,
         args=(
             mgd.InputFile(destruct_breakpoints),

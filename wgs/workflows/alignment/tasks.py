@@ -1,19 +1,21 @@
-import pypeliner
 import os
+
+import pypeliner
+
 
 def markdups(input, output, metrics, tempdir):
     cmd = ['picard', '-Xmx4G', '-Xms4G',
-            '-XX:ParallelGCThreads=1',
-            'MarkDuplicates',
-            'INPUT=' + input,
-            'OUTPUT=' + output,
-            'METRICS_FILE=' + metrics,
-            'REMOVE_DUPLICATES=False',
-            'ASSUME_SORTED=True',
-            'VALIDATION_STRINGENCY=LENIENT',
-            'TMP_DIR=' + tempdir,
-            'MAX_RECORDS_IN_RAM=150000'
-            ]
+           '-XX:ParallelGCThreads=1',
+           'MarkDuplicates',
+           'INPUT=' + input,
+           'OUTPUT=' + output,
+           'METRICS_FILE=' + metrics,
+           'REMOVE_DUPLICATES=False',
+           'ASSUME_SORTED=True',
+           'VALIDATION_STRINGENCY=LENIENT',
+           'TMP_DIR=' + tempdir,
+           'MAX_RECORDS_IN_RAM=150000'
+           ]
 
     pypeliner.commandline.execute(*cmd)
 
@@ -39,7 +41,6 @@ def picard_merge_bams(inputs, output, mem="2G", **kwargs):
 
 
 def bam_index(infile, outfile, **kwargs):
-
     pypeliner.commandline.execute(
         'samtools', 'index',
         infile,
@@ -55,7 +56,6 @@ def merge_bams(inputs, output, output_index, containers):
 
 
 def align_bwa_mem(read_1, read_2, ref_genome, aligned_bam, threads, sample_id=None, lane_id=None, read_group_info=None):
-
     if read_group_info:
         rg_id = read_group_info['ID'].format(**{'sample_id': sample_id, 'lane_id': lane_id})
         read_group = ['@RG', 'ID:{0}'.format(rg_id)]

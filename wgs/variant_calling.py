@@ -1,11 +1,12 @@
 import os
+
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import mutationseq
 from wgs.workflows import strelka
-from wgs.workflows import vcf_annotation
 from wgs.workflows import variant_calling_consensus
+from wgs.workflows import vcf_annotation
 
 
 def call_variants(
@@ -15,19 +16,19 @@ def call_variants(
         museq_paired_pdf, museq_single_pdf,
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
-                         for sampid in samples])
+                            for sampid in samples])
     strelka_indel_vcf = dict([(sampid, strelka_indel_vcf[sampid])
-                         for sampid in samples])
+                              for sampid in samples])
     museq_vcf = dict([(sampid, museq_vcf[sampid])
-                         for sampid in samples])
+                      for sampid in samples])
     museq_ss_vcf = dict([(sampid, museq_ss_vcf[sampid])
                          for sampid in samples])
     museq_paired_pdf = dict([(sampid, museq_paired_pdf[sampid])
-                         for sampid in samples])
+                             for sampid in samples])
     museq_single_pdf = dict([(sampid, museq_single_pdf[sampid])
-                         for sampid in samples])
+                             for sampid in samples])
     parsed_csv = dict([(sampid, parsed_csv[sampid])
-                         for sampid in samples])
+                       for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -92,7 +93,7 @@ def call_variants(
         args=(
             mgd.TempInputFile("museq_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_snv_ann.vcf.gz', 'sample_id',
-                               extensions=['.csi','.tbi'], fnames=museq_vcf),
+                           extensions=['.csi', '.tbi'], fnames=museq_vcf),
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
@@ -105,7 +106,7 @@ def call_variants(
         args=(
             mgd.TempInputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_germlines_ann.vcf.gz', 'sample_id',
-                               extensions=['.csi','.tbi'], fnames=museq_ss_vcf),
+                           extensions=['.csi', '.tbi'], fnames=museq_ss_vcf),
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
@@ -118,7 +119,7 @@ def call_variants(
         args=(
             mgd.TempInputFile("strelka_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('strelka_snv_ann.vcf.gz', 'sample_id',
-                               extensions=['.csi','.tbi'], fnames=strelka_snv_vcf),
+                           extensions=['.csi', '.tbi'], fnames=strelka_snv_vcf),
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
@@ -131,7 +132,7 @@ def call_variants(
         args=(
             mgd.TempInputFile("strelka_indel.vcf.gz", 'sample_id'),
             mgd.OutputFile('strelka_indel_ann.vcf.gz', 'sample_id',
-                               extensions=['.csi','.tbi'], fnames=strelka_indel_vcf),
+                           extensions=['.csi', '.tbi'], fnames=strelka_indel_vcf),
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),

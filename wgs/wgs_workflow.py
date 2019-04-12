@@ -1,13 +1,15 @@
-from variant_calling import call_variants
-from sv_calling import call_breakpoints
-from cna_calling import call_copynumber
-import pypeliner
-from wgs.utils import helpers
 import os
+
+import pypeliner
 import pypeliner.managed as mgd
+from wgs.utils import helpers
+
 from alignment import paired_alignment
-from workflows import titan
+from sv_calling import call_breakpoints
+from variant_calling import call_variants
 from workflows import remixt
+from workflows import titan
+
 
 def get_fastqs(inputs, samples, sample_type):
     fq1 = {}

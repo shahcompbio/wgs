@@ -3,17 +3,16 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 """
-import os
-import pypeliner
-import pypeliner.managed as mgd
-from cmdline import parse_args
-from variant_calling import variant_calling_workflow
-from sv_calling import sv_calling_workflow
-from cna_calling import cna_calling_workflow
-from wgs_workflow import wgs_workflow
-from alignment import alignment_workflow
-from wgs.config import pipeline_config
 from wgs.config import batch_config
+from wgs.config import pipeline_config
+
+from alignment import alignment_workflow
+from cmdline import parse_args
+from cna_calling import cna_calling_workflow
+from sv_calling import sv_calling_workflow
+from variant_calling import variant_calling_workflow
+from wgs_workflow import wgs_workflow
+
 
 def generate_config(args):
     if args['which'] == 'generate_config':
@@ -58,5 +57,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

@@ -5,15 +5,17 @@ Created on Oct 31, 2015
 '''
 # from pypeliner.workflow import Workflow
 
-import os
 import itertools
+import os
+import shutil
+
 import pandas as pd
 import pypeliner
-import shutil
 # import time
 import vcf
 
 from components_utils import flatten_input
+
 
 # from ._merge import merge_vcfs
 
@@ -201,15 +203,14 @@ def split_vcf(in_file, out_file_callback, lines_per_file):
 
 
 def convert_vcf_to_hdf5(in_file, out_file, table_name, score_callback=None):
-
     def line_group(line, line_idx=itertools.count()):
         return int(next(line_idx) / chunk_size)
 
     chunk_size = 1000
 
-    #===================================================================================================================
+    # ===================================================================================================================
     # find all entries in categories
-    #===================================================================================================================
+    # ===================================================================================================================
     reader = vcf.Reader(filename=in_file)
 
     chrom_categories = set()
@@ -225,7 +226,6 @@ def convert_vcf_to_hdf5(in_file, out_file, table_name, score_callback=None):
         ref_categories.add(str(record.REF))
 
         for alt in record.ALT:
-
             alt_categories.add(str(alt))
 
     chrom_categories = sorted(chrom_categories)
@@ -234,9 +234,9 @@ def convert_vcf_to_hdf5(in_file, out_file, table_name, score_callback=None):
 
     alt_categories = sorted(alt_categories)
 
-    #===================================================================================================================
+    # ===================================================================================================================
     # convert
-    #===================================================================================================================
+    # ===================================================================================================================
 
     # reopen reader to restart iter
     reader = vcf.Reader(filename=in_file)
@@ -285,7 +285,6 @@ def convert_vcf_to_hdf5(in_file, out_file, table_name, score_callback=None):
 
 
 def sort_vcf(in_file, out_file):
-
     pypeliner.commandline.execute(
         'vcf-sort',
         in_file,

@@ -1,9 +1,10 @@
 import os
+
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.workflows import titan
 from wgs.workflows import remixt
+from wgs.workflows import titan
 
 
 def call_copynumber(
@@ -12,13 +13,13 @@ def call_copynumber(
         remixt_raw_dir, titan_segments, titan_params, titan_markers
 ):
     breakpoints = dict([(sampid, breakpoints[sampid])
-                       for sampid in samples])
+                        for sampid in samples])
     remixt_results = dict([(sampid, remixt_results[sampid])
-                          for sampid in samples])
+                           for sampid in samples])
     titan_segments = dict([(sampid, titan_segments[sampid])
-                          for sampid in samples])
+                           for sampid in samples])
     titan_params = dict([(sampid, titan_params[sampid])
-                          for sampid in samples])
+                         for sampid in samples])
     titan_markers = dict([(sampid, titan_markers[sampid])
                           for sampid in samples])
 

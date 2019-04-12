@@ -1,10 +1,11 @@
 import os
+
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
+from wgs.workflows import breakpoint_calling_consensus
 from wgs.workflows import destruct
 from wgs.workflows import lumpy
-from wgs.workflows import breakpoint_calling_consensus
 
 
 def call_breakpoints(
@@ -15,17 +16,17 @@ def call_breakpoints(
     destruct_raw_breakpoints = dict([(sampid, destruct_raw_breakpoints[sampid])
                                      for sampid in samples])
     destruct_raw_library = dict([(sampid, destruct_raw_library[sampid])
-                                for sampid in samples])
+                                 for sampid in samples])
     destruct_breakpoints = dict([(sampid, destruct_breakpoints[sampid])
-                                for sampid in samples])
+                                 for sampid in samples])
     destruct_library = dict([(sampid, destruct_library[sampid])
-                            for sampid in samples])
+                             for sampid in samples])
     destruct_reads = dict([(sampid, destruct_reads[sampid])
-                          for sampid in samples])
-    lumpy_vcf = dict([(sampid, lumpy_vcf[sampid])
-                     for sampid in samples])
-    consensus_calls = dict([(sampid, consensus_calls[sampid])
                            for sampid in samples])
+    lumpy_vcf = dict([(sampid, lumpy_vcf[sampid])
+                      for sampid in samples])
+    consensus_calls = dict([(sampid, consensus_calls[sampid])
+                            for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
 

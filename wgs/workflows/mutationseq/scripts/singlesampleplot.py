@@ -12,6 +12,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 import numpy as np
 
+
 class PlotSingleSample(object):
     def __init__(self, variants, thousand_genomes, dbsnp, concordance_ref, outpdf, threshold):
         self.variants = variants

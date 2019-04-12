@@ -6,8 +6,8 @@ last_updated: 12 Feb 16 by dgrewal
 '''
 import argparse
 import os
-from collections import defaultdict
 import warnings
+from collections import defaultdict
 
 version = '1.3.1'
 
@@ -42,7 +42,7 @@ def load_chromosome(db, chromosome):
         if len(line.split()[3]) > len(line.split()[4]):
             pos = resolve_db_position(args.input_type, int(pos))
 
-        chrom.replace('chr','')
+        chrom.replace('chr', '')
         key = ','.join([chrom, str(pos)])
 
         if args.flag_with_id:
@@ -66,7 +66,7 @@ def load_genome(db):
     else:
         f = open(db, 'r')
 
-    db_dict   = defaultdict(list)
+    db_dict = defaultdict(list)
     is_db_vcf = False
 
     for line in f:
@@ -83,7 +83,7 @@ def load_genome(db):
         if len(line.split()[3]) > len(line.split()[4]):
             pos = resolve_db_position(args.input_type, int(pos))
 
-        chrom.replace('chr','')
+        chrom.replace('chr', '')
         key = ','.join([chrom, str(pos)])
 
         if args.flag_with_id:
@@ -113,7 +113,7 @@ def load_db_positions(db_file, chrom):
 def write_header(out):
     ''' write the header for the output vcf '''
 
-    db_hdr =  '##{}_DB={}\n'.format(args.label, os.path.abspath(args.db))
+    db_hdr = '##{}_DB={}\n'.format(args.label, os.path.abspath(args.db))
     db_hdr += '##INFO=<ID={0},Number=.,Type=String,Description="{0} flag">\n'.format(args.label)
 
     with open(args.infile, 'r') as f:
@@ -133,7 +133,7 @@ def write_header(out):
 def flag_positions(chromosome, db_file):
     ''' flag the positions '''
 
-    db_dict  =  None
+    db_dict = None
 
     with open(args.out, 'w') as out:
 
@@ -147,7 +147,7 @@ def flag_positions(chromosome, db_file):
 
                 line = line.rstrip().split('\t')
                 chrom, pos = line[0:2]
-                chrom = chrom.replace('chr','')
+                chrom = chrom.replace('chr', '')
 
                 if chromosome and chrom != chromosome:
                     continue
@@ -157,7 +157,7 @@ def flag_positions(chromosome, db_file):
 
                 info = line[7]
 
-                key   = ','.join([chrom, pos])
+                key = ','.join([chrom, pos])
                 value = db_dict[1].get(key)
 
                 if value:
@@ -167,20 +167,19 @@ def flag_positions(chromosome, db_file):
 
                 info = '{};{}={}'.format(info, args.label, flag)
                 line[7] = info
-                line = '\t'.join(line)+'\n'
+                line = '\t'.join(line) + '\n'
                 out.write(line)
 
 
 def main():
     ''' main function '''
 
-#    db_dict = load_db_positions(args.db, args.chrom)
+    #    db_dict = load_db_positions(args.db, args.chrom)
     flag_positions(args.chrom, args.db)
 
 
 if __name__ == '__main__':
-
-    chromosomes = map(str,range(1,23))
+    chromosomes = map(str, range(1, 23))
     chromosomes.append('X')
     chromosomes.append('Y')
 
@@ -189,39 +188,38 @@ if __name__ == '__main__':
                                                     file if it exists in a specified database''')
 
     parser.add_argument("--infile",
-                   required=True,
-                   help='''specify the path/to/VCF-formatted-input-file.vcf''')
+                        required=True,
+                        help='''specify the path/to/VCF-formatted-input-file.vcf''')
 
     parser.add_argument("--input_type",
-                   required=True,
-                   choices=['indel','snv'],
-                   help='''snv or indel''')
+                        required=True,
+                        choices=['indel', 'snv'],
+                        help='''snv or indel''')
 
     parser.add_argument("--db",
-                   required=True,
-                   help='''specify the /path/to/db_file to be
+                        required=True,
+                        help='''specify the /path/to/db_file to be
                    used as a reference to determine whether
                    positions in input file is also in db''')
 
     parser.add_argument("--out",
-                   required=True,
-                   help='''specify the /path/to/out.vcf to save output to a file''')
+                        required=True,
+                        help='''specify the /path/to/out.vcf to save output to a file''')
 
     parser.add_argument("--label",
-                   required=True,
-                   help='''specify a label to be used e.g. "<label>=T"''')
+                        required=True,
+                        help='''specify a label to be used e.g. "<label>=T"''')
 
     parser.add_argument("--flag_with_id",
-                   action='store_true',
-                   help='''use a list of ids as the flag for presence in the database
+                        action='store_true',
+                        help='''use a list of ids as the flag for presence in the database
                            instead of 'T' ''')
 
     parser.add_argument("--chrom",
-                   required=False,
-                   choices=chromosomes,
-                   default=None,
-                   help='''chromosome''')
-
+                        required=False,
+                        choices=chromosomes,
+                        default=None,
+                        help='''chromosome''')
 
     args, unknown = parser.parse_known_args()
 

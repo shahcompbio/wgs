@@ -1,14 +1,15 @@
 import os
-import tasks
-import pypeliner
-import pypeliner.managed as mgd
-import biowrappers
 
+import biowrappers
 import biowrappers.components
 import biowrappers.components.io
-import biowrappers.components.io.fastq.tasks
 import biowrappers.components.io.bam.tasks
+import biowrappers.components.io.fastq.tasks
 import biowrappers.pipelines.realignment.tasks
+import pypeliner
+import pypeliner.managed as mgd
+
+import tasks
 
 
 def align_samples(
@@ -17,7 +18,6 @@ def align_samples(
         fastq2_inputs,
         bam_outputs,
         outdir):
-
     samples = bam_outputs.keys()
 
     workflow = pypeliner.workflow.Workflow()
@@ -45,7 +45,6 @@ def align_samples(
 
 
 def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
-
     ref_genome = pypeliner.managed.InputFile(config['ref_genome']['file'])
 
     read_group_config = config.get('read_group', {})
@@ -53,7 +52,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
     markdups_metrics = os.path.join(outdir, 'markdups_metrics.pdf')
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
-    out_bai = out_file+'.bai'
+    out_bai = out_file + '.bai'
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -64,7 +63,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='split_fastq_1',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '12:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '12:00'},
         func=biowrappers.components.io.fastq.tasks.split_fastq,
         args=(
             pypeliner.managed.InputFile(fastq_1),
@@ -75,7 +74,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='split_fastq_2',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '12:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '12:00'},
         func=biowrappers.components.io.fastq.tasks.split_fastq,
         args=(
             pypeliner.managed.InputFile(fastq_2),
@@ -102,7 +101,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
     workflow.transform(
         name='sort',
         axes=('split',),
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '08:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
         func=biowrappers.components.io.bam.tasks.sort,
         args=(
             pypeliner.managed.TempInputFile('aligned.bam', 'split'),
@@ -112,7 +111,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='merge',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '24:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '24:00'},
         func=biowrappers.components.io.bam.tasks.merge,
         args=(
             pypeliner.managed.TempInputFile('sorted.bam', 'split'),
@@ -122,7 +121,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='markdups',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '24:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '24:00'},
         func=tasks.markdups,
         args=(
             pypeliner.managed.TempInputFile('merged.bam'),
@@ -134,7 +133,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.commandline(
         name='index',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '08:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
         args=(
             'samtools',
             'index',
@@ -145,7 +144,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.commandline(
         name='flagstat',
-        ctx={'mem': 4, 'ncpus':1, 'walltime': '08:00'},
+        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
         args=(
             'samtools',
             'flagstat',

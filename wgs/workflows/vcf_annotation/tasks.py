@@ -4,10 +4,12 @@ Created on Feb 21, 2018
 @author: pwalters
 '''
 import os
+
 import pypeliner
 
 scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
+
 
 def run_snpeff(infile, output, config):
     '''
@@ -99,11 +101,11 @@ def run_cosmic(infile, output, config):
 
     pypeliner.commandline.execute(*cmd)
 
+
 def finalize_vcf(infile, outfile, config):
-
-     raise NotImplementedError()
-
     # run  cat infile vcf-sort > temp_sorted
     # run  bgzip temp_sorted > outfile (infile + '.gz')
     # run  bcftools index outfile
     # run tabix -f -p vcf outfile
+    raise NotImplementedError()
+

@@ -3,9 +3,9 @@ Created on Nov 20, 2015
 
 @author: Andrew Roth
 '''
+import csv
 from collections import namedtuple
 
-import csv
 import pysam
 
 from components_utils import flatten_input
@@ -65,6 +65,7 @@ def write_header(fh):
     header = '\t'.join(header)
 
     fh.write('#{0}\n'.format(header))
+
 
 LightVCFRecord = namedtuple('LightVCFRecord', ['chrom', 'coord', 'ref', 'alt'])
 

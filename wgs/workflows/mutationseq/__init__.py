@@ -5,8 +5,9 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-import tasks
 from wgs.utils import vcf_tasks
+
+import tasks
 
 
 def create_museq_workflow(
@@ -16,7 +17,6 @@ def create_museq_workflow(
         varcall_config,
         tumour_bam=None,
         normal_bam=None):
-
     single = False if tumour_bam and normal_bam else True
 
     workflow = pypeliner.workflow.Workflow()
@@ -38,13 +38,13 @@ def create_museq_workflow(
         workflow.transform(
             name='run_museq_unpaired_tumour',
             ctx={'num_retry': 3, 'mem_retry_increment': 2,
-                'mem': global_config['memory']['high'],
-                'ncpus': global_config['threads'],
-                'walltime': '24:00'},
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '24:00'},
             axes=('interval',),
             func=tasks.run_museq,
             args=(
-                mgd.TempOutputFile('museq.vcf','interval'),
+                mgd.TempOutputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('museq.log', 'interval'),
                 varcall_config['reference'],
                 mgd.InputInstance('interval'),
@@ -59,9 +59,9 @@ def create_museq_workflow(
         workflow.transform(
             name='run_museq_unpaired_normal',
             ctx={'num_retry': 3, 'mem_retry_increment': 2,
-                'mem': global_config['memory']['high'],
-                'ncpus': global_config['threads'],
-                'walltime': '24:00'},
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '24:00'},
             axes=('interval',),
             func=tasks.run_museq,
             args=(
@@ -80,9 +80,9 @@ def create_museq_workflow(
         workflow.transform(
             name='run_museq_paired',
             ctx={'num_retry': 3, 'mem_retry_increment': 2,
-                'mem': global_config['memory']['high'],
-                'ncpus': global_config['threads'],
-                'walltime': '24:00'},
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '24:00'},
             axes=('interval',),
             func=tasks.run_museq,
             args=(
@@ -101,9 +101,9 @@ def create_museq_workflow(
     workflow.transform(
         name='merge_vcfs',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['high'],
-            'ncpus': global_config['threads'],
-            'walltime': '08:00'},
+             'mem': global_config['memory']['high'],
+             'ncpus': global_config['threads'],
+             'walltime': '08:00'},
         func=tasks.merge_vcfs,
         args=(
             mgd.TempInputFile('museq.vcf', 'interval'),
@@ -111,7 +111,6 @@ def create_museq_workflow(
             mgd.TempSpace('merge_vcf'),
         )
     )
-
 
     workflow.transform(
         name='finalise_snvs',
@@ -126,8 +125,8 @@ def create_museq_workflow(
     workflow.transform(
         name='run_museqportrait',
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
-            'mem': global_config['memory']['low'],
-            'ncpus': 1, 'walltime': '08:00'},
+             'mem': global_config['memory']['low'],
+             'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_museqportrait,
         args=(
             mgd.InputFile(snv_vcf),

@@ -1,16 +1,11 @@
-from pypeliner.workflow import Workflow
-
-import csv
-import pypeliner
 import pypeliner.managed as mgd
 import pysam
-
-from strelkautils import default_chromosomes
+from pypeliner.workflow import Workflow
 
 import strelkautils as utils
-import vcf_tasks
 import tasks
-import os
+import vcf_tasks
+from strelkautils import default_chromosomes
 
 
 def create_strelka_workflow(

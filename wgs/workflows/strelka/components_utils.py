@@ -3,10 +3,10 @@ Created on Nov 21, 2015
 
 @author: Andrew Roth
 '''
+import errno
 import os
 import random
 import time
-import errno
 
 
 def find(name, path):
@@ -116,6 +116,7 @@ def symlink(filename, link_name=None, link_directory=None):
     filename = os.path.abspath(filename)
     os.symlink(filename, link_filename)
     return link_filename
+
 
 if __name__ == '__main__':
     import doctest

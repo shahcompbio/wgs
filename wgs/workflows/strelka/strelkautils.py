@@ -5,10 +5,9 @@ Created on Oct 31, 2015
 '''
 from collections import OrderedDict
 
+import pandas as pd
 import pysam
 import vcf
-import pandas as pd
-
 
 default_chromosomes = [str(x) for x in range(1, 23)] + ['X', 'Y']
 

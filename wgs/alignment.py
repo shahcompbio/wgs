@@ -1,9 +1,8 @@
-import os
 import pypeliner
-from workflows import alignment
-from wgs.utils import helpers
 import pypeliner.managed as mgd
+from wgs.utils import helpers
 
+from workflows import alignment
 
 
 def paired_alignment(
@@ -12,13 +11,13 @@ def paired_alignment(
         outdir_template_normal, outdir_template_tumour
 ):
     tumours = dict([(sampid, tumours[sampid])
-                   for sampid in samples])
+                    for sampid in samples])
     normals = dict([(sampid, normals[sampid])
-                   for sampid in samples])
-    tumours_index = dict([(sampid, tumours[sampid]+'.bai')
-                   for sampid in samples])
-    normals_index = dict([(sampid, normals[sampid]+'.bai')
-                   for sampid in samples])
+                    for sampid in samples])
+    tumours_index = dict([(sampid, tumours[sampid] + '.bai')
+                          for sampid in samples])
+    normals_index = dict([(sampid, normals[sampid] + '.bai')
+                          for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -42,7 +41,7 @@ def paired_alignment(
         args=(
             config,
             mgd.InputFile('input.r1.fastq.gz', 'tum_sample_id', 'tum_lane', fnames=tumour_fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'tum_sample_id', 'tum_lane',fnames=tumour_fastqs_r2),
+            mgd.InputFile('input.r2.fastq.gz', 'tum_sample_id', 'tum_lane', fnames=tumour_fastqs_r2),
             mgd.TempOutputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
             mgd.Template(outdir_template_tumour, 'tum_sample_id', 'tum_lane'),
             [mgd.InputInstance('tum_sample_id'),
@@ -70,7 +69,7 @@ def paired_alignment(
         args=(
             config,
             mgd.InputFile('input.r1.fastq.gz', 'norm_sample_id', 'norm_lane', fnames=normal_fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'norm_sample_id', 'norm_lane',fnames=normal_fastqs_r2),
+            mgd.InputFile('input.r2.fastq.gz', 'norm_sample_id', 'norm_lane', fnames=normal_fastqs_r2),
             mgd.TempOutputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
             mgd.Template(outdir_template_normal, 'norm_sample_id', 'norm_lane'),
             [mgd.InputInstance('norm_sample_id'),

@@ -11,8 +11,9 @@ https://bitbucket.org/aroth85/biowrappers/src/b6746d3584f702e7a81fef55afa2e56514
 
 """
 
-import pandas as pd
 import destruct.balanced
+import pandas as pd
+
 
 def classify_rearrangement_type(entry):
     break1 = entry['position_1']
@@ -39,6 +40,7 @@ def annotate_rearrangement_type(df):
     for idx, row in df.iterrows():
         rearrangement_types.append(classify_rearrangement_type(row))
     df['rearrangement_type'] = rearrangement_types
+
 
 def filter_annotate_breakpoints(
         input_breakpoint_filename,
@@ -82,10 +84,10 @@ def filter_annotate_breakpoints(
 
     num_patients = (
         brklib[['prediction_id', 'patient_id']]
-        .drop_duplicates()
-        .groupby('prediction_id')
-        .size()
-        .rename('num_patients')
+            .drop_duplicates()
+            .groupby('prediction_id')
+            .size()
+            .rename('num_patients')
     )
 
     # Mark as germline any prediction with nonzero normal reads
@@ -132,12 +134,12 @@ def filter_annotate_breakpoints(
 
         return data['dist_filtered']
 
-    dist_filtered = brkend.set_index(['prediction_id', 'side'])\
-                          .groupby(['chromosome', 'strand'])\
-                          .apply(calculate_dist_filtered)\
-                          .reset_index(level=[0, 1], drop=True)\
-                          .unstack(level=1)\
-                          .min(axis=1)
+    dist_filtered = brkend.set_index(['prediction_id', 'side']) \
+        .groupby(['chromosome', 'strand']) \
+        .apply(calculate_dist_filtered) \
+        .reset_index(level=[0, 1], drop=True) \
+        .unstack(level=1) \
+        .min(axis=1)
 
     brk.set_index('prediction_id', inplace=True)
     brk['dist_filtered'] = dist_filtered

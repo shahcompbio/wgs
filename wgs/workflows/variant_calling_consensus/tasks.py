@@ -29,7 +29,7 @@ def parse_museq(infile, output, low_map_filt_output, config):
 def parse_strelka(infile, output, low_map_filt_output, config):
     cmd = ['vizutils_parse_strelka', '--infile', infile,
            '--pre_mappability_output', output,
-           '--output', low_map_filt_output,]
+           '--output', low_map_filt_output, ]
 
     for key, val in config.iteritems():
         if isinstance(val, bool):
@@ -43,10 +43,11 @@ def parse_strelka(infile, output, low_map_filt_output, config):
                 cmd.append(val)
     pypeliner.commandline.execute(*cmd)
 
+
 def merge_overlap(infiles, outfile):
     cmd = ['vizutils_merge', '--output', outfile, 'merge_overlap',
            '--input1', infiles[0], '--input2', infiles[1],
-           '--suffix1', 'strelka',  '--key_cols', 'case_id',
+           '--suffix1', 'strelka', '--key_cols', 'case_id',
            'chromosome', 'start', 'stop', 'ref', 'alt']
 
     pypeliner.commandline.execute(*cmd)

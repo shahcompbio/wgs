@@ -15,7 +15,7 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, samp
            '--output', low_map_filt_output,
            '--case_id', sample_id,
            '--tumour_id', sample_id,
-           '--normal_id', sample_id+'N',
+           '--normal_id', sample_id + 'N',
            ]
 
     for key, val in config.iteritems():
@@ -52,4 +52,3 @@ def parse_lumpy(infile, output, low_map_filt_output, config, sample_id):
             else:
                 cmd.append(val)
     pypeliner.commandline.execute(*cmd)
-
