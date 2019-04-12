@@ -121,7 +121,7 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='markdups',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '24:00'},
+        ctx={'mem': 8, 'ncpus': 1, 'walltime': '24:00'},
         func=tasks.markdups,
         args=(
             pypeliner.managed.TempInputFile('merged.bam'),
