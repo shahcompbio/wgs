@@ -203,7 +203,7 @@ def luna_config(reference):
 def azure_config(reference):
 
     if reference == 'grch37':
-        reference = "/datadrive/refdata/GRCh37-lite.fa"
+        reference = "/refdata/GRCh37-lite.fa"
     else:
         reference = None
 
@@ -217,29 +217,29 @@ def azure_config(reference):
         'reference': reference,
         'annotation_params': {
             'snpeff_params': {
-                'snpeff_config': '/datadrive/refdata/snpEff.config'
+                'snpeff_config': '/refdata/snpEff.config'
             },
             'mutation_assessor_params': {
-                'db': '/datadrive/refdata/MA.hg19_v2/'
+                'db': '/refdata/MA.hg19_v2/'
             },
             'dbsnp_params': {
-                'db': '/datadrive/refdata/dbsnp_142.human_9606.all.vcf.gz'
+                'db': '/refdata/dbsnp_142.human_9606.all.vcf.gz'
             },
             'thousandgen_params': {
-                'db': '/datadrive/refdata/1000G_release_20130502_genotypes.vcf.gz'
+                'db': '/refdata/1000G_release_20130502_genotypes.vcf.gz'
             },
             'cosmic_params': {
-                'db': '/datadrive/refdata/CosmicMutantExport.sorted.vcf.gz'
+                'db': '/refdata/CosmicMutantExport.sorted.vcf.gz'
             },
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample': '/datadrive/refdata/single_sample_plot_data.txt',
+            'refdata_single_sample': '/refdata/single_sample_plot_data.txt',
             'thousandgen_params': {
-                'db': '/datadrive/refdata/1000G_release_20130502_genotypes.vcf.gz'
+                'db': '/refdata/1000G_release_20130502_genotypes.vcf.gz'
             },
             'dbsnp_params': {
-                'db': '/datadrive/refdata/dbsnp_142.human_9606.all.vcf.gz'
+                'db': '/refdata/dbsnp_142.human_9606.all.vcf.gz'
             },
         },
         'parse_strelka':{
@@ -249,7 +249,7 @@ def azure_config(reference):
             'remove_duplicates': False,
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
+            'mappability_ref': '/refdata/mask_regions_blacklist_crg_align36_table.txt',
          },
         'parse_museq': {
             'keep_1000gen': True,
@@ -257,7 +257,7 @@ def azure_config(reference):
             'remove_duplicates': False,
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table.txt',
+            'mappability_ref': '/refdata/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
          },
         'museq_params': {
@@ -278,7 +278,7 @@ def azure_config(reference):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/datadrive/refdata/reference-grch37-decoys-destruct/',
+        'refdata_destruct': '/refdata/reference-grch37-decoys-destruct/',
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
@@ -300,7 +300,7 @@ def azure_config(reference):
             'deletion_size_threshold': 1000,
             'project': None,
             'types': None,
-            'mappability_ref': '/datadrive/refdata/mask_regions_blacklist_crg_align36_table_destruct.txt',
+            'mappability_ref': '/refdata/mask_regions_blacklist_crg_align36_table_destruct.txt',
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
             'breakdistance_threshold': 30
@@ -311,10 +311,10 @@ def azure_config(reference):
         "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': map(str, range(1, 23) + ['X']),
-        'dbsnp_positions': '/datadrive/refdata/common_all_dbSNP138.pos',
+        'dbsnp_positions': '/refdata/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
         'correction' : {
-            'gc': '/datadrive/refdata/GRCh37-lite.gc.ws_1000.wig',
+            'gc': '/refdata/GRCh37-lite.gc.ws_1000.wig',
         },
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
@@ -328,8 +328,8 @@ def azure_config(reference):
             {'num_clusters': 4, 'ploidy': 4},
             {'num_clusters': 5, 'ploidy': 4},
         ],
-        'pygenes_gtf': '/datadrive/refdata/Homo_sapiens.GRCh37.73.gtf',
-        'remixt_refdata': '/datadrive/refdata/reference-grch37-decoys-remixt',
+        'pygenes_gtf': '/refdata/Homo_sapiens.GRCh37.73.gtf',
+        'remixt_refdata': '/refdata/reference-grch37-decoys-remixt',
         'museq_params': {
             'threshold': 0.85,
             'verbose': True,
@@ -345,7 +345,7 @@ def azure_config(reference):
         'titan_params': {
             'y_threshold': 20,
             'genome_type': 'NCBI',
-            'map': '/datadrive/refdata/GRCh37-lite.map.ws_1000.wig',
+            'map': '/refdata/GRCh37-lite.map.ws_1000.wig',
             'num_cores': 4,
             'myskew': 0,
             'estimate_ploidy': 'TRUE',
