@@ -89,7 +89,7 @@ def luna_config(reference):
             'chromosomes': map(str, range(1, 23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
-            'readsupport_threshold': 0,
+            'tumour_read_support_threshold': 0,
             'project': None,
             'tumour_id': None,
             'confidence_interval_size': 500,
@@ -187,8 +187,9 @@ def luna_config(reference):
         'aligner': 'bwa-mem',
         'split_size': 1e7,
         'read_group_info': {
-            'ID': '{sample_id}',
+            'ID': '{sample_id}_{lane_id}',
             'SM': '{sample_id}',
+            'PU': '{lane_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
         }
@@ -207,7 +208,6 @@ def azure_config(reference):
         reference = None
 
     globals = {
-        'pools': {'standard': None, 'highmem': None, 'multicore': None},
         'memory': {'low': 5, 'med': 10, 'high': 15,},
         'threads': 1,
     }
@@ -285,7 +285,7 @@ def azure_config(reference):
             'chromosomes': map(str, range(1, 23) + ['X']),
             'normal_id': None,
             'deletion_size_threshold': 0,
-            'readsupport_threshold': 0,
+            'tumour_read_support_threshold': 0,
             'project': None,
             'tumour_id': None,
             'confidence_interval_size': 500,
@@ -308,6 +308,7 @@ def azure_config(reference):
     }
 
     cna_calling = {
+        "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'dbsnp_positions': '/datadrive/refdata/common_all_dbSNP138.pos',
@@ -369,6 +370,28 @@ def azure_config(reference):
         }
     }
 
+    alignment = {
+        "ref_genome":{
+            'file': reference,
+            'header':{
+                'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
+                'AS': 'hg19/1000genomes',
+                'SP': 'Homo sapiens'
+            }
+        },
+        'threads': 8,
+        'aligner': 'bwa-mem',
+        'split_size': 1e7,
+        'read_group_info': {
+            'ID': '{sample_id}_{lane_id}',
+            'PU': '{lane_id}',
+            'SM': '{sample_id}',
+            'CN': 'IGO_MSKCC',
+            'PL': 'ILLUMINA',
+        }
+    }
+
+
     config = locals()
 
     return config
@@ -383,7 +406,6 @@ def shahlab_config(reference):
         reference = None
 
     globals = {
-        'pools': {'standard': None, 'highmem': None, 'multicore': None},
         'memory': {'low': 5, 'med': 10, 'high': 15,},
         'threads': 1,
     }
@@ -559,8 +581,9 @@ def shahlab_config(reference):
         'aligner': 'bwa-mem',
         'split_size': 1e7,
         'read_group_info': {
-            'ID': '{sample_id}',
+            'ID': '{sample_id}_{lane_id}',
             'SM': '{sample_id}',
+            'PU': '{lane_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
         }

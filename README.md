@@ -32,6 +32,11 @@ Activate the environment:
 source activate wgspipeline
 ```
 
+Install WGS pipeline:
+
+```
+python setup.py install
+```
 
 #### Input File format
 
