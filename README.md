@@ -19,6 +19,14 @@ conda config --add channels https://conda.anaconda.org/shahcompbio
 ```
 
 ### From Source
+Add channels:
+```
+conda config --add channels shahcompbio
+conda config --add channels dranew
+conda config --add channels aroth85
+conda config --add channels componc
+conda config --add channels bioconda
+```
 
 Then create an environment with the required packages:
 
