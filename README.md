@@ -7,16 +7,7 @@
 
 Set up conda with the required packages.
 
-First ensure you have the correct channels:
 
-```
-conda config --add channels https://conda.anaconda.org/dranew
-conda config --add channels https://conda.anaconda.org/aroth85
-conda config --add channels 'bioconda'
-conda config --add channels 'r'
-conda config --add channels 'conda-forge'
-conda config --add channels https://conda.anaconda.org/shahcompbio
-```
 
 ### From Source
 Add channels:
