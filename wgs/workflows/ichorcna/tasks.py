@@ -1,11 +1,7 @@
 import os
-import sys
 import pypeliner
 from wgs.utils import helpers
 import shutil
-
-
-import glob
 
 scripts = os.path.join(
     os.path.realpath(os.path.dirname(__file__)),
@@ -37,15 +33,25 @@ def run_ichorcna(input_wig, normal_panel, segments,
                  txnE=None, chromosomes=None):
     cmd = [
         'Rscript', os.path.join(scripts, 'run_ichorcna.R'),
-        input_wig,
-        normal_panel,
-        centromere,
-        gc_wig,
-        map_wig,
-        sample_id,
-        txnE,
-        '--outDir',
-        plots_dir
+        '--id', sample_id,
+        '--WIG', input_wig,
+        '--ploidy', "c(2,3)",
+        '--normal', "c(0.5,0.6,0.7,0.8,0.9)",
+        '--maxCN', 5,
+        '--gcWig', gc_wig,
+        '--mapWig', map_wig,
+        '--centromere', centromere,
+        '--normalPanel', normal_panel,
+        '--includeHOMD', False,
+        '--chrs', "c(1:22, \"X\")",
+        '--chrTrain', "c(1:22)",
+        '--estimateNormal', True,
+        '--estimatePloidy', True,
+        '--estimateScPrevalence', True,
+        '--scStates', "c(1,3)",
+        '--txnE', 0.9999,
+        '--txnStrength', 10000,
+        '--outDir', plots_dir
     ]
 
     pypeliner.commandline.execute(*cmd)

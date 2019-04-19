@@ -19,7 +19,6 @@ def call_cfdna_copynumber(
     plots_tar = dict([(sampid, plots_tar[sampid])
                           for sampid in samples])
 
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -58,7 +57,7 @@ def cfdna_cna_calling_workflow(args):
 
     samples = inputs.keys()
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
-    normals = {sample: inputs[sample]['normal'] for sample in samples}
+    normal_panels = {sample: inputs[sample]['normal_panel'] for sample in samples}
 
     cna_outdir = os.path.join(args['out_dir'], 'cfdna_copynumber', '{sample_id}')
     ichor_segments = os.path.join(cna_outdir, 'ichor', 'segments.seg')
@@ -78,7 +77,7 @@ def cfdna_cna_calling_workflow(args):
             config,
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                           extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.panel", 'sample_id', fnames=normals,
+            mgd.InputFile("normal.panel", 'sample_id', fnames=normal_panels,
                           axes_origin=[]),
             mgd.OutputFile('ichor_segments', 'sample_id', axes_origin=[], template=ichor_segments),
             mgd.OutputFile('ichor_params', 'sample_id', axes_origin=[], template=ichor_params),
