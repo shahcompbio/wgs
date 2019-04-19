@@ -195,7 +195,7 @@ def luna_config(reference):
         }
     }
 
-    cfdna_copy_number_calling = {
+    cfdna_copynumber_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
         'map': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
         'gc': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
@@ -404,7 +404,7 @@ def azure_config(reference):
         }
     }
 
-    cfdna_copy_number_calling = {
+    cfdna_copynumber_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
         'map': '/refdata/GRCh37-lite.map.ws_125_to_1000000.wig',
         'gc': '/refdata/GRCh37-lite.gc.ws_1000000.wig',
@@ -614,7 +614,7 @@ def shahlab_config(reference):
         }
     }
 
-    cfdna_copy_number_calling = {
+    cfdna_copynumber_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
         'map': '/shahlab/pipelines/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
         'gc': '/shahlab/pipelines/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',

@@ -1,23 +1,23 @@
 import os
+
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import ichorcna
 
+
 def call_cfdna_copynumber(
-        samples, config, tumours, normals,
+        samples, config, global_config, tumours, normals,
         segments, params, depth, plots_tar
 ):
-
-    config = config
     segments = dict([(sampid, segments[sampid])
-                          for sampid in samples])
+                     for sampid in samples])
     params = dict([(sampid, params[sampid])
-                          for sampid in samples])
+                   for sampid in samples])
     depth = dict([(sampid, depth[sampid])
-                          for sampid in samples])
+                  for sampid in samples])
     plots_tar = dict([(sampid, plots_tar[sampid])
-                          for sampid in samples])
+                      for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -36,24 +36,24 @@ def call_cfdna_copynumber(
             mgd.OutputFile('params', 'sample_id', fnames=params),
             mgd.OutputFile('depth', 'sample_id', fnames=depth),
             config,
+            global_config,
             mgd.InputInstance('sample_id'),
             mgd.OutputFile('plots_tar', 'sample_id', fnames=plots_tar),
-    ),
+        ),
     )
-
 
     return workflow
 
 
 def cfdna_cna_calling_workflow(args):
-
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
 
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    config = config['cfdna_copy_number_calling']
+    config = config['cfdna_copynumber_calling']
+    global_config = config['globals']
 
     samples = inputs.keys()
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
@@ -75,6 +75,7 @@ def cfdna_cna_calling_workflow(args):
         args=(
             samples,
             config,
+            global_config,
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                           extensions=['.bai'], axes_origin=[]),
             mgd.InputFile("normal.panel", 'sample_id', fnames=normal_panels,
