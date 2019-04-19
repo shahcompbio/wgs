@@ -32,7 +32,10 @@ def run_ichorcna(
         cmd.extend(['--centromere', centromere])
 
     for flag, value in kwargs.items():
-        if isinstance(value, list):
+        if flag in ['chrs', 'chrTrain']:
+            value = ['\"{}\"'.format(v) if isinstance(v, str) else v for v in value]
+            value = '"c(' + ','.join(map(str, value)) + ')"'
+        elif isinstance(value, list):
             value = '"c(' + ','.join(map(str, value)) + ')"'
         elif isinstance(value, bool):
             value = 'True' if value else 'False'
