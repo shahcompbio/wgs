@@ -195,16 +195,18 @@ def luna_config(reference):
         }
     }
 
-    ichorcna = {
+    cfdna_copy_number_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
-        'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
-        'map': '/juno/work/shah/reference/GRCh37-lite.map.ws_1000.wig',
-        'centromere': '/juno/work/shah/reference/GRCh37-lite.map.ws_1000.wig',
+        'map': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
+        'gc': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
+        'centromere': None,
         'chrTrain': map(str, range(1, 23)),
         'estimateNormal': True,
+        'hmmcopy_readcounter': {
+            'w': 1000000,
+            'm': 20,
+        }
     }
-
-
 
     config = locals()
 
@@ -402,6 +404,18 @@ def azure_config(reference):
         }
     }
 
+    cfdna_copy_number_calling = {
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'map': '/refdata/GRCh37-lite.map.ws_125_to_1000000.wig',
+        'gc': '/refdata/GRCh37-lite.gc.ws_1000000.wig',
+        'centromere': None,
+        'chrTrain': map(str, range(1, 23)),
+        'estimateNormal': True,
+        'hmmcopy_readcounter': {
+            'w': 1000000,
+            'm': 20,
+        }
+    }
 
     config = locals()
 
@@ -600,9 +614,23 @@ def shahlab_config(reference):
         }
     }
 
+    cfdna_copy_number_calling = {
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'map': '/shahlab/pipelines/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
+        'gc': '/shahlab/pipelines/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
+        'centromere': None,
+        'chrTrain': map(str, range(1, 23)),
+        'estimateNormal': True,
+        'hmmcopy_readcounter': {
+            'w': 1000000,
+            'm': 20,
+        }
+    }
+
     config = locals()
 
     return config
+
 
 def get_config(override):
 

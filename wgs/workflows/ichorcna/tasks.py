@@ -40,7 +40,6 @@ def run_ichorcna(input_wig, normal_panel, segments,
         '--maxCN', 5,
         '--gcWig', gc_wig,
         '--mapWig', map_wig,
-        '--centromere', centromere,
         '--normalPanel', normal_panel,
         '--includeHOMD', False,
         '--chrs', "c(1:22, \"X\")",
@@ -53,6 +52,9 @@ def run_ichorcna(input_wig, normal_panel, segments,
         '--txnStrength', 10000,
         '--outDir', plots_dir
     ]
+
+    if centromere:
+        cmd.extend(['--centromere', centromere])
 
     pypeliner.commandline.execute(*cmd)
 

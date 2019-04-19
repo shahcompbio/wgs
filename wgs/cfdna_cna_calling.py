@@ -53,7 +53,7 @@ def cfdna_cna_calling_workflow(args):
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    config = config['ichorcna']
+    config = config['cfdna_copy_number_calling']
 
     samples = inputs.keys()
     tumours = {sample: inputs[sample]['tumour'] for sample in samples}
