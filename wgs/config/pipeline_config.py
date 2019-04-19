@@ -203,7 +203,7 @@ def luna_config(reference):
         'chrTrain': map(str, range(1, 23)),
         'ploidy': [2,3],
         'normal': [0.5,0.6,0.7,0.8,0.9],
-        'max_cn': 5,
+        'maxCN': 5,
         'includeHOMD': False,
         'estimateNormal': True,
         'estimatePloidy': True,
