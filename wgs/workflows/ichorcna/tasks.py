@@ -2,6 +2,7 @@ import os
 import pypeliner
 from wgs.utils import helpers
 import shutil
+from scripts import ReadCounter
 
 scripts = os.path.join(
     os.path.realpath(os.path.dirname(__file__)),
@@ -10,21 +11,12 @@ scripts = os.path.join(
 
 
 def hmmcopy_readcounter(input_bam, output_wig, config):
-    chromosomes = ['--chromosomes'] + config['hmmcopy_readcounter']['chromosomes']
 
-    cmd = [
-              'python',
-              os.path.join(scripts, 'read_counter.py'),
-              input_bam,
-              output_wig,
-              '-w',
-              str(config['hmmcopy_readcounter']['w']),
-              '-m',
-              str(config['hmmcopy_readcounter']['m']),
-          ] + chromosomes
-
-    helpers.run_cmd(cmd, output=output_wig)
-
+    rc = ReadCounter(
+        input_bam, output_wig, config['hmmcopy_readcounter']['w'],
+        config['chromosomes'], config['hmmcopy_readcounter']['m'],
+    )
+    rc.main()
 
 def run_ichorcna(
         input_wig, normal_panel, segments, params, depth, centromere, gc_wig,
