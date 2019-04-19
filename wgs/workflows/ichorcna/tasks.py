@@ -33,7 +33,7 @@ def run_ichorcna(
 
     for flag, value in kwargs.items():
         if isinstance(value, list):
-            value = 'c(' + ','.join(map(str,value)) + ')'
+            value = '"c(' + ','.join(map(str, value)) + ')"'
         elif isinstance(value, bool):
             value = 'True' if value else 'False'
 
