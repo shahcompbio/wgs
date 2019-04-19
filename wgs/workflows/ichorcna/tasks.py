@@ -26,35 +26,31 @@ def hmmcopy_readcounter(input_bam, output_wig, config):
     helpers.run_cmd(cmd, output=output_wig)
 
 
-def run_ichorcna(input_wig, normal_panel, segments,
-                 params, depth, centromere,
-                 gc_wig, map_wig, sample_id, plots_dir,
-                 plots_tar,
-                 txnE=None, chromosomes=None):
+def run_ichorcna(
+        input_wig, normal_panel, segments, params, depth, centromere, gc_wig,
+        map_wig, sample_id, plots_dir, plots_tar, **kwargs
+):
+
     cmd = [
         'Rscript', os.path.join(scripts, 'run_ichorcna.R'),
         '--id', sample_id,
         '--WIG', input_wig,
-        '--ploidy', "c(2,3)",
-        '--normal', "c(0.5,0.6,0.7,0.8,0.9)",
-        '--maxCN', 5,
         '--gcWig', gc_wig,
         '--mapWig', map_wig,
         '--normalPanel', normal_panel,
-        '--includeHOMD', False,
-        '--chrs', "c(1:22, \"X\")",
-        '--chrTrain', "c(1:22)",
-        '--estimateNormal', True,
-        '--estimatePloidy', True,
-        '--estimateScPrevalence', True,
-        '--scStates', "c(1,3)",
-        '--txnE', 0.9999,
-        '--txnStrength', 10000,
         '--outDir', plots_dir
     ]
 
     if centromere:
         cmd.extend(['--centromere', centromere])
+
+    for flag, value in kwargs.items():
+        if isinstance(value, list):
+            value = 'c(' + ','.join(map(str,value)) + ')'
+        elif isinstance(value, bool):
+            value = 'True' if value else 'False'
+
+        cmd.extend(['--{}'.format(flag), value])
 
     pypeliner.commandline.execute(*cmd)
 

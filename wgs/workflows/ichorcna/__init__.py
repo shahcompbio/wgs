@@ -45,7 +45,20 @@ def create_ichorcna_workflow(
             mgd.TempSpace('plots_dir'),
             mgd.OutputFile(plots_tar)
         ),
-        kwargs=dict(txnE=config['txnE'], chromosomes=config['chromosomes'])
+        kwargs=dict(
+            ploidy=config['ploidy'],
+            normal=config['normal'],
+            maxCN=config['maxCN'],
+            includeHOMD=config['includeHOMD'],
+            chrs=config['chromosomes'],
+            chrTrain=config['chrTrain'],
+            estimateNormal=config['estimateNormal'],
+            estimatePloidy=config['estimatePloidy'],
+            estimateScPrevalence=config['estimateScPrevalence'],
+            scStates=config['scStates'],
+            txnE=config['txnE'],
+            txnStrength=config['txnStrength'],
+        )
     )
 
     return workflow
