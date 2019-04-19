@@ -196,11 +196,11 @@ def luna_config(reference):
     }
 
     cfdna_copynumber_calling = {
-        'chromosomes': map(str, range(1, 23) + ['X']),
+        'chromosomes': range(1, 23) + ['X'],
         'map_wig': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
         'gc_wig': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
         'centromere': None,
-        'chrTrain': map(str, range(1, 23)),
+        'chrTrain': range(1, 23),
         'ploidy': [2,3],
         'normal': [0.5,0.6,0.7,0.8,0.9],
         'maxCN': 5,
