@@ -4,11 +4,6 @@ from wgs.utils import helpers
 import shutil
 from scripts import ReadCounter
 
-scripts = os.path.join(
-    os.path.realpath(os.path.dirname(__file__)),
-    'scripts'
-)
-
 
 def hmmcopy_readcounter(input_bam, output_wig, config):
 
@@ -24,7 +19,7 @@ def run_ichorcna(
 ):
 
     cmd = [
-        'Rscript', os.path.join(scripts, 'run_ichorcna.R'),
+        'runIchorCNA.R',
         '--id', sample_id,
         '--WIG', input_wig,
         '--gcWig', gc_wig,
