@@ -197,8 +197,8 @@ def luna_config(reference):
 
     cfdna_copynumber_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
-        'map': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
-        'gc': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
+        'map_wig': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.map.ws_125_to_1000000.wig',
+        'gc_wig': '/juno/work/shah/reference/hmmcopy_wigs/GRCh37-lite.gc.ws_1000000.wig',
         'centromere': None,
         'chrTrain': map(str, range(1, 23)),
         'estimateNormal': True,
