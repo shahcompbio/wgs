@@ -118,7 +118,7 @@ def luna_config(reference):
         'dbsnp_positions': '/juno/work/shah/reference/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
         'correction': {
-            'gc': '/shahlab/pipelines/reference/GRCh37-lite.gc.ws_1000.wig',
+            'gc': '/juno/work/shah/reference/GRCh37-lite.gc.ws_1000.wig',
         },
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
