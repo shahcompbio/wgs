@@ -31,10 +31,12 @@ Activate the environment:
 source activate wgspipeline
 ```
 
-Install WGS pipeline:
+Install pacakges from source:
 
 ```
-python setup.py install
+pip install git+https://bitbucket.org/aroth85/biowrappers.git@singlecell
+pip install git+https://github.com/shahcompbio/pypeliner.git@master
+pip install git+https://github.com/shahcompbio/wgs.git@master
 ```
 
 #### Input File format
