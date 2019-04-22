@@ -62,8 +62,8 @@ def cfdna_cna_calling_workflow(args):
     cna_outdir = os.path.join(args['out_dir'], 'cfdna_copynumber', '{sample_id}')
     ichor_segments = os.path.join(cna_outdir, 'ichor', 'segments.seg')
     ichor_params = os.path.join(cna_outdir, 'ichor', 'params.txt')
-    ichor_corrected_depth = os.path.join(cna_outdir, 'remixt', 'ichor_corrected_depth.txt')
-    ichor_plots = os.path.join(cna_outdir, 'remixt', 'plots.tar')
+    ichor_corrected_depth = os.path.join(cna_outdir, 'ichor', 'ichor_corrected_depth.txt')
+    ichor_plots = os.path.join(cna_outdir, 'ichor', 'plots.tar')
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
