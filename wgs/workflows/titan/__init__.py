@@ -23,6 +23,8 @@ def create_titan_workflow(
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
+    targets = mgd.InputFile(targets) if targets else None
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -115,7 +117,7 @@ def create_titan_workflow(
         args=(
             mgd.TempInputFile('tumour.wig'),
             mgd.TempInputFile('normal.wig'),
-            mgd.InputFile(targets),
+            targets,
             mgd.TempOutputFile('correct_reads.txt'),
             config,
         ),
