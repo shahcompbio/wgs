@@ -36,9 +36,9 @@ def run_ichorcna(
     for flag, value in kwargs.items():
         if flag in ['chrs', 'chrTrain']:
             value = ['\\"{}\\"'.format(v) if isinstance(v, str) else v for v in value]
-            value = '"c(' + ','.join(map(str, value)) + ')"'
+            value = 'c(' + ','.join(map(str, value)) + ')'
         elif isinstance(value, list):
-            value = '"c(' + ','.join(map(str, value)) + ')"'
+            value = 'c(' + ','.join(map(str, value)) + ')'
         elif isinstance(value, bool):
             value = 'True' if value else 'False'
 
