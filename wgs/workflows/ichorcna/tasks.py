@@ -18,6 +18,8 @@ def run_ichorcna(
         map_wig, sample_id, plots_dir, plots_tar, **kwargs
 ):
 
+    helpers.makedirs(plots_dir)
+
     cmd = [
         'runIchorCNA.R',
         '--id', sample_id,
