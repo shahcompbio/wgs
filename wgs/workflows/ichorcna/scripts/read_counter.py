@@ -26,6 +26,8 @@ class ReadCounter(object):
         else:
             self.chromosomes = self.__get_chr_names()
 
+        self.chromosomes = [str(chrom) for chrom in self.chromosomes]
+
         self.bam = self.__get_bam_reader()
         self.chr_lengths = self.__get_chr_lengths()
 
