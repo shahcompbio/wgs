@@ -128,7 +128,8 @@ def align_sample(config, fastq_1, fastq_2, out_file, outdir, ids):
             pypeliner.managed.OutputFile(out_file),
             pypeliner.managed.OutputFile(markdups_metrics),
             pypeliner.managed.TempSpace("temp_markdups"),
-        )
+        ),
+        kwargs={'mem': '8G'},
     )
 
     workflow.commandline(

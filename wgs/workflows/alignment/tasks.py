@@ -3,8 +3,9 @@ import os
 import pypeliner
 
 
-def markdups(input, output, metrics, tempdir):
-    cmd = ['picard', '-Xmx4G', '-Xms4G',
+
+def markdups(input, output, metrics, tempdir, mem="2G"):
+    cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
            'INPUT=' + input,
