@@ -17,7 +17,9 @@ def create_strelka_workflow(
         global_config,
         varcall_config,
         chromosomes=default_chromosomes,
-        use_depth_thresholds=True):
+        use_depth_thresholds=True,
+        single_node=False,
+):
     workflow = Workflow()
 
     workflow.transform(
@@ -59,81 +61,100 @@ def create_strelka_workflow(
         ),
     )
 
-    workflow.transform(
-        name='call_somatic_variants',
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': global_config['threads'], 'walltime': '08:00'},
-        axes=('interval',),
-        func=tasks.call_somatic_variants,
-        args=(
-            mgd.InputFile(normal_bam, extensions=['.bai']),
-            mgd.InputFile(tumour_bam, extensions=['.bai']),
-            mgd.TempInputObj('known_sizes'),
-            ref_genome_fasta_file,
-            mgd.TempOutputFile('somatic.indels.unfiltered.vcf', 'interval'),
-            mgd.TempOutputFile('somatic.indels.unfiltered.vcf.window', 'interval'),
-            mgd.TempOutputFile('somatic.snvs.unfiltered.vcf', 'interval'),
-            mgd.TempOutputFile('strelka.stats', 'interval'),
-            mgd.InputInstance('interval'),
-        ),
-    )
+    if single_node:
+        workflow.transform(
+            name='call_somatic_variants',
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': global_config['threads'], 'walltime': '08:00'},
+            func=tasks.call_somatic_variants_one_job,
+            args=(
+                mgd.InputFile(normal_bam, extensions=['.bai']),
+                mgd.InputFile(tumour_bam, extensions=['.bai']),
+                mgd.TempOutputFile('somatic.snvs.filtered.vcf.gz'),
+                mgd.TempOutputFile('somatic.indels.filtered.vcf.gz'),
+                mgd.TempInputObj('known_sizes'),
+                ref_genome_fasta_file,
+                mgd.InputChunks('interval'),
+                chromosomes,
+                mgd.TempSpace("strelka_single_node_run"),
+            ),
+        )
+    else:
+        workflow.transform(
+            name='call_somatic_variants',
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': global_config['threads'], 'walltime': '08:00'},
+            axes=('interval',),
+            func=tasks.call_somatic_variants,
+            args=(
+                mgd.InputFile(normal_bam, extensions=['.bai']),
+                mgd.InputFile(tumour_bam, extensions=['.bai']),
+                mgd.TempInputObj('known_sizes'),
+                ref_genome_fasta_file,
+                mgd.TempOutputFile('somatic.indels.unfiltered.vcf', 'interval'),
+                mgd.TempOutputFile('somatic.indels.unfiltered.vcf.window', 'interval'),
+                mgd.TempOutputFile('somatic.snvs.unfiltered.vcf', 'interval'),
+                mgd.TempOutputFile('strelka.stats', 'interval'),
+                mgd.InputInstance('interval'),
+            ),
+        )
 
-    workflow.transform(
-        name='add_indel_filters',
-        axes=('chrom',),
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': 1, 'walltime': '01:00'},
-        func=tasks.filter_indel_file_list,
-        args=(
-            mgd.TempInputFile('somatic.indels.unfiltered.vcf', 'interval', axes_origin=[]),
-            mgd.TempInputFile('strelka.stats', 'interval', axes_origin=[]),
-            mgd.TempInputFile('somatic.indels.unfiltered.vcf.window', 'interval', axes_origin=[]),
-            mgd.TempOutputFile('somatic.indels.filtered.vcf', 'chrom'),
-            mgd.InputInstance('chrom'),
-            mgd.TempInputObj('known_sizes'),
-            mgd.InputChunks('interval'),
-        ),
-        kwargs={'use_depth_filter': use_depth_thresholds}
-    )
+        workflow.transform(
+            name='add_indel_filters',
+            axes=('chrom',),
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': 1, 'walltime': '01:00'},
+            func=tasks.filter_indel_file_list,
+            args=(
+                mgd.TempInputFile('somatic.indels.unfiltered.vcf', 'interval', axes_origin=[]),
+                mgd.TempInputFile('strelka.stats', 'interval', axes_origin=[]),
+                mgd.TempInputFile('somatic.indels.unfiltered.vcf.window', 'interval', axes_origin=[]),
+                mgd.TempOutputFile('somatic.indels.filtered.vcf', 'chrom'),
+                mgd.InputInstance('chrom'),
+                mgd.TempInputObj('known_sizes'),
+                mgd.InputChunks('interval'),
+            ),
+            kwargs={'use_depth_filter': use_depth_thresholds}
+        )
 
-    workflow.transform(
-        name='add_snv_filters',
-        axes=('chrom',),
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': 1, 'walltime': '01:00'},
-        func=tasks.filter_snv_file_list,
-        args=(
-            mgd.TempInputFile('somatic.snvs.unfiltered.vcf', 'interval', axes_origin=[]),
-            mgd.TempInputFile('strelka.stats', 'interval', axes_origin=[]),
-            mgd.TempOutputFile('somatic.snvs.filtered.vcf', 'chrom'),
-            mgd.InputInstance('chrom'),
-            mgd.TempInputObj('known_sizes'),
-            mgd.InputChunks('interval'),
-        ),
-        kwargs={'use_depth_filter': use_depth_thresholds}
-    )
+        workflow.transform(
+            name='add_snv_filters',
+            axes=('chrom',),
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': 1, 'walltime': '01:00'},
+            func=tasks.filter_snv_file_list,
+            args=(
+                mgd.TempInputFile('somatic.snvs.unfiltered.vcf', 'interval', axes_origin=[]),
+                mgd.TempInputFile('strelka.stats', 'interval', axes_origin=[]),
+                mgd.TempOutputFile('somatic.snvs.filtered.vcf', 'chrom'),
+                mgd.InputInstance('chrom'),
+                mgd.TempInputObj('known_sizes'),
+                mgd.InputChunks('interval'),
+            ),
+            kwargs={'use_depth_filter': use_depth_thresholds}
+        )
 
-    workflow.transform(
-        name='merge_indels',
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': 1, 'walltime': '01:00'},
-        func=vcf_tasks.concatenate_vcf,
-        args=(
-            mgd.TempInputFile('somatic.indels.filtered.vcf', 'chrom'),
-            mgd.TempOutputFile('somatic.indels.filtered.vcf.gz'),
-        ),
-    )
+        workflow.transform(
+            name='merge_indels',
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': 1, 'walltime': '01:00'},
+            func=vcf_tasks.concatenate_vcf,
+            args=(
+                mgd.TempInputFile('somatic.indels.filtered.vcf', 'chrom'),
+                mgd.TempOutputFile('somatic.indels.filtered.vcf.gz'),
+            ),
+        )
 
-    workflow.transform(
-        name='merge_snvs',
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': 1, 'walltime': '01:00'},
-        func=vcf_tasks.concatenate_vcf,
-        args=(
-            mgd.TempInputFile('somatic.snvs.filtered.vcf', 'chrom'),
-            mgd.TempOutputFile('somatic.snvs.filtered.vcf.gz'),
-        ),
-    )
+        workflow.transform(
+            name='merge_snvs',
+            ctx={'mem': global_config['memory']['med'],
+                 'ncpus': 1, 'walltime': '01:00'},
+            func=vcf_tasks.concatenate_vcf,
+            args=(
+                mgd.TempInputFile('somatic.snvs.filtered.vcf', 'chrom'),
+                mgd.TempOutputFile('somatic.snvs.filtered.vcf.gz'),
+            ),
+        )
 
     workflow.transform(
         name='filter_indels',

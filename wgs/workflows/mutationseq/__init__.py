@@ -16,8 +16,18 @@ def create_museq_workflow(
         global_config,
         varcall_config,
         tumour_bam=None,
-        normal_bam=None):
-    single = False if tumour_bam and normal_bam else True
+        normal_bam=None,
+        single_node=None
+):
+
+    name = 'run_museq'
+    if tumour_bam:
+        tumour_bam = mgd.InputFile(tumour_bam, extensions=['.bai'])
+        name += '_tumour'
+    if normal_bam:
+        normal_bam = mgd.InputFile(normal_bam, extensions=['.bai'])
+        name += '_normal'
+    single = False if name == 'run_museq_tumour_normal' else True
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -30,55 +40,33 @@ def create_museq_workflow(
         args=(
             varcall_config['reference'],
             varcall_config['chromosomes']
-        )
+        ),
+        kwargs={'size': varcall_config['split_size']}
     )
 
-    if tumour_bam and not normal_bam:
-        # Unpaired with only tumour
+    if single_node:
         workflow.transform(
-            name='run_museq_unpaired_tumour',
+            name=name,
             ctx={'num_retry': 3, 'mem_retry_increment': 2,
                  'mem': global_config['memory']['high'],
                  'ncpus': global_config['threads'],
                  'walltime': '24:00'},
-            axes=('interval',),
-            func=tasks.run_museq,
+            func=tasks.run_museq_one_job,
             args=(
-                mgd.TempOutputFile('museq.vcf', 'interval'),
-                mgd.TempOutputFile('museq.log', 'interval'),
+                mgd.TempSpace("run_museq_temp"),
+                mgd.TempOutputFile('merged.vcf'),
                 varcall_config['reference'],
-                mgd.InputInstance('interval'),
+                mgd.InputChunks('interval'),
                 varcall_config['museq_params'],
             ),
             kwargs={
-                'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
-            }
-        )
-    elif not tumour_bam and normal_bam:
-        # Unpaired with only normal
-        workflow.transform(
-            name='run_museq_unpaired_normal',
-            ctx={'num_retry': 3, 'mem_retry_increment': 2,
-                 'mem': global_config['memory']['high'],
-                 'ncpus': global_config['threads'],
-                 'walltime': '24:00'},
-            axes=('interval',),
-            func=tasks.run_museq,
-            args=(
-                mgd.TempOutputFile('museq.vcf', 'interval'),
-                mgd.TempOutputFile('museq.log', 'interval'),
-                varcall_config['reference'],
-                mgd.InputInstance('interval'),
-                varcall_config['museq_params'],
-            ),
-            kwargs={
-                'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
+                'tumour_bam': tumour_bam,
+                'normal_bam': normal_bam,
             }
         )
     else:
-        # Paired
         workflow.transform(
-            name='run_museq_paired',
+            name=name,
             ctx={'num_retry': 3, 'mem_retry_increment': 2,
                  'mem': global_config['memory']['high'],
                  'ncpus': global_config['threads'],
@@ -93,24 +81,24 @@ def create_museq_workflow(
                 varcall_config['museq_params'],
             ),
             kwargs={
-                'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
-                'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
+                'tumour_bam': tumour_bam,
+                'normal_bam': normal_bam,
             }
         )
 
-    workflow.transform(
-        name='merge_vcfs',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': global_config['threads'],
-             'walltime': '08:00'},
-        func=tasks.merge_vcfs,
-        args=(
-            mgd.TempInputFile('museq.vcf', 'interval'),
-            mgd.TempOutputFile('merged.vcf'),
-            mgd.TempSpace('merge_vcf'),
+        workflow.transform(
+            name='merge_vcfs',
+            ctx={'num_retry': 3, 'mem_retry_increment': 2,
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '08:00'},
+            func=tasks.merge_vcfs,
+            args=(
+                mgd.TempInputFile('museq.vcf', 'interval'),
+                mgd.TempOutputFile('merged.vcf'),
+                mgd.TempSpace('merge_vcf'),
+            )
         )
-    )
 
     workflow.transform(
         name='finalise_snvs',
@@ -118,7 +106,7 @@ def create_museq_workflow(
         func=vcf_tasks.finalise_vcf,
         args=(
             mgd.TempInputFile('merged.vcf'),
-            mgd.OutputFile(snv_vcf),
+            mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
     )
 
@@ -129,7 +117,7 @@ def create_museq_workflow(
              'ncpus': 1, 'walltime': '08:00'},
         func=tasks.run_museqportrait,
         args=(
-            mgd.InputFile(snv_vcf),
+            mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(museqportrait_pdf),
             mgd.TempOutputFile('museqportrait.txt'),
             mgd.TempOutputFile('museqportrait.log'),

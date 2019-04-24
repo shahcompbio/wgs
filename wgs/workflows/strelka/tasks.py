@@ -14,6 +14,9 @@ import pandas as pd
 import pypeliner
 import pysam
 import vcf
+from wgs.utils import helpers
+
+import vcf_tasks
 
 FILTER_ID_BASE = 'BCNoise'
 FILTER_ID_DEPTH = 'DP'
@@ -98,7 +101,9 @@ def call_somatic_variants(
         sindel_prior=0.000001,
         ssnv_noise=0.0000005,
         ssnv_noise_strand_bias_frac=0.5,
-        ssnv_prior=0.000001):
+        ssnv_prior=0.000001,
+        return_cmd=False
+):
     chrom, beg, end = interval.split('_')
 
     genome_size = sum(known_sizes.values())
@@ -146,14 +151,116 @@ def call_somatic_variants(
         '--tier2-single-align-score-rescue-mode'
     ]
 
-    pypeliner.commandline.execute(*cmd)
+    if return_cmd:
+        return cmd
+    else:
+        pypeliner.commandline.execute(*cmd)
+
+
+def call_somatic_variants_one_job(
+        normal_bam_file,
+        tumour_bam_file,
+        strelka_snv_vcf,
+        strelka_indel_vcf,
+        known_sizes,
+        ref_genome,
+        intervals,
+        chromosomes,
+        tempdir,
+        max_input_depth=10000,
+        min_tier_one_mapq=20,
+        min_tier_two_mapq=5,
+        sindel_noise=0.000001,
+        sindel_prior=0.000001,
+        ssnv_noise=0.0000005,
+        ssnv_noise_strand_bias_frac=0.5,
+        ssnv_prior=0.000001,
+        depth_filter_multiple_snv=3.0,
+        max_filtered_basecall_frac_snv=0.4,
+        max_spanning_deletion_frac_snv=0.75,
+        quality_lower_bound_snv=15,
+        use_depth_filter_snv=True,
+        depth_filter_multiple_indel=3.0,
+        max_int_hpol_length_indel=14,
+        max_ref_repeat_indel=8,
+        max_window_filtered_basecall_frac_indel=0.3,
+        quality_lower_bound_indel=30,
+        use_depth_filter_indel=True
+):
+
+    commands = []
+    for i, interval in enumerate(intervals):
+        ival_temp_dir = os.path.join(tempdir, 'intervals', str(i))
+        helpers.makedirs(ival_temp_dir)
+        indel_out = os.path.join(ival_temp_dir, 'strelka_indel.vcf')
+        indel_out_window = os.path.join(ival_temp_dir, 'strelka_indel.vcf.window')
+        snv_out = os.path.join(ival_temp_dir, 'strelka_snv.vcf')
+        snv_out_stats = os.path.join(ival_temp_dir, 'strelka_snv.vcf.stats')
+
+        command = call_somatic_variants(
+            normal_bam_file, tumour_bam_file, known_sizes, ref_genome,
+            indel_out, indel_out_window, snv_out, snv_out_stats, interval,
+            return_cmd=True,
+            max_input_depth=max_input_depth,
+            min_tier_one_mapq=min_tier_one_mapq,
+            min_tier_two_mapq=min_tier_two_mapq,
+            sindel_noise=sindel_noise,
+            sindel_prior=sindel_prior,
+            ssnv_noise=ssnv_noise,
+            ssnv_noise_strand_bias_frac=ssnv_noise_strand_bias_frac,
+            ssnv_prior=ssnv_prior
+        )
+
+        commands.append(command)
+
+    parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, None)
+
+    snv_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf')
+                for i, ival in enumerate(intervals)}
+    snv_stats = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf.stats')
+                 for i, ival in enumerate(intervals)}
+    indel_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_indel.vcf')
+                  for i, ival in enumerate(intervals)}
+    indel_windows = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_indel.vcf.window')
+                     for i, ival in enumerate(intervals)}
+
+    for chrom in chromosomes:
+        helpers.makedirs(os.path.join(tempdir, 'chrs', chrom))
+        snv_chrom_out = os.path.join(tempdir, 'chrs', chrom, 'snv.vcf')
+        filter_snv_file_list(
+            snv_vcfs, snv_stats, snv_chrom_out, chrom, known_sizes,
+            intervals, depth_filter_multiple=depth_filter_multiple_snv,
+            max_filtered_basecall_frac=max_filtered_basecall_frac_snv,
+            max_spanning_deletion_frac=max_spanning_deletion_frac_snv,
+            quality_lower_bound=quality_lower_bound_snv,
+            use_depth_filter=use_depth_filter_snv,
+        )
+
+        indel_chrom_out = os.path.join(tempdir, 'chrs', chrom, 'indel.vcf')
+        filter_indel_file_list(
+            indel_vcfs, snv_stats, indel_windows, indel_chrom_out,
+            chrom, known_sizes, intervals,
+            depth_filter_multiple=depth_filter_multiple_indel,
+            max_int_hpol_length=max_int_hpol_length_indel,
+            max_ref_repeat=max_ref_repeat_indel,
+            max_window_filtered_basecall_frac=max_window_filtered_basecall_frac_indel,
+            quality_lower_bound=quality_lower_bound_indel,
+            use_depth_filter=use_depth_filter_indel
+        )
+
+    vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'snv.vcf') for chrom in chromosomes]
+    vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
+    vcf_tasks.concatenate_vcf(vcf_files, strelka_snv_vcf)
+
+    vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'indel.vcf') for chrom in chromosomes]
+    vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
+    vcf_tasks.concatenate_vcf(vcf_files, strelka_indel_vcf)
 
 
 # =======================================================================================================================
 # SNV filtering
 # =======================================================================================================================
-
-
 def filter_snv_file_list(
         in_files,
         stats_files,

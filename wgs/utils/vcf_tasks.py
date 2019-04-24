@@ -88,12 +88,6 @@ def index_bcf(in_file, index_file=None):
 
     pypeliner.commandline.execute('bcftools', 'index', in_file)
 
-    if index_file is None:
-        _rename_index(in_file, '.csi')
-
-    else:
-        shutil.move(in_file + '.csi', index_file)
-
 
 def finalise_vcf(in_file, compressed_file):
     """ Compress a VCF using bgzip and create index.
@@ -123,12 +117,6 @@ def index_vcf(vcf_file, index_file=None):
     """
 
     pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file)
-
-    if index_file is None:
-        _rename_index(vcf_file, '.tbi')
-
-    else:
-        shutil.move(vcf_file + '.tbi', index_file)
 
 
 def concatenate_vcf(in_files, out_file, allow_overlap=False, bcf_index_file=None, vcf_index_file=None):

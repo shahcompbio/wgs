@@ -17,6 +17,7 @@ def luna_config(reference):
     }
 
     variant_calling = {
+        'split_size': 1e7,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {
@@ -213,6 +214,7 @@ def azure_config(reference):
     }
 
     variant_calling = {
+        'split_size': 1e7,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {
@@ -411,6 +413,7 @@ def shahlab_config(reference):
     }
 
     variant_calling = {
+        'split_size': 1e7,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {
