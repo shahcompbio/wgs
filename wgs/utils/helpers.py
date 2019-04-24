@@ -6,7 +6,6 @@ Created on Feb 19, 2018
 import os
 import errno
 import tarfile
-import time
 import yaml
 
 import shutil
@@ -16,6 +15,39 @@ from subprocess import Popen, PIPE
 import multiprocessing
 
 from multiprocessing.pool import ThreadPool
+
+import pypeliner
+
+
+def build_shell_script(command, tag, tempdir):
+    outfile = os.path.join(tempdir, "{}.sh".format(tag))
+    with open(outfile, 'w') as scriptfile:
+        scriptfile.write("#!/bin/bash\n")
+        if isinstance(command, list) or isinstance(command, tuple):
+            command = ' '.join(map(str, command)) + '\n'
+        scriptfile.write(command)
+    return outfile
+
+
+def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
+    makedirs(tempdir)
+
+    scriptfiles = []
+
+    for tag,command in enumerate(commands):
+        scriptfiles.append(build_shell_script(command, tag, tempdir))
+
+    parallel_outfile = os.path.join(tempdir, "commands.txt")
+    with open(parallel_outfile, 'w') as outfile:
+        for scriptfile in scriptfiles:
+            outfile.write("sh {}\n".format(scriptfile))
+
+    if not ncores:
+        ncores = multiprocessing.cpu_count()
+
+    gnu_parallel_cmd = ['parallel', '--jobs', ncores, '<', parallel_outfile]
+    pypeliner.commandline.execute(*gnu_parallel_cmd, docker_image=docker_image)
+
 
 
 def get_values_from_input(yamldata, key):

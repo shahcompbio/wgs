@@ -26,6 +26,11 @@ def add_global_args(subparser):
                            type=json.loads,
                            help='''json string to override the defaults in config''')
 
+    subparser.add_argument("--single_node",
+                           default=False,
+                           action='store_true',
+                           help='''azure specific mode''')
+
     pypeliner.app.add_arguments(subparser)
 
     return subparser

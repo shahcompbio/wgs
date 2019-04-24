@@ -106,6 +106,8 @@ def alignment_workflow(args):
 
     outdir = args['out_dir']
 
+    config = config['alignment']
+
     workflow.subworkflow(
         name="align_samples",
         func=alignment.align_samples,
@@ -114,8 +116,9 @@ def alignment_workflow(args):
             fastqs_r1,
             fastqs_r2,
             outputs,
-            outdir
-        )
+            outdir,
+        ),
+        kwargs={'single_node': args['single_node']}
     )
 
     pyp.run(workflow)

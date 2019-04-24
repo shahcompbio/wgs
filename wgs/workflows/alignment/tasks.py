@@ -3,7 +3,6 @@ import os
 import pypeliner
 
 
-
 def markdups(input, output, metrics, tempdir, mem="2G"):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
