@@ -41,7 +41,7 @@ def create_destruct_workflow(
         args=(
             mgd.InputFile(raw_breakpoints),
             mgd.InputFile(raw_library),
-            [sample_id + 'N'],  # control_ids
+            [str(sample_id) + 'N'],  # control_ids
             mgd.OutputFile(breakpoints),
             mgd.OutputFile(library),
         )
