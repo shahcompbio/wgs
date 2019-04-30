@@ -38,7 +38,7 @@ def luna_config(reference):
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample':'/juno/work/shah/reference/single_sample_plot_data.txt',
+            'refdata_single_sample':'/juno/work/shah/reference/single_sample_plot_reference.h5',
             'thousandgen_params': {
                 'db': '/juno/work/shah/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
@@ -234,7 +234,7 @@ def azure_config(reference):
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample': '/refdata/single_sample_plot_data.txt',
+            'refdata_single_sample': '/refdata/single_sample_plot_reference.h5',
             'thousandgen_params': {
                 'db': '/refdata/1000G_release_20130502_genotypes.vcf.gz'
             },
@@ -432,7 +432,7 @@ def shahlab_config(reference):
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample': '/shahlab/pipelines/reference/single_sample_plot_data.txt',
+            'refdata_single_sample': '/shahlab/pipelines/reference/single_sample_plot_reference.h5',
             'thousandgen_params': {
                 'db': '/shahlab/pipelines/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
