@@ -31,11 +31,10 @@ def wgs_workflow(args):
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    samples = inputs.keys()
-    tumours = {sample: inputs[sample]['tumour'] for sample in samples}
-    normals = {sample: inputs[sample]['normal'] for sample in samples}
-    targets = {sample: inputs[sample].get('target_list') for sample in samples}
-
+    tumours = helpers.get_values_from_input(inputs, 'tumour')
+    normals = helpers.get_values_from_input(inputs, 'normal')
+    targets = helpers.get_values_from_input(inputs, 'target_list')
+    samples = tumours.keys()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),

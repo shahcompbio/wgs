@@ -72,11 +72,11 @@ def cna_calling_workflow(args):
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    samples = inputs.keys()
-    tumours = {sample: inputs[sample]['tumour'] for sample in samples}
-    normals = {sample: inputs[sample]['normal'] for sample in samples}
-    breakpoints = {sample: inputs[sample].get('breakpoints') for sample in samples}
-    targets = {sample: inputs[sample].get('target_list') for sample in samples}
+    tumours = helpers.get_values_from_input(inputs, 'tumour')
+    normals = helpers.get_values_from_input(inputs, 'normal')
+    targets = helpers.get_values_from_input(inputs, 'target_list')
+    breakpoints = helpers.get_values_from_input(inputs, 'breakpoints')
+    samples = tumours.keys()
 
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
     remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')

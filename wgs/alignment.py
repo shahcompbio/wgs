@@ -100,13 +100,9 @@ def alignment_workflow(args):
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    samples = inputs.keys()
-    fastqs_r1 = {sample: inputs[sample]["fastq1"]
-                 for sample in samples}
-    fastqs_r2 = {sample: inputs[sample]["fastq2"]
-                 for sample in samples}
-    outputs = {sample: inputs[sample]["bam"]
-               for sample in samples}
+    fastqs_r1 = helpers.get_values_from_input(inputs, 'fastq1')
+    fastqs_r2 = helpers.get_values_from_input(inputs, 'fastq2')
+    outputs = helpers.get_values_from_input(inputs, 'bam')
 
     outdir = args['out_dir']
 

@@ -18,6 +18,12 @@ import multiprocessing
 from multiprocessing.pool import ThreadPool
 
 
+def get_values_from_input(yamldata, key):
+    values = {str(sample): yamldata[sample][key] for sample in yamldata}
+    return values
+
+
+
 def get_coltype_reference():
     coltypes = {
         'estimated_library_size': 'int', 'total_mapped_reads': 'int',
