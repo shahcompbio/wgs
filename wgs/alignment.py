@@ -95,20 +95,23 @@ def paired_alignment(
 
 
 def alignment_workflow(args):
-    pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow()
 
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
-    fastqs_r1 = helpers.get_values_from_input(inputs, 'fastq1')
-    fastqs_r2 = helpers.get_values_from_input(inputs, 'fastq2')
     outputs = helpers.get_values_from_input(inputs, 'bam')
+    samples = outputs.keys()
+    fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
 
     outdir = args['out_dir']
 
     config_globals = config['globals']
     config = config['alignment']
+
+    ctx = {'docker_image': config['docker']['wgs']}
+
+    pyp = pypeliner.app.Pypeline(config=args)
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
     workflow.subworkflow(
         name="align_samples",

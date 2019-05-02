@@ -22,7 +22,6 @@ def align_samples(
         single_node=False
 ):
 
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -53,7 +52,7 @@ def align_samples(
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs),
-            None
+            config['docker']
         )
     )
 
@@ -89,18 +88,26 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam'),
             config['threads'],
+            mgd.TempSpace("temp_align")
         ),
-        kwargs={'sample_id': ids[0], 'lane_id': ids[1], 'read_group_info': config['read_group_info']}
+        kwargs={
+            'sample_id': ids[0],
+            'lane_id': ids[1],
+            'read_group_info': config['read_group_info'],
+            'docker_config': config['docker']
+        }
     )
 
     workflow.transform(
         name='sort',
         ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
-        func=biowrappers.components.io.bam.tasks.sort,
+        func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
             pypeliner.managed.TempInputFile('aligned.bam'),
             pypeliner.managed.TempOutputFile('sorted.bam'),
+            mgd.TempSpace("sort_alignment")
         ),
+        kwargs={'docker_image': config['docker']['picard']}
     )
 
     workflow.transform(
@@ -113,6 +120,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             pypeliner.managed.OutputFile(markdups_metrics),
             pypeliner.managed.TempSpace("temp_markdups"),
         ),
+        kwargs={'docker_image': config['docker']['picard']}
     )
 
     workflow.commandline(
@@ -123,7 +131,8 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             'index',
             pypeliner.managed.InputFile(out_file),
             pypeliner.managed.OutputFile(out_bai)
-        )
+        ),
+        kwargs={'docker_image': config['docker']['samtools']}
     )
 
     workflow.commandline(
@@ -135,7 +144,8 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             pypeliner.managed.InputFile(out_file),
             '>',
             pypeliner.managed.OutputFile(samtools_flagstat)
-        )
+        ),
+        kwargs={'docker_image': config['docker']['samtools']}
     )
 
     return workflow

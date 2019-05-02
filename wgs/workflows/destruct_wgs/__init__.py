@@ -7,7 +7,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-import filter_annotate
+# import filter_annotate
 
 
 def create_destruct_workflow(
@@ -24,7 +24,7 @@ def create_destruct_workflow(
     if single_node:
         workflow.transform(
             name='destruct_local',
-            func=tasks.run_destruct_local,
+            func='wgs.workflows.destruct_wgs.tasks.run_destruct_local',
             args=(
                 mgd.TempSpace("destruct_local_temp"),
                 mgd.InputFile(tumour_bam),
@@ -59,7 +59,7 @@ def create_destruct_workflow(
             'mem': 4,
             'ncpus': 1,
         },
-        func=filter_annotate.filter_annotate_breakpoints,
+        func='wgs.workflows.destruct_wgs.filter_annotate.filter_annotate_breakpoints',
         args=(
             mgd.InputFile(raw_breakpoints),
             mgd.InputFile(raw_library),

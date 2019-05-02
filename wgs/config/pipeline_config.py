@@ -2,6 +2,31 @@ import os
 import warnings
 import yaml
 from wgs.utils import helpers
+import wgs
+
+
+def get_version():
+    version = wgs.__version__
+    # strip setuptools metadata
+    version = version.split("+")[0]
+    return version
+
+def containers():
+    version = get_version()
+    docker_images = {
+        'bwa': 'wgs/bwa:v0.0.1', 'samtools': 'wgs/samtools:v0.0.1',
+        'picard': 'wgs/picard:v0.0.1',
+        'wgs': 'wgs/wgs:v{}'.format(version),
+        'strelka': 'wgs/strelka:v0.0.1', 'mutationseq': 'wgs/mutationseq:v0.0.1',
+        'vcftools': 'wgs/vcftools:v0.0.1', 'snpeff': 'wgs/vcftools:v0.0.1',
+        'titan': 'wgs/titan:v0.0.1', 'remixt': 'wgs/remixt:v{}'.format(version),
+        'destruct': 'wgs/destruct:v{}'.format(version),
+        'lumpy': 'wgs/lumpy:v0.0.1'
+    }
+
+    singularity = {}
+
+    return {'docker': docker_images, 'singularity': singularity}
 
 
 def luna_config(reference):
@@ -204,6 +229,8 @@ def luna_config(reference):
 
 def azure_config(reference):
 
+    docker_containers = containers()['docker']
+
     if reference == 'grch37':
         reference = "/refdata/GRCh37-lite.fa"
     else:
@@ -392,6 +419,12 @@ def azure_config(reference):
             'SM': '{sample_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
+        },
+        'docker': {
+          'wgs': docker_containers['wgs'],
+          'bwa': docker_containers['bwa'],
+          'samtools': docker_containers['samtools'],
+          'picard': docker_containers['picard'],
         }
     }
 

@@ -2,8 +2,9 @@ import os
 
 import pypeliner
 
+from wgs.utils import helpers
 
-def markdups(input, output, metrics, tempdir, mem="2G"):
+def markdups(input, output, metrics, tempdir, mem="2G", docker_image=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
@@ -17,7 +18,7 @@ def markdups(input, output, metrics, tempdir, mem="2G"):
            'MAX_RECORDS_IN_RAM=150000'
            ]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def picard_merge_bams(inputs, output, mem="2G", **kwargs):
@@ -56,7 +57,44 @@ def merge_bams(inputs, output, containers):
     bam_index(output, output_index, docker_image=containers.get('samtools'))
 
 
-def align_bwa_mem(read_1, read_2, ref_genome, aligned_bam, threads, sample_id=None, lane_id=None, read_group_info=None):
+def bwa_mem_paired_end(fastq1, fastq2, output,
+                         reference, readgroup,
+                       numthreads,
+                         **kwargs):
+    """
+    run bwa aln on both fastq files,
+    bwa sampe to align, and convert to bam with samtools view
+    """
+
+    if not numthreads:
+        numthreads=1
+
+    if not readgroup:
+        pypeliner.commandline.execute(
+            'bwa', 'mem', '-M',
+            '-t', numthreads,
+            reference, fastq1, fastq2,
+            '>', output,
+            **kwargs)
+    else:
+        try:
+            readgroup_literal = '"' + readgroup + '"'
+            pypeliner.commandline.execute(
+                'bwa', 'mem', '-M', '-R', readgroup_literal,
+                '-t', numthreads,
+                reference, fastq1, fastq2,
+                '>', output,
+                **kwargs)
+        except pypeliner.commandline.CommandLineException:
+            pypeliner.commandline.execute(
+                'bwa', 'mem', '-M', '-R', readgroup,
+                '-t', numthreads,
+                reference, fastq1, fastq2,
+                '>', output,
+                **kwargs)
+
+
+def get_readgroup(read_group_info, sample_id, lane_id):
     if read_group_info:
         rg_id = read_group_info['ID'].format(**{'sample_id': sample_id, 'lane_id': lane_id})
         read_group = ['@RG', 'ID:{0}'.format(rg_id)]
@@ -74,13 +112,50 @@ def align_bwa_mem(read_1, read_2, ref_genome, aligned_bam, threads, sample_id=No
     else:
         read_group = None
 
-    align_cmd = ['bwa', 'mem']
-    if read_group:
-        align_cmd.extend(['-R', read_group])
-    align_cmd.extend(['-M', ref_genome, read_1, read_2, '-t', threads])
+    return read_group
 
-    to_bam_cmd = ['samtools', 'view', '-bSh', '-', '>', aligned_bam]
 
-    cmd = align_cmd + ['|'] + to_bam_cmd
+def samtools_sam_to_bam(samfile, bamfile,
+                         **kwargs):
+    pypeliner.commandline.execute(
+        'samtools', 'view', '-bSh', samfile,
+        '>', bamfile,
+        **kwargs)
 
-    pypeliner.commandline.execute(*cmd)
+
+def align_bwa_mem(
+        read_1, read_2, ref_genome, aligned_bam, threads, tempdir,
+        sample_id=None, lane_id=None, read_group_info=None,
+        docker_config=None
+):
+
+    readgroup = get_readgroup(read_group_info, sample_id, lane_id)
+
+    helpers.makedirs(tempdir)
+
+    bwa_mem_output = os.path.join(tempdir, "bwa_mem.sam")
+    bwa_mem_paired_end(
+        read_1, read_2, bwa_mem_output, ref_genome,
+        readgroup, threads, docker_image=docker_config['bwa']
+    )
+
+    samtools_sam_to_bam(
+        bwa_mem_output, aligned_bam, docker_image=docker_config['samtools']
+    )
+
+
+def bam_sort(bam_filename, sorted_bam_filename, tempdir, mem="2G", **kwargs):
+    if not os.path.exists(tempdir):
+        helpers.makedirs(tempdir)
+
+    pypeliner.commandline.execute(
+        'picard', '-Xmx' + mem, '-Xms' + mem,
+        '-XX:ParallelGCThreads=1',
+        'SortSam',
+                  'INPUT=' + bam_filename,
+                  'OUTPUT=' + sorted_bam_filename,
+        'SORT_ORDER=coordinate',
+        'VALIDATION_STRINGENCY=LENIENT',
+                  'TMP_DIR=' + tempdir,
+        'MAX_RECORDS_IN_RAM=150000',
+        **kwargs)
