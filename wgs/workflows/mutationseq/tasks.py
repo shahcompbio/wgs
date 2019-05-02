@@ -98,6 +98,7 @@ def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, 
 
         # touch the txt file to avoid pypeliner errors
         open(out_txt, 'w').close()
+        open(museqportrait_log, 'w').close()
 
     else:
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
