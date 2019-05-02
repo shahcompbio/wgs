@@ -1,6 +1,6 @@
+import logging
 import multiprocessing
 import os
-import shutil
 
 import pypeliner
 import pypeliner.managed as mgd
@@ -9,7 +9,7 @@ import pypeliner.managed as mgd
 def run_destruct_local(
         tempdir, tumour_bam, normal_bam,
         sample_id, raw_breakpoints, raw_library,
-        reads, destruct_config, refdata_destruct,# logfile,
+        reads, destruct_config, refdata_destruct,
         ncpus=None
 ):
     pipelinedir = os.path.join(tempdir, 'pipeline')
@@ -24,6 +24,8 @@ def run_destruct_local(
 
     pyp = pypeliner.app.Pypeline(config=config)
     workflow = pypeliner.workflow.Workflow()
+
+    logging.getLogger().setLevel(logging.DEBUG)
 
     workflow.subworkflow(
         name='destruct',
@@ -40,10 +42,3 @@ def run_destruct_local(
     )
 
     pyp.run(workflow)
-
-    # pyp_logfile = os.path.join(pipelinedir, 'log', 'latest', 'pipeline.log')
-    #
-    # if not os.path.exists(logfile):
-    #     raise IOError("Couldnt find log file at {}".format(pyp_logfile))
-    #
-    # shutil.copyfile(pyp_logfile, logfile)

@@ -35,7 +35,6 @@ def create_destruct_workflow(
                 mgd.OutputFile(reads),
                 destruct_config,
                 sv_config['refdata_destruct'],
-                # mgd.TempOutputFile('destruct_local_pypeliner.log')
             ),
             kwargs={'ncpus': None}
         )

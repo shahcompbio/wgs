@@ -1,9 +1,8 @@
-import pandas as pd
-
+import logging
 import multiprocessing
 import os
-import shutil
 
+import pandas as pd
 import pypeliner
 import pypeliner.managed as mgd
 
@@ -42,8 +41,10 @@ def run_remixt_local(
               'submit': 'local', 'maxjobs': ncpus,
               'loglevel': 'DEBUG'}
 
-    pyp = pypeliner.app.Pypeline(config=config)#, no_init_logger=True)
+    pyp = pypeliner.app.Pypeline(config=config)
     workflow = pypeliner.workflow.Workflow()
+
+    logging.getLogger().setLevel(logging.DEBUG)
 
     workflow.subworkflow(
         name='remixt',
