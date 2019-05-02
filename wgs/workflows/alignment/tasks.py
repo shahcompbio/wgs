@@ -48,7 +48,8 @@ def bam_index(infile, outfile, **kwargs):
         **kwargs)
 
 
-def merge_bams(inputs, output, output_index, containers):
+def merge_bams(inputs, output, containers):
+    output_index = output + '.bai'
     if not containers:
         containers = {}
     picard_merge_bams(inputs, output, docker_image=containers.get('picard'))

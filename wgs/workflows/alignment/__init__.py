@@ -14,34 +14,47 @@ import tasks
 
 def align_samples(
         config,
-        fastq1_inputs,
-        fastq2_inputs,
+        config_globals,
+        fastqs_r1,
+        fastqs_r2,
         bam_outputs,
         outdir,
         single_node=False
 ):
-    samples = bam_outputs.keys()
+
 
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples
+        obj=mgd.OutputChunks('sample_id', 'lane_id'),
+        value=fastqs_r1.keys(),
     )
 
     workflow.subworkflow(
         name='align_samples',
         func=align_sample,
-        axes=('sample_id',),
+        axes=('sample_id', 'lane_id'),
         args=(
             config,
-            mgd.InputFile('input.r1.fastq.gz', 'sample_id', fnames=fastq1_inputs),
-            mgd.InputFile('input.r2.fastq.gz', 'sample_id', fnames=fastq2_inputs),
-            mgd.OutputFile('output.bam', 'sample_id', fnames=bam_outputs),
+            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
+            mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             outdir,
             mgd.InputInstance("sample_id"),
         ),
         kwargs={'single_node': single_node}
+    )
+
+    workflow.transform(
+        name='merge_tumour_lanes',
+        ctx={'mem': config_globals['memory']['med'], 'ncpus': 1},
+        func="wgs.workflows.alignment.tasks.merge_bams",
+        axes=('sample_id',),
+        args=(
+            mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
+            mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs),
+            None
+        )
     )
 
     return workflow
@@ -59,19 +72,12 @@ def align_sample(
 def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
     ref_genome = config['ref_genome']['file']
 
-    read_group_config = config.get('read_group', {})
-
     markdups_metrics = os.path.join(outdir, 'markdups_metrics.pdf')
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
     out_bai = out_file + '.bai'
 
     workflow = pypeliner.workflow.Workflow()
-
-    workflow.setobj(
-        obj=pypeliner.managed.TempOutputObj('read_group_config'),
-        value=read_group_config,
-    )
 
     workflow.transform(
         name='align_bwa_mem',

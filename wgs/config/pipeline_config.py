@@ -113,6 +113,7 @@ def luna_config(reference):
     }
 
     cna_calling = {
+        'split_size': 1e7,
         "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': map(str, range(1, 23) + ['X']),
@@ -280,7 +281,7 @@ def azure_config(reference):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/refdata/reference-grch37-decoys-destruct/',
+        'refdata_destruct': '/refdata/',
         'parse_lumpy':{
             'foldback_threshold': None,
             'mappability_ref': None,
@@ -310,6 +311,7 @@ def azure_config(reference):
     }
 
     cna_calling = {
+        'split_size': 1e7,
         "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': map(str, range(1, 23) + ['X']),
@@ -509,6 +511,7 @@ def shahlab_config(reference):
     }
 
     cna_calling = {
+        'split_size': 1e7,
         "min_num_reads": 5,
         "reference_genome": reference,
         'chromosomes': map(str, range(1, 23) + ['X']),

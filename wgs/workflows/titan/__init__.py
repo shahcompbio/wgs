@@ -4,13 +4,14 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-
+import wgs.utils.museq_utils
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, titan_raw_dir,
         segments, params, markers,
         global_config, config,
-        intervals, sample_id
+        intervals, sample_id,
+        single_node=None
 ):
     titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
     igv_template = os.path.join(titan_outdir, 'igv_segs.txt')
@@ -41,37 +42,68 @@ def create_titan_workflow(
         args=(
             config['reference_genome'],
             config['chromosomes']
-        )
-    )
-
-    workflow.transform(
-        name='run_museq',
-        ctx={'mem': global_config['memory']['high'],
-             'ncpus': global_config['threads'], 'walltime': '02:00'},
-        func=tasks.run_museq,
-        axes=('interval',),
-        args=(
-            mgd.InputFile(tumour_bam, extensions=['.bai']),
-            mgd.InputFile(normal_bam, extensions=['.bai']),
-            mgd.TempOutputFile('museq.vcf', 'interval'),
-            mgd.TempOutputFile('museq.log', 'interval'),
-            config['reference_genome'],
-            mgd.InputInstance('interval'),
-            config['museq_params']
         ),
+        kwargs={'size': config['split_size']}
     )
 
-    workflow.transform(
-        name='merge_vcfs',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1},
-        func=tasks.merge_vcfs,
-        args=(
-            mgd.TempInputFile('museq.vcf', 'interval'),
-            mgd.OutputFile(museq_vcf),
+
+    if single_node:
+        workflow.transform(
+            name='run_museq',
+            ctx={'num_retry': 3, 'mem_retry_increment': 2,
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '24:00'},
+            func=wgs.utils.museq_utils.run_museq_one_job,
+            args=(
+                mgd.TempSpace("run_museq_temp"),
+                mgd.TempOutputFile('merged.vcf'),
+                config['reference_genome'],
+                mgd.InputChunks('interval'),
+                config['museq_params'],
+            ),
+            kwargs={
+                'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
+                'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
+                'titan_mode': True
+            }
         )
-    )
+    else:
+        workflow.transform(
+            name='run_museq',
+            ctx={'num_retry': 3, 'mem_retry_increment': 2,
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '24:00'},
+            axes=('interval',),
+            func=wgs.utils.museq_utils.run_museq,
+            args=(
+                mgd.TempOutputFile('museq.vcf', 'interval'),
+                mgd.TempOutputFile('museq.log', 'interval'),
+                config['reference_genome'],
+                mgd.InputInstance('interval'),
+                config['museq_params']
+            ),
+            kwargs={
+                'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
+                'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
+                'titan_mode': True
+            }
+        )
+
+        workflow.transform(
+            name='merge_vcfs',
+            ctx={'num_retry': 3, 'mem_retry_increment': 2,
+                 'mem': global_config['memory']['high'],
+                 'ncpus': global_config['threads'],
+                 'walltime': '08:00'},
+            func=tasks.merge_vcfs,
+            args=(
+                mgd.TempInputFile('museq.vcf', 'interval'),
+                mgd.TempOutputFile('merged.vcf'),
+                mgd.TempSpace('merge_vcf'),
+            )
+        )
 
     workflow.transform(
         name='convert_museq_vcf2counts',
@@ -157,84 +189,84 @@ def create_titan_workflow(
             mgd.InputInstance('ploidy')
         ),
     )
-
-    workflow.transform(
-        name='calc_cnsegments_titan',
-        axes=('numclusters', 'ploidy'),
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.calc_cnsegments_titan,
-        args=(
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile('titan_igv', 'numclusters', 'ploidy', template=igv_template),
-            mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
-        ),
-    )
-
-    workflow.transform(
-        name='annot_pygenes',
-        axes=('numclusters', 'ploidy'),
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.annot_pygenes,
-        args=(
-            mgd.TempInputFile('segs.csv', 'numclusters', 'ploidy'),
-            mgd.OutputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            config,
-        ),
-    )
-
-    workflow.transform(
-        name='parse_titan',
-        axes=('numclusters', 'ploidy'),
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.parse_titan,
-        args=(
-            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile('titan_parsed.csv', 'numclusters', 'ploidy', template=parsed_template),
-            config['parse_titan'],
-            sample_id,
-        ),
-    )
-
-    workflow.transform(
-        name='segments_h5',
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.merge_to_h5,
-        args=(
-            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            mgd.OutputFile(segments),
-            intervals
-        ),
-    )
-
-    workflow.transform(
-        name='params_h5',
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.merge_to_h5,
-        args=(
-            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
-            mgd.OutputFile(params),
-            intervals
-        ),
-    )
-
-    workflow.transform(
-        name='markers_h5',
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '02:00'},
-        func=tasks.merge_to_h5,
-        args=(
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile(markers),
-            intervals
-        ),
-        kwargs={'dtype': {'Chr': str}}
-    )
+    #
+    # workflow.transform(
+    #     name='calc_cnsegments_titan',
+    #     axes=('numclusters', 'ploidy'),
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.calc_cnsegments_titan,
+    #     args=(
+    #         mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+    #         mgd.OutputFile('titan_igv', 'numclusters', 'ploidy', template=igv_template),
+    #         mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
+    #     ),
+    # )
+    #
+    # workflow.transform(
+    #     name='annot_pygenes',
+    #     axes=('numclusters', 'ploidy'),
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.annot_pygenes,
+    #     args=(
+    #         mgd.TempInputFile('segs.csv', 'numclusters', 'ploidy'),
+    #         mgd.OutputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+    #         config,
+    #     ),
+    # )
+    #
+    # workflow.transform(
+    #     name='parse_titan',
+    #     axes=('numclusters', 'ploidy'),
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.parse_titan,
+    #     args=(
+    #         mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+    #         mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
+    #         mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+    #         mgd.OutputFile('titan_parsed.csv', 'numclusters', 'ploidy', template=parsed_template),
+    #         config['parse_titan'],
+    #         sample_id,
+    #     ),
+    # )
+    #
+    # workflow.transform(
+    #     name='segments_h5',
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.merge_to_h5,
+    #     args=(
+    #         mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+    #         mgd.OutputFile(segments),
+    #         intervals
+    #     ),
+    # )
+    #
+    # workflow.transform(
+    #     name='params_h5',
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.merge_to_h5,
+    #     args=(
+    #         mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
+    #         mgd.OutputFile(params),
+    #         intervals
+    #     ),
+    # )
+    #
+    # workflow.transform(
+    #     name='markers_h5',
+    #     ctx={'mem': global_config['memory']['low'],
+    #          'ncpus': 1, 'walltime': '02:00'},
+    #     func=tasks.merge_to_h5,
+    #     args=(
+    #         mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+    #         mgd.OutputFile(markers),
+    #         intervals
+    #     ),
+    #     kwargs={'dtype': {'Chr': str}}
+    # )
 
     return workflow

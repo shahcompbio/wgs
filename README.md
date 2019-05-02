@@ -38,6 +38,7 @@ pip install git+https://bitbucket.org/aroth85/biowrappers.git@singlecell
 pip install git+https://github.com/shahcompbio/pypeliner.git@master
 pip install git+https://github.com/shahcompbio/wgs.git@master
 pip install git+https://dgrewal@svn.bcgsc.ca/bitbucket/scm/~dgrewal/vizutils.git
+pip install git+https://dgrewal@svn.bcgsc.ca/bitbucket/scm/museq/museqportrait.git@new_vcf_format
 ```
 
 #### Input File format

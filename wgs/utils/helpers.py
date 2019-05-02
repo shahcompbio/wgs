@@ -19,6 +19,22 @@ from multiprocessing.pool import ThreadPool
 import pypeliner
 
 
+def get_fastqs(inputs, samples, sample_type):
+    fq1 = {}
+    fq2 = {}
+
+    for sample in samples:
+        if sample_type:
+            fastqs = inputs[sample]['fastqs'][sample_type]
+        else:
+            fastqs = inputs[sample]['fastqs']
+        for lane in fastqs:
+            fq1[(sample, lane)] = fastqs[lane]['fastq1']
+            fq2[(sample, lane)] = fastqs[lane]['fastq2']
+
+    return fq1, fq2
+
+
 def build_shell_script(command, tag, tempdir):
     outfile = os.path.join(tempdir, "{}.sh".format(tag))
     with open(outfile, 'w') as scriptfile:
@@ -264,24 +280,24 @@ def copy_file(infile, output):
     shutil.copy(infile, output)
 
 
-def get_fastqs(fastqs_file):
-
-    data = load_yaml(fastqs_file)
-
-    for cell in data.keys():
-        assert "fastqs" in data[
-            cell], "couldnt extract fastq file paths from yaml input for cell: {}".format(cell)
-
-    fastq_1_filenames = dict()
-    fastq_2_filenames = dict()
-    for cell in data.keys():
-        fastqs = data[cell]["fastqs"]
-
-        for lane, paths in fastqs.iteritems():
-            fastq_1_filenames[(cell, lane)] = paths["fastq_1"]
-            fastq_2_filenames[(cell, lane)] = paths["fastq_2"]
-
-    return fastq_1_filenames, fastq_2_filenames
+# def get_fastqs(fastqs_file):
+#
+#     data = load_yaml(fastqs_file)
+#
+#     for cell in data.keys():
+#         assert "fastqs" in data[
+#             cell], "couldnt extract fastq file paths from yaml input for cell: {}".format(cell)
+#
+#     fastq_1_filenames = dict()
+#     fastq_2_filenames = dict()
+#     for cell in data.keys():
+#         fastqs = data[cell]["fastqs"]
+#
+#         for lane, paths in fastqs.iteritems():
+#             fastq_1_filenames[(cell, lane)] = paths["fastq_1"]
+#             fastq_2_filenames[(cell, lane)] = paths["fastq_2"]
+#
+#     return fastq_1_filenames, fastq_2_filenames
 
 
 def get_instrument_info(fastqs_file):

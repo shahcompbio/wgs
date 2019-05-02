@@ -4,14 +4,14 @@ import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import breakpoint_calling_consensus
-from wgs.workflows import destruct
+from wgs.workflows import destruct_wgs
 from wgs.workflows import lumpy
-
 
 def call_breakpoints(
         samples, config, tumours, normals, destruct_raw_breakpoints,
         destruct_raw_library, destruct_breakpoints, destruct_library,
-        destruct_reads, lumpy_vcf, consensus_calls
+        destruct_reads, lumpy_vcf, consensus_calls,
+        single_node=False
 ):
     destruct_raw_breakpoints = dict([(sampid, destruct_raw_breakpoints[sampid])
                                      for sampid in samples])
@@ -34,25 +34,26 @@ def call_breakpoints(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
-    workflow.subworkflow(
-        name='destruct',
-        func=destruct.create_destruct_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile('destruct_raw_breakpoints', 'sample_id', fnames=destruct_raw_breakpoints),
-            mgd.OutputFile('destruct_raw_library', 'sample_id', fnames=destruct_raw_library),
-            mgd.OutputFile('destruct_breakpoints', 'sample_id', fnames=destruct_breakpoints),
-            mgd.OutputFile('destruct_library', 'sample_id', fnames=destruct_library),
-            mgd.OutputFile('destruct_reads', 'sample_id', fnames=destruct_reads),
-            mgd.InputInstance('sample_id'),
-            config['globals'],
-            config['sv_calling']
-        )
-    )
+    # workflow.subworkflow(
+    #     name='destruct',
+    #     func=destruct_wgs.create_destruct_workflow,
+    #     axes=('sample_id',),
+    #     args=(
+    #         mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+    #                       extensions=['.bai'], axes_origin=[]),
+    #         mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+    #                       extensions=['.bai'], axes_origin=[]),
+    #         mgd.OutputFile('destruct_raw_breakpoints', 'sample_id', fnames=destruct_raw_breakpoints),
+    #         mgd.OutputFile('destruct_raw_library', 'sample_id', fnames=destruct_raw_library),
+    #         mgd.OutputFile('destruct_breakpoints', 'sample_id', fnames=destruct_breakpoints),
+    #         mgd.OutputFile('destruct_library', 'sample_id', fnames=destruct_library),
+    #         mgd.OutputFile('destruct_reads', 'sample_id', fnames=destruct_reads),
+    #         mgd.InputInstance('sample_id'),
+    #         config['globals'],
+    #         config['sv_calling']
+    #     ),
+    #     kwargs={'single_node': single_node}
+    # )
 
     workflow.subworkflow(
         name='lumpy',
@@ -70,22 +71,23 @@ def call_breakpoints(
             'normal_bam': mgd.InputFile(
                 "normal.bam", 'sample_id', fnames=normals,
                 extensions=['.bai'], axes_origin=[]),
-        }
+            'single_node': single_node
+        },
     )
-
-    workflow.subworkflow(
-        name="consensus_calling",
-        func=breakpoint_calling_consensus.create_consensus_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile('destruct_breakpoints', 'sample_id', fnames=destruct_breakpoints),
-            mgd.InputFile('lumpy_vcf', 'sample_id', fnames=lumpy_vcf),
-            mgd.OutputFile('consensus_calls', 'sample_id', fnames=consensus_calls),
-            config['globals'],
-            config['sv_calling'],
-            mgd.InputInstance('sample_id')
-        ),
-    )
+    #
+    # workflow.subworkflow(
+    #     name="consensus_calling",
+    #     func=breakpoint_calling_consensus.create_consensus_workflow,
+    #     axes=('sample_id',),
+    #     args=(
+    #         mgd.InputFile('destruct_breakpoints', 'sample_id', fnames=destruct_breakpoints),
+    #         mgd.InputFile('lumpy_vcf', 'sample_id', fnames=lumpy_vcf),
+    #         mgd.OutputFile('consensus_calls', 'sample_id', fnames=consensus_calls),
+    #         config['globals'],
+    #         config['sv_calling'],
+    #         mgd.InputInstance('sample_id')
+    #     ),
+    # )
 
     return workflow
 
@@ -131,7 +133,8 @@ def sv_calling_workflow(args):
             mgd.OutputFile('destruct_reads', 'sample_id', template=destruct_reads, axes_origin=[]),
             mgd.OutputFile('lumpy_vcf', 'sample_id', template=lumpy_vcf, axes_origin=[]),
             mgd.OutputFile('parsed_csv', 'sample_id', template=parsed_csv, axes_origin=[])
-        )
+        ),
+        kwargs={'single_node': args['single_node']}
     )
 
     pyp.run(workflow)

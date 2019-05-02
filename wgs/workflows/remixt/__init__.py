@@ -17,7 +17,8 @@ def create_remixt_workflow(
         remixt_refdata,
         remixt_results_filename,
         remixt_raw_dir,
-        min_num_reads
+        min_num_reads,
+        single_node=False
 ):
     workflow = pypeliner.workflow.Workflow()
 
@@ -41,21 +42,38 @@ def create_remixt_workflow(
         )
     )
 
-    workflow.subworkflow(
-        name='remixt',
-        func="remixt.workflow.create_remixt_bam_workflow",
-        args=(
-            mgd.InputFile(breakpoints),
-            {sample_id: mgd.InputFile(tumour_path),
-             sample_id + 'N': mgd.InputFile(normal_path)},
-            {sample_id: mgd.OutputFile(remixt_results_filename)},
-            remixt_raw_dir,
-            remixt_config,
-            remixt_refdata,
-        ),
-        kwargs={
-            'normal_id': sample_id + 'N',
-        }
-    )
+    if single_node:
+        workflow.transform(
+            name='remixt',
+            func=tasks.run_remixt_local,
+            args=(
+                mgd.TempSpace("remixt_temp"),
+                mgd.InputFile(breakpoints),
+                mgd.InputFile(tumour_path, extensions=['.bai']),
+                mgd.InputFile(normal_path, extensions=['.bai']),
+                sample_id,
+                mgd.OutputFile(remixt_results_filename),
+                remixt_raw_dir,
+                remixt_config,
+                remixt_refdata,
+            ),
+        )
+    else:
+        workflow.subworkflow(
+            name='remixt',
+            func="remixt.workflow.create_remixt_bam_workflow",
+            args=(
+                mgd.InputFile(breakpoints),
+                {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),
+                 sample_id + 'N': mgd.InputFile(normal_path, extensions=['.bai'])},
+                {sample_id: mgd.OutputFile(remixt_results_filename)},
+                remixt_raw_dir,
+                remixt_config,
+                remixt_refdata,
+            ),
+            kwargs={
+                'normal_id': sample_id + 'N',
+            }
+        )
 
     return workflow

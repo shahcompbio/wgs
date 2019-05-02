@@ -2,6 +2,8 @@ import os
 
 import pypeliner
 
+from wgs.utils import helpers
+
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
@@ -44,3 +46,17 @@ def run_lumpyexpress(lumpy_vcf, config,
            '-o', lumpy_vcf]
 
     pypeliner.commandline.execute(*cmd)
+
+
+
+def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config):
+    helpers.makedirs(tempdir)
+
+    # disc
+    unsorted_disc = os.path.join(tempdir, 'discordants.unsorted.bam')
+    run_samtools_view(bamfile, unsorted_disc)
+    run_samtools_sort(unsorted_disc, disc_reads)
+
+    unsorted_split = os.path.join(tempdir, 'splitters.unsorted.bam')
+    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config)
+    run_samtools_sort(unsorted_split, split_reads)

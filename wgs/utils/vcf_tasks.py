@@ -119,6 +119,11 @@ def index_vcf(vcf_file, index_file=None):
     pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file)
 
 
+def sort_vcf(infile, outfile):
+    cmd = ['cat', infile, '|', 'vcf-sort', '>', outfile]
+    pypeliner.commandline.execute(*cmd)
+
+
 def concatenate_vcf(in_files, out_file, allow_overlap=False, bcf_index_file=None, vcf_index_file=None):
     """ Fast concatenation of VCF file using `bcftools`.
 
