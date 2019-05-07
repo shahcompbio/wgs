@@ -62,6 +62,8 @@ def create_museq_workflow(
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
+                'museq_docker_image': varcall_config['docker']['mutationseq'],
+                'vcftools_docker_image': varcall_config['docker']['vcftools']
             }
         )
     else:
@@ -83,6 +85,7 @@ def create_museq_workflow(
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
+                'docker_image': varcall_config['docker']['mutationseq']
             }
         )
 
@@ -108,6 +111,7 @@ def create_museq_workflow(
             mgd.TempInputFile('merged.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
+        kwargs={'docker_image': varcall_config['docker']['vcftools']}
     )
 
     workflow.transform(
@@ -124,6 +128,7 @@ def create_museq_workflow(
             single,
             varcall_config['plot_params'],
         ),
+        kwargs={'docker_image': varcall_config['docker']['museqportrait']}
     )
 
     return workflow

@@ -14,7 +14,10 @@ def create_annotation_workflow(
         input_vcf,
         annotated_vcf,
         global_config,
-        varcall_config):
+        varcall_config,
+        vcftools_docker=None,
+        snpeff_docker=None
+):
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -28,6 +31,7 @@ def create_annotation_workflow(
             mgd.TempOutputFile('museq_annotSnpEff.vcf'),
             varcall_config,
         ),
+        kwargs={'docker_image': snpeff_docker}
     )
 
     workflow.transform(
@@ -92,6 +96,7 @@ def create_annotation_workflow(
             mgd.TempInputFile('museq_cosmic.vcf'),
             mgd.OutputFile(annotated_vcf),
         ),
+        kwargs={'docker_image': vcftools_docker}
     )
 
     return workflow

@@ -29,7 +29,7 @@ FILTER_ID_SPANNING_DELETION = 'SpanDel'
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
-def generate_intervals(ref, chromosomes, size=100000000):
+def generate_intervals(ref, chromosomes, size=1000000):
     fasta = pysam.FastaFile(ref)
     lengths = fasta.lengths
     names = fasta.references
@@ -39,9 +39,10 @@ def generate_intervals(ref, chromosomes, size=100000000):
     for name, length in zip(names, lengths):
         if name not in chromosomes:
             continue
-
         for i in range(int((length / size) + 1)):
-            intervals.append(name + "_" + str(i * size) + "_" + str((i + 1) * size))
+            start = str(int(i * size))
+            end = str(int((i + 1) * size))
+            intervals.append(name + "_" + start + "_" + end)
 
     return intervals
 
@@ -73,7 +74,7 @@ def get_known_chromosome_sizes(size_file):
     return sizes
 
 
-def count_fasta_bases(ref_genome_fasta_file, out_file):
+def count_fasta_bases(ref_genome_fasta_file, out_file, **kwargs):
     cmd = [
         'countFastaBases',
         ref_genome_fasta_file,
@@ -81,7 +82,7 @@ def count_fasta_bases(ref_genome_fasta_file, out_file):
         out_file
     ]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, **kwargs)
 
 
 def call_somatic_variants(
@@ -102,6 +103,7 @@ def call_somatic_variants(
         ssnv_noise=0.0000005,
         ssnv_noise_strand_bias_frac=0.5,
         ssnv_prior=0.000001,
+        docker_image=None,
         return_cmd=False
 ):
     chrom, beg, end = interval.split('_')
@@ -148,13 +150,13 @@ def call_somatic_variants(
         '--tier2-min-single-align-score', min_tier_two_mapq,
         '--tier2-mismatch-density-filter-count', 10,
         '--tier2-no-filter-unanchored',
-        '--tier2-single-align-score-rescue-mode'
+        '--tier2-single-align-score-rescue-mode',
     ]
 
     if return_cmd:
         return cmd
     else:
-        pypeliner.commandline.execute(*cmd)
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def call_somatic_variants_one_job(
@@ -185,9 +187,9 @@ def call_somatic_variants_one_job(
         max_ref_repeat_indel=8,
         max_window_filtered_basecall_frac_indel=0.3,
         quality_lower_bound_indel=30,
-        use_depth_filter_indel=True
+        use_depth_filter_indel=True,
+        docker_image=None
 ):
-
     commands = []
     for i, interval in enumerate(intervals):
         ival_temp_dir = os.path.join(tempdir, 'intervals', str(i))
@@ -214,7 +216,7 @@ def call_somatic_variants_one_job(
         commands.append(command)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, None)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, docker_image)
 
     snv_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf')
                 for i, ival in enumerate(intervals)}

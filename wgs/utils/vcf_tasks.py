@@ -78,7 +78,7 @@ def _rename_index(in_file, index_suffix):
         shutil.move(in_file + index_suffix, index_file)
 
 
-def index_bcf(in_file, index_file=None):
+def index_bcf(in_file, docker_image=None):
     """ Index a VCF or BCF file with bcftools.
 
     :param in_file: Path of file to index.
@@ -86,10 +86,10 @@ def index_bcf(in_file, index_file=None):
 
     """
 
-    pypeliner.commandline.execute('bcftools', 'index', in_file)
+    pypeliner.commandline.execute('bcftools', 'index', in_file, docker_image=docker_image)
 
 
-def finalise_vcf(in_file, compressed_file):
+def finalise_vcf(in_file, compressed_file, docker_image=None):
     """ Compress a VCF using bgzip and create index.
 
     :param in_file: Path of file to compressed and index.
@@ -98,15 +98,15 @@ def finalise_vcf(in_file, compressed_file):
 
     """
     uncompressed_file = compressed_file + '.uncompressed'
-    pypeliner.commandline.execute('vcf-sort', in_file, '>', uncompressed_file)
-    pypeliner.commandline.execute('bgzip', uncompressed_file, '-c', '>', compressed_file)
+    pypeliner.commandline.execute('vcf-sort', in_file, '>', uncompressed_file, docker_image=docker_image)
+    pypeliner.commandline.execute('bgzip', uncompressed_file, '-c', '>', compressed_file, docker_image=docker_image)
     os.remove(uncompressed_file)
 
-    index_bcf(compressed_file)
-    index_vcf(compressed_file)
+    index_bcf(compressed_file, docker_image=docker_image)
+    index_vcf(compressed_file, docker_image=docker_image)
 
 
-def index_vcf(vcf_file, index_file=None):
+def index_vcf(vcf_file, docker_image=None):
     """ Create a tabix index for a VCF file
 
     :param vcf_file: Path of VCF to create index for. Should compressed by bgzip.
@@ -116,7 +116,7 @@ def index_vcf(vcf_file, index_file=None):
 
     """
 
-    pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file)
+    pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file, docker_image=docker_image)
 
 
 def sort_vcf(infile, outfile):

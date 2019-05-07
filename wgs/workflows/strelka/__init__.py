@@ -20,6 +20,8 @@ def create_strelka_workflow(
         use_depth_thresholds=True,
         single_node=False,
 ):
+    docker_config = varcall_config['docker']
+
     workflow = Workflow()
 
     workflow.transform(
@@ -31,7 +33,8 @@ def create_strelka_workflow(
         args=(
             varcall_config['reference'],
             varcall_config['chromosomes']
-        )
+        ),
+        kwargs={'size': varcall_config['split_size']}
     )
 
     workflow.setobj(
@@ -48,6 +51,7 @@ def create_strelka_workflow(
             ref_genome_fasta_file,
             mgd.TempOutputFile('ref_base_counts.tsv'),
         ),
+        kwargs={'docker_image': docker_config['strelka']}
     )
 
     workflow.transform(
@@ -78,6 +82,7 @@ def create_strelka_workflow(
                 chromosomes,
                 mgd.TempSpace("strelka_single_node_run"),
             ),
+            kwargs={'docker_image': docker_config['strelka']}
         )
     else:
         workflow.transform(
@@ -97,6 +102,7 @@ def create_strelka_workflow(
                 mgd.TempOutputFile('strelka.stats', 'interval'),
                 mgd.InputInstance('interval'),
             ),
+            kwargs={'docker_image': docker_config['strelka']}
         )
 
         workflow.transform(
@@ -185,8 +191,9 @@ def create_strelka_workflow(
         func=vcf_tasks.finalise_vcf,
         args=(
             mgd.TempInputFile('somatic.indels.passed.vcf'),
-            mgd.OutputFile(indel_vcf_file),
+            mgd.OutputFile(indel_vcf_file, extensions=['.tbi', '.csi']),
         ),
+        kwargs={'docker_image': docker_config['vcftools']}
     )
 
     workflow.transform(
@@ -196,8 +203,9 @@ def create_strelka_workflow(
         func=vcf_tasks.finalise_vcf,
         args=(
             mgd.TempInputFile('somatic.snvs.passed.vcf'),
-            mgd.OutputFile(snv_vcf_file),
+            mgd.OutputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
         ),
+        kwargs={'docker_image': docker_config['vcftools']}
     )
 
     return workflow

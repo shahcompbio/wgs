@@ -31,6 +31,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('museq_snv_filt.csv'),
             varcall_config["parse_museq"],
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -45,6 +46,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('museq_germlines_filt.csv'),
             varcall_config["parse_museq"],
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -59,6 +61,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('strelka_snv_filt.csv'),
             varcall_config["parse_strelka"],
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -73,6 +76,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('strelka_indel_filt.csv'),
             varcall_config["parse_strelka"],
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -86,6 +90,7 @@ def create_consensus_workflow(
              mgd.TempInputFile('museq_snv.csv')],
             mgd.TempOutputFile('merged_snv.csv'),
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -101,6 +106,7 @@ def create_consensus_workflow(
              ],
             mgd.OutputFile(output),
         ),
+        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     return workflow

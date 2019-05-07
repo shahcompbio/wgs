@@ -101,6 +101,9 @@ def call_variants(
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
+        kwargs={'vcftools_docker': config['variant_calling']['docker']['vcftools'],
+                'snpeff_docker': config['variant_calling']['docker']['vcftools'],
+                }
     )
 
     workflow.subworkflow(
@@ -114,6 +117,9 @@ def call_variants(
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
+        kwargs={'vcftools_docker': config['variant_calling']['docker']['vcftools'],
+                'snpeff_docker': config['variant_calling']['docker']['vcftools'],
+                }
     )
 
     workflow.subworkflow(
@@ -127,6 +133,9 @@ def call_variants(
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
+        kwargs={'vcftools_docker': config['variant_calling']['docker']['vcftools'],
+                'snpeff_docker': config['variant_calling']['docker']['vcftools'],
+                }
     )
 
     workflow.subworkflow(
@@ -140,6 +149,9 @@ def call_variants(
             config['globals'],
             config['variant_calling']['annotation_params'],
         ),
+        kwargs={'vcftools_docker': config['variant_calling']['docker']['vcftools'],
+                'snpeff_docker': config['variant_calling']['docker']['vcftools'],
+                }
     )
 
     workflow.subworkflow(

@@ -64,8 +64,8 @@ def concatenate_vcf(infiles, outfile):
                 for l in f:
                     print >> ofile, l,
 
-def sort_vcf(infile, outfile):
+def sort_vcf(infile, outfile, docker_image=None):
 
     cmd = ['cat', infile, '|', 'vcf-sort', '>', outfile]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)

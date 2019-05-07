@@ -21,7 +21,8 @@ def containers():
         'vcftools': 'wgs/vcftools:v0.0.1', 'snpeff': 'wgs/vcftools:v0.0.1',
         'titan': 'wgs/titan:v0.0.1', 'remixt': 'wgs/remixt:v{}'.format(version),
         'destruct': 'wgs/destruct:v{}'.format(version),
-        'lumpy': 'wgs/lumpy:v0.0.1'
+        'lumpy': 'wgs/lumpy:v0.0.1', 'museqportrait': 'wgs/museqportrait:v0.0.1',
+        'vizutils': 'wgs/vizutils:v0.0.1'
     }
 
     singularity = {}
@@ -301,6 +302,14 @@ def azure_config(reference):
             'normal_variant': 25,
             'tumour_variant': 2,
             'baseq_threshold': 20,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'strelka': docker_containers['strelka'],
+            'vcftools': docker_containers['vcftools'],
+            'mutationseq': docker_containers['mutationseq'],
+            'museqportrait': docker_containers['museqportrait'],
+            'vizutils': docker_containers['vizutils'],
         }
     }
 

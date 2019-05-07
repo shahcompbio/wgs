@@ -8,6 +8,7 @@ import os
 import pypeliner
 import pysam
 from wgs.utils import helpers, vcfutils
+from scripts import PlotSingleSample
 
 scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
@@ -32,7 +33,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
 
 def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
-              normal_bam=None, return_cmd=False):
+              normal_bam=None, return_cmd=False, docker_image=False):
     '''
     Run museq script for all chromosomes and merge VCF files
 
@@ -80,17 +81,18 @@ def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
     if return_cmd:
         return cmd
     else:
-        pypeliner.commandline.execute(*cmd)
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def merge_vcfs(inputs, outfile, tempdir):
+def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile)
+    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
 
 
-def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config):
+def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config,
+                      docker_image=None):
     '''
     Run museqportrait script on the input VCF file
 
@@ -100,14 +102,16 @@ def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, 
     '''
 
     if single_mode:
-        script = os.path.join(scripts_directory, 'singlesampleplot.py')
-        cmd = ['python', script, '--thousand_gen', config["thousandgen_params"]["db"],
-               '--output', out_pdf, '--threshold', config['threshold'],
-               '--dbsnp', config["dbsnp_params"]["db"],
-               '--ref_data', config['refdata_single_sample'],
-               '--variant_file', infile,
-               ]
-        pypeliner.commandline.execute(*cmd)
+        plt_ss = PlotSingleSample(
+            infile,
+            config["thousandgen_params"]["db"],
+            config["dbsnp_params"]["db"],
+            config['refdata_single_sample'],
+            out_pdf,
+            config['threshold']
+        )
+
+        plt_ss.main()
 
         # touch the txt file to avoid pypeliner errors
         open(out_txt, 'w').close()
@@ -116,13 +120,13 @@ def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, 
     else:
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
                out_pdf, '--output-txt', out_txt, infile]
-        pypeliner.commandline.execute(*cmd)
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 
 
 def run_museq_one_job(tempdir, museq_vcf, reference, intervals, museq_params, tumour_bam=None,
-              normal_bam=None):
+              normal_bam=None, museq_docker_image=None, vcftools_docker_image=None):
     '''
     Run museq script for all chromosomes and merge VCF files
 
@@ -149,9 +153,9 @@ def run_museq_one_job(tempdir, museq_vcf, reference, intervals, museq_params, tu
         commands.append(command)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, None)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, museq_docker_image)
 
     vcf_files = [os.path.join(tempdir, str(i), 'museq.vcf') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'museq_merge')
     helpers.makedirs(merge_tempdir)
-    merge_vcfs(vcf_files, museq_vcf, merge_tempdir)
+    merge_vcfs(vcf_files, museq_vcf, merge_tempdir, docker_image=vcftools_docker_image)
