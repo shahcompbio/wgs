@@ -150,7 +150,6 @@ def call_somatic_variants(
         '--tier2-min-single-align-score', min_tier_two_mapq,
         '--tier2-mismatch-density-filter-count', 10,
         '--tier2-no-filter-unanchored',
-        '--tier2-single-align-score-rescue-mode',
     ]
 
     if return_cmd:
