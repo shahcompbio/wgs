@@ -6,7 +6,9 @@ import pypeliner
 import pysam
 from wgs.utils import vcfutils, helpers
 
-scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
+from scripts import ReadCounter
+from scripts import TransformVcfCounts
+from scripts import PygeneAnnotation
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -24,39 +26,6 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
     return intervals
 
-
-def run_museq(tumour_bam, normal_bam, out, log, reference, interval, museq_params):
-    '''
-    Run museq script for all chromosomes and merge vcf files
-
-    :param tumour_bam: path to tumour bam
-    :param tumour_bai: path to tumour bai
-    :param normal_bam: path to normal bam
-    :param normal_bai: path to normal bai
-    :param out: temporary output vcf file for the merged vcf files (museq.vcf)
-    :param log: temporary log file (museq.log)
-    :param config: dictionary of parameters for the run
-    '''
-    interval = interval.split('_')
-    interval = interval[0] + ':' + interval[1] + '-' + interval[2]
-
-    cmd = ['museq_het', 'normal:' + normal_bam, 'tumour:' + tumour_bam,
-           'reference:' + reference, '--out', out,
-           '--log', log, '--interval', interval, '--verbose']
-
-    for key, val in museq_params.iteritems():
-        if isinstance(val, bool):
-            if val:
-                cmd.append('--{}'.format(key))
-        else:
-            cmd.append('--{}'.format(key))
-            if isinstance(val, list):
-                cmd.extend(val)
-            else:
-                cmd.append(val)
-    pypeliner.commandline.execute(*cmd)
-
-
 def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
 
@@ -70,36 +39,20 @@ def convert_museq_vcf2counts(infile, outfile, config):
     :param config: dictionary of parameters for the run
     '''
 
-    script = os.path.join(scripts_directory, 'transform_vcf_to_counts.py')
-    positions_file = config['dbsnp_positions']
-
-    cmd = ['python', script, '--infile', infile, '--outfile', outfile,
-           '--positions_file', positions_file]
-
-    pypeliner.commandline.execute(*cmd)
+    transformer = TransformVcfCounts(infile, outfile, config['dbsnp_positions'])
+    transformer.main()
 
 
-def run_readcounter(bam, outfile, config):
-    '''
-    Run readCounter on the input bam file
+def run_readcounter(input_bam, output_wig, config):
 
-    :param bam: path to normal or tumour bam
-    :param bai: path to normal or tumour bai
-    :param outfile: temporary wig file
-    :param config: dictionary of parameters for the run
-    '''
-
-    readcounter = 'readCounter'
-    w = config['readcounter']['w']
-    q = config['readcounter']['q']
-    chrs = ','.join(config['chromosomes'])
-
-    cmd = [readcounter, '-w', w, '-q', q, '-c', chrs, bam, '>', outfile]
-
-    pypeliner.commandline.execute(*cmd)
+    rc = ReadCounter(
+        input_bam, output_wig, config['hmmcopy_readcounter']['w'],
+        config['chromosomes'], config['hmmcopy_readcounter']['q'],
+    )
+    rc.main()
 
 
-def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config):
+def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, docker_image=None):
     '''
     Run script to calculate correct reads
 
@@ -109,7 +62,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config):
     :param config: dictionary of parameters for the run
     '''
 
-    script = os.path.join(scripts_directory, 'correctReads.R')
+    script = 'correctReads.R'
     gc = config['correction']['gc']
     map_wig = config['titan_params']['map']
     if not target_list:
@@ -119,11 +72,11 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config):
     cmd = ['Rscript', script, tumour_wig, normal_wig, gc, map_wig,
            target_list, outfile, genome_type]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_clusters, ploidy):
-    script = os.path.join(scripts_directory, 'titan.R')
+def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_clusters, ploidy, docker_image=Nonw):
+    script = 'titan.R'
     map_wig = titan_params['map']
 
     sample_id = os.path.basename(outfile).split('_')[0]
@@ -137,7 +90,7 @@ def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_
            titan_params['symmetric'], obj_outfile, titan_params['genome_type'], titan_params['chrom'],
            titan_params['y_threshold'], titan_params['max_depth']]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def make_tarfile(output_filename, source_dir):
@@ -145,39 +98,35 @@ def make_tarfile(output_filename, source_dir):
         tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 
-def plot_titan(obj_file, titan_input, output, tempdir, config, num_clusters, ploidy):
-    script = os.path.join(scripts_directory, 'plot_titan.R')
+def plot_titan(obj_file,  output, tempdir, num_clusters, ploidy, docker_image=None):
+    script = 'plot_titan.R'
 
     chrom = 'c(1:22,\'X\')'
 
     cmd = ['Rscript', script, obj_file, tempdir, num_clusters, chrom, ploidy]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
     make_tarfile(output, tempdir)
 
 
-def calc_cnsegments_titan(infile, outigv, outfile):
-    script = os.path.join(scripts_directory, 'createTITANsegmentfiles.pl')
+def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
+    script = 'createTITANsegmentfiles.pl'
 
     sample_id = os.path.basename(infile).split('_')[0]
     symmetric = '1'
 
-    cmd = ['perl', script, '-id=' + sample_id, '-infile=' + infile,
+    cmd = [script, '-id=' + sample_id, '-infile=' + infile,
            '-outfile=' + outfile, '-outIGV=' + outigv,
            '-symmetric=' + symmetric]
 
-    helpers.run_cmd(cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def annot_pygenes(infile, outfile, config):
-    script = os.path.join(scripts_directory, 'pygene_annotation.py')
+def annot_pygenes(infile, outfile, config, docker_image=None):
     gene_sets_gtf = config['pygenes_gtf']
-
-    cmd = ['python', script, '--infile', infile, '--outfile', outfile,
-           '--gene_sets_gtf', gene_sets_gtf]
-
-    helpers.run_cmd(cmd)
+    annotator = PygeneAnnotation(infile, outfile, gene_sets_gtf=gene_sets_gtf)
+    annotator.main()
 
 
 def merge_to_h5(inputs, output, intervals, dtype=None):
@@ -205,7 +154,7 @@ def merge_to_h5(inputs, output, intervals, dtype=None):
             h5output.put(tablename, input_df, format='table')
 
 
-def parse_titan(infile, params_file, titan_file, output, config, sample_id):
+def parse_titan(infile, params_file, titan_file, output, config, sample_id, docker_image=None):
     '''
     Parse the input VCF file into a TSV file
 
@@ -236,4 +185,4 @@ def parse_titan(infile, params_file, titan_file, output, config, sample_id):
                 cmd.extend(val)
             else:
                 cmd.append(val)
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)

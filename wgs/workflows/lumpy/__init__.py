@@ -3,11 +3,11 @@ import pypeliner.managed as mgd
 
 import tasks
 
+
 def lumpy_preprocess_workflow(
         global_config, bamfile, sv_config, discordants_sorted_bam,
         splitters_sorted_bam, single_node=False
 ):
-
     workflow = pypeliner.workflow.Workflow()
 
     if single_node:
@@ -34,6 +34,7 @@ def lumpy_preprocess_workflow(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.discordants.unsorted.bam'),
             ),
+            kwargs={'docker_image': sv_config['docker']['samtools']}
         )
 
         workflow.transform(
@@ -46,6 +47,7 @@ def lumpy_preprocess_workflow(
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
                 sv_config,
             ),
+            kwargs={'docker_image': sv_config['docker']['lumpy']}
         )
 
         workflow.transform(
@@ -57,6 +59,7 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
                 mgd.OutputFile(discordants_sorted_bam),
             ),
+            kwargs={'docker_image': sv_config['docker']['samtools']}
         )
 
         workflow.transform(
@@ -68,6 +71,7 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
                 mgd.OutputFile(splitters_sorted_bam),
             ),
+            kwargs={'docker_image': sv_config['docker']['samtools']}
         )
 
     return workflow
@@ -83,7 +87,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         normal_split = mgd.TempInputFile('normal.splitters.sorted.bam')
         lumpy_job_name += '_normal'
     else:
-        normal_disc=None
+        normal_disc = None
         normal_split = None
 
     if tumour_bam:
@@ -92,7 +96,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         tumour_split = mgd.TempInputFile('tumour.splitters.sorted.bam')
         lumpy_job_name += '_tumour'
     else:
-        tumour_disc=None
+        tumour_disc = None
         tumour_split = None
 
     if normal_bam:
@@ -142,7 +146,8 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
             'tumour_splitters': tumour_split,
             'normal_bam': normal_bam,
             'normal_discordants': normal_disc,
-            'normal_splitters': normal_split
+            'normal_splitters': normal_split,
+            'docker_image': sv_config['docker']['lumpy']
         }
     )
 

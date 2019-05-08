@@ -31,6 +31,7 @@ def create_consensus_workflow(
             svcalling_config["parse_lumpy"],
             sample_id
         ),
+        kwargs={'docker_image': svcalling_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -47,6 +48,7 @@ def create_consensus_workflow(
             svcalling_config["parse_destruct"],
             sample_id
         ),
+        kwargs={'docker_image': svcalling_config['docker']['vizutils']}
     )
 
     return workflow

@@ -18,9 +18,12 @@ def create_remixt_workflow(
         remixt_results_filename,
         remixt_raw_dir,
         min_num_reads,
-        single_node=False
+        single_node=False,
+        docker_containers={}
 ):
-    workflow = pypeliner.workflow.Workflow()
+
+    ctx = {'docker_image': docker_containers.get('remixt')}
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
     if not breakpoints:
         # just setting a random obj so that we dont return empty workflow

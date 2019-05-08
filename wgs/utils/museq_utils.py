@@ -1,10 +1,15 @@
+import os
+
 import pypeliner
 from wgs.utils import helpers
-import os
 from wgs.utils import vcfutils
 
-def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
-              normal_bam=None, return_cmd=False, titan_mode=False):
+
+def run_museq(
+        out, log, reference, interval, museq_params,
+        tumour_bam=None, normal_bam=None, return_cmd=False,
+        titan_mode=False, docker_image=False
+):
     '''
     Run museq script for all chromosomes and merge VCF files
 
@@ -15,8 +20,9 @@ def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
     :param config: path to the config YAML file
     '''
 
-    cmd = ['museq']
     if titan_mode:
+        cmd = ['museq']
+    else:
         cmd = ['museq_het']
 
     if tumour_bam:
@@ -54,11 +60,14 @@ def run_museq(out, log, reference, interval, museq_params, tumour_bam=None,
     if return_cmd:
         return cmd
     else:
-        pypeliner.commandline.execute(*cmd)
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_museq_one_job(tempdir, museq_vcf, reference, intervals, museq_params, tumour_bam=None,
-              normal_bam=None, titan_mode=False):
+def run_museq_one_job(
+        tempdir, museq_vcf, reference, intervals, museq_params,
+        tumour_bam=None, normal_bam=None, museq_docker_image=None,
+        vcftools_docker_image=None, titan_mode=False
+):
     '''
     Run museq script for all chromosomes and merge VCF files
 
@@ -85,9 +94,16 @@ def run_museq_one_job(tempdir, museq_vcf, reference, intervals, museq_params, tu
         commands.append(command)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, None)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, museq_docker_image)
 
-    vcf_files = {i: os.path.join(tempdir, str(i), 'museq.vcf') for i in range(len(intervals))}
+    vcf_files = [os.path.join(tempdir, str(i), 'museq.vcf') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'museq_merge')
     helpers.makedirs(merge_tempdir)
-    vcfutils.concatenate_vcf(vcf_files, museq_vcf)
+    merge_vcfs(vcf_files, museq_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+
+
+def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+    helpers.makedirs(tempdir)
+    mergedfile = os.path.join(tempdir, 'merged.vcf')
+    vcfutils.concatenate_vcf(inputs, mergedfile)
+    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)

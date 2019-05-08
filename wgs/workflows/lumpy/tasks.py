@@ -1,19 +1,18 @@
 import os
 
 import pypeliner
-
 from wgs.utils import helpers
 
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
-def run_samtools_view(infile, outfile):
+def run_samtools_view(infile, outfile, docker_image=None):
     cmd = ['samtools', 'view', '-b', '-F', '1294', infile, '>', outfile]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_lumpy_extract_split_reads_bwamem(infile, outfile, config):
+def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=None):
     cmd = [
         config['samtools'], 'view', '-h', infile, '|',
         config['extractSplitReads_BwaMem'], '-i', 'stdin', '|',
@@ -21,22 +20,25 @@ def run_lumpy_extract_split_reads_bwamem(infile, outfile, config):
         '>', outfile
     ]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_samtools_sort(infile, outfile):
+def run_samtools_sort(infile, outfile, docker_image=None):
     cmd = ['samtools', 'sort', infile, '-o', outfile]
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_lumpyexpress(lumpy_vcf, config,
-                     normal_bam=None,
-                     tumour_bam=None,
-                     normal_discordants=None,
-                     tumour_discordants=None,
-                     normal_splitters=None,
-                     tumour_splitters=None):
+def run_lumpyexpress(
+        lumpy_vcf, config,
+        normal_bam=None,
+        tumour_bam=None,
+        normal_discordants=None,
+        tumour_discordants=None,
+        normal_splitters=None,
+        tumour_splitters=None,
+        docker_image=None
+):
     lumpyexpress = config['lumpyexpress']
 
     cmd = [lumpyexpress,
@@ -45,8 +47,7 @@ def run_lumpyexpress(lumpy_vcf, config,
            '-D', ','.join([e for e in [normal_discordants, tumour_discordants] if e]),
            '-o', lumpy_vcf]
 
-    pypeliner.commandline.execute(*cmd)
-
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config):
@@ -54,9 +55,9 @@ def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config):
 
     # disc
     unsorted_disc = os.path.join(tempdir, 'discordants.unsorted.bam')
-    run_samtools_view(bamfile, unsorted_disc)
-    run_samtools_sort(unsorted_disc, disc_reads)
+    run_samtools_view(bamfile, unsorted_disc, docker_image=config['docker']['samtools'])
+    run_samtools_sort(unsorted_disc, disc_reads, docker_image=config['docker']['samtools'])
 
     unsorted_split = os.path.join(tempdir, 'splitters.unsorted.bam')
-    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config)
-    run_samtools_sort(unsorted_split, split_reads)
+    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config, docker_image=config['docker']['lumpy'])
+    run_samtools_sort(unsorted_split, split_reads, docker_image=config['docker']['samtools'])

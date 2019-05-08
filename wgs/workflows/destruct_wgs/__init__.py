@@ -19,7 +19,9 @@ def create_destruct_workflow(
 
     destruct_config = {}
 
-    workflow = pypeliner.workflow.Workflow()
+    ctx = {'docker_image': sv_config['docker']['destruct']}
+
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
     if single_node:
         workflow.transform(
@@ -36,7 +38,7 @@ def create_destruct_workflow(
                 destruct_config,
                 sv_config['refdata_destruct'],
             ),
-            kwargs={'ncpus': None}
+            kwargs={'ncpus': None,}
         )
     else:
         workflow.subworkflow(

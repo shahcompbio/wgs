@@ -343,6 +343,13 @@ def azure_config(reference):
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
             'breakdistance_threshold': 30
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'destruct': docker_containers['destruct'],
+            'lumpy': docker_containers['lumpy'],
+            'samtools': docker_containers['samtools'],
+            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -407,6 +414,14 @@ def azure_config(reference):
             'chromosomes': map(str, range(1, 23) + ['X']),
             'genes': None,
             'types': None,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'titan': docker_containers['titan'],
+            'vizutils': docker_containers['vizutils'],
+            'mutationseq': docker_containers['mutationseq'],
+            'vcftools': docker_containers['vcftools'],
+            'remixt': docker_containers['remixt']
         }
     }
 
