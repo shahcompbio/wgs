@@ -12,6 +12,7 @@ Set up conda with the required packages.
 ### From Source
 Add channels:
 ```
+conda config --add channels r
 conda config --add channels shahcompbio
 conda config --add channels dranew
 conda config --add channels aroth85
