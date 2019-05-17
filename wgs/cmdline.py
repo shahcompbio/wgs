@@ -84,6 +84,22 @@ def parse_args():
                          action='store_true',
                          help='start with fastqs and run alignment')
 
+    all_wgs.add_argument('--variant_calling',
+                         default=False,
+                         action='store_true',
+                         help='run variant calling workflow')
+
+    all_wgs.add_argument('--breakpoint_calling',
+                         default=False,
+                         action='store_true',
+                         help='run breakpoint_calling')
+
+    all_wgs.add_argument('--copynumber_calling',
+                         default=False,
+                         action='store_true',
+                         help='run copynumber workflow')
+
+
     # ======================================
     # generates pipeline and batch configs
     # ======================================
