@@ -75,7 +75,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_clusters, ploidy, docker_image=Nonw):
+def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_clusters, ploidy, docker_image=None):
     script = 'titan.R'
     map_wig = titan_params['map']
 

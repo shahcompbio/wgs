@@ -31,7 +31,9 @@ def call_variants(
     parsed_csv = dict([(sampid, parsed_csv[sampid])
                        for sampid in samples])
 
-    workflow = pypeliner.workflow.Workflow()
+    ctx = {'docker_image': config['variant_calling']['docker']['wgs']}
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),

@@ -67,7 +67,7 @@ def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
 
 
 def get_values_from_input(yamldata, key):
-    values = {str(sample): yamldata[sample][key] for sample in yamldata}
+    values = {str(sample): yamldata[sample].get(key) for sample in yamldata}
     return values
 
 

@@ -16,7 +16,7 @@ def wgs_workflow(args):
     run_cn_calling = args['copynumber_calling']
     run_bkp_calling = args['breakpoint_calling']
 
-    if not all((run_var_calling, run_cn_calling, run_bkp_calling)):
+    if not any((run_var_calling, run_cn_calling, run_bkp_calling)):
         run_cn_calling = True
         run_bkp_calling = True
         run_var_calling = True

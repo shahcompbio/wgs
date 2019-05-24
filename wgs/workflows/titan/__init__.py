@@ -4,7 +4,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-import wgs.utils.museq_utils
+# import wgs.utils.museq_utils
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, titan_raw_dir,

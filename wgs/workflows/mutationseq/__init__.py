@@ -5,7 +5,6 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-from wgs.utils import vcf_tasks
 
 import tasks
 
@@ -19,7 +18,6 @@ def create_museq_workflow(
         normal_bam=None,
         single_node=None
 ):
-
     name = 'run_museq'
     if tumour_bam:
         tumour_bam = mgd.InputFile(tumour_bam, extensions=['.bai'])
@@ -51,7 +49,7 @@ def create_museq_workflow(
                  'mem': global_config['memory']['high'],
                  'ncpus': global_config['threads'],
                  'walltime': '24:00'},
-            func=tasks.run_museq_one_job,
+            func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
                 mgd.TempSpace("run_museq_temp"),
                 mgd.TempOutputFile('merged.vcf'),
@@ -74,7 +72,7 @@ def create_museq_workflow(
                  'ncpus': global_config['threads'],
                  'walltime': '24:00'},
             axes=('interval',),
-            func=tasks.run_museq,
+            func='wgs.utils.museq_utils.run_museq',
             args=(
                 mgd.TempOutputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('museq.log', 'interval'),
@@ -95,7 +93,7 @@ def create_museq_workflow(
                  'mem': global_config['memory']['high'],
                  'ncpus': global_config['threads'],
                  'walltime': '08:00'},
-            func=tasks.merge_vcfs,
+            func='wgs.utils.museq_utils.merge_vcfs',
             args=(
                 mgd.TempInputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('merged.vcf'),
@@ -106,7 +104,7 @@ def create_museq_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx={'ncpus': 1, 'walltime': '01:00'},
-        func=vcf_tasks.finalise_vcf,
+        func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
             mgd.TempInputFile('merged.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
