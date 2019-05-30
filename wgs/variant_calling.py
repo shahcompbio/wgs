@@ -3,10 +3,6 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.workflows import mutationseq
-from wgs.workflows import strelka
-from wgs.workflows import variant_calling_consensus
-from wgs.workflows import vcf_annotation
 
 
 def call_variants(
@@ -34,14 +30,13 @@ def call_variants(
     ctx = {'docker_image': config['variant_calling']['docker']['wgs']}
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
-
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
     workflow.subworkflow(
         name="mutationseq_paired",
-        func=mutationseq.create_museq_workflow,
+        func='wgs.workflows.mutationseq.create_museq_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempOutputFile("museq_snv.vcf.gz", 'sample_id'),
@@ -60,7 +55,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="mutationseq_single",
-        func=mutationseq.create_museq_workflow,
+        func='wgs.workflows.mutationseq.create_museq_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempOutputFile("museq_germlines.vcf.gz", 'sample_id'),
@@ -78,7 +73,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="strelka",
-        func=strelka.create_strelka_workflow,
+        func='wgs.workflows.strelka.create_strelka_workflow',
         axes=('sample_id',),
         args=(
             mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
@@ -94,7 +89,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="annotate_paired_museq",
-        func=vcf_annotation.create_annotation_workflow,
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempInputFile("museq_snv.vcf.gz", 'sample_id'),
@@ -110,7 +105,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="annotate_germline_museq",
-        func=vcf_annotation.create_annotation_workflow,
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempInputFile("museq_germlines.vcf.gz", 'sample_id'),
@@ -126,7 +121,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="annotate_strelka",
-        func=vcf_annotation.create_annotation_workflow,
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempInputFile("strelka_snv.vcf.gz", 'sample_id'),
@@ -142,7 +137,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="annotate_strelka_indel",
-        func=vcf_annotation.create_annotation_workflow,
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
         axes=('sample_id',),
         args=(
             mgd.TempInputFile("strelka_indel.vcf.gz", 'sample_id'),
@@ -158,7 +153,7 @@ def call_variants(
 
     workflow.subworkflow(
         name="consensus_calling",
-        func=variant_calling_consensus.create_consensus_workflow,
+        func='wgs.workflows.variant_calling_consensus.create_consensus_workflow',
         axes=('sample_id',),
         args=(
             mgd.InputFile("museq_germlines_ann.vcf.gz", 'sample_id', fnames=museq_ss_vcf),

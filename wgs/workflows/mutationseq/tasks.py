@@ -3,15 +3,10 @@ Created on Feb 21, 2018
 
 @author: pwalters
 '''
-import os
-
 import pypeliner
 import pysam
-from wgs.utils import helpers, vcfutils
-from scripts import PlotSingleSample
 
-scripts_directory = os.path.join(
-    os.path.realpath(os.path.dirname(__file__)), 'scripts')
+from scripts import PlotSingleSample
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -30,10 +25,6 @@ def generate_intervals(ref, chromosomes, size=1000000):
             intervals.append(name + "_" + start + "_" + end)
 
     return intervals
-
-
-
-
 
 
 def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config,
@@ -66,5 +57,3 @@ def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, 
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
                out_pdf, '--output-txt', out_txt, infile]
         pypeliner.commandline.execute(*cmd, docker_image=docker_image)
-
-

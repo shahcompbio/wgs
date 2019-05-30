@@ -6,8 +6,6 @@ Created on Feb 21, 2018
 import pypeliner
 import pypeliner.managed as mgd
 
-import tasks
-
 
 def create_museq_workflow(
         snv_vcf,
@@ -31,7 +29,7 @@ def create_museq_workflow(
 
     workflow.transform(
         name='generate_intervals',
-        func=tasks.generate_intervals,
+        func='wgs.workflows.mutationseq.tasks.generate_intervals',
         ctx={'mem': global_config['memory']['low'],
              'ncpus': 1, 'walltime': '01:00'},
         ret=mgd.OutputChunks('interval'),
@@ -117,7 +115,7 @@ def create_museq_workflow(
         ctx={'num_retry': 3, 'mem_retry_increment': 2,
              'mem': global_config['memory']['low'],
              'ncpus': 1, 'walltime': '08:00'},
-        func=tasks.run_museqportrait,
+        func='wgs.workflows.mutationseq.tasks.run_museqportrait',
         args=(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(museqportrait_pdf),
