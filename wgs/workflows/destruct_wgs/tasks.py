@@ -10,7 +10,7 @@ def run_destruct_local(
         tempdir, tumour_bam, normal_bam,
         sample_id, raw_breakpoints, raw_library,
         reads, destruct_config, refdata_destruct,
-        ncpus=None
+        ncpus=None, docker_image=None
 ):
     pipelinedir = os.path.join(tempdir, 'pipeline')
     tmpdir = os.path.join(tempdir, 'tmp')
@@ -23,13 +23,14 @@ def run_destruct_local(
               'loglevel': 'DEBUG'}
 
     pyp = pypeliner.app.Pypeline(config=config)
-    workflow = pypeliner.workflow.Workflow()
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': docker_image})
 
     logging.getLogger().setLevel(logging.DEBUG)
 
     workflow.subworkflow(
-        name='destruct',
+        name='destruct_local_in_job',
         func='destruct.workflow.create_destruct_workflow',
+        ctx={'docker_image': docker_image},
         args=(
             {sample_id: mgd.InputFile(tumour_bam),
              sample_id + 'N': mgd.InputFile(normal_bam)},

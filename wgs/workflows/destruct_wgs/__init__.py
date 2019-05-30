@@ -6,11 +6,8 @@ Created on Feb 21, 2018
 import pypeliner
 import pypeliner.managed as mgd
 
-import tasks
-# import filter_annotate
 
-
-def create_destruct_workflow(
+def create_destruct_wgs_workflow(
         tumour_bam, normal_bam, raw_breakpoints, raw_library,
         breakpoints, library, reads,
         sample_id, global_config, sv_config,
@@ -19,9 +16,7 @@ def create_destruct_workflow(
 
     destruct_config = {}
 
-    ctx = {'docker_image': sv_config['docker']['destruct']}
-
-    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': sv_config['docker']['destruct']})
 
     if single_node:
         workflow.transform(
@@ -38,11 +33,12 @@ def create_destruct_workflow(
                 destruct_config,
                 sv_config['refdata_destruct'],
             ),
-            kwargs={'ncpus': None,}
+            kwargs={'ncpus': None, 'docker_image': sv_config['docker']['destruct']}
         )
     else:
         workflow.subworkflow(
             name='destruct_parallel',
+            ctx={'docker_image': sv_config['docker']['destruct']},
             func='destruct.workflow.create_destruct_workflow',
             args=(
                 {sample_id: mgd.InputFile(tumour_bam),

@@ -96,7 +96,8 @@ def create_museq_workflow(
                 mgd.TempInputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
-            )
+            ),
+            kwargs={'docker_image': varcall_config['docker']['vcftools']}
         )
 
     workflow.transform(

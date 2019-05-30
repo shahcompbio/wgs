@@ -21,8 +21,11 @@ def lumpy_preprocess_workflow(
                 mgd.OutputFile(discordants_sorted_bam),
                 mgd.OutputFile(splitters_sorted_bam),
                 mgd.TempSpace("lumpy_preprocess_temp"),
-                sv_config
             ),
+            kwargs={
+                'lumpy_docker_image': sv_config['docker']['lumpy'],
+                'samtools_docker_image': sv_config['docker']['samtools']
+            }
         )
     else:
         workflow.transform(

@@ -1,8 +1,10 @@
+import collections
 import os
 import warnings
+
+import wgs
 import yaml
 from wgs.utils import helpers
-import wgs
 
 
 def get_version():
@@ -10,6 +12,7 @@ def get_version():
     # strip setuptools metadata
     version = version.split("+")[0]
     return version
+
 
 def containers():
     version = get_version()
@@ -31,14 +34,13 @@ def containers():
 
 
 def luna_config(reference):
-
     if reference == 'grch37':
         reference = "/juno/work/shah/reference/gr37.fasta"
     else:
         reference = None
 
     globals = {
-        'memory': {'low': 5, 'med': 10, 'high': 15,},
+        'memory': {'low': 5, 'med': 10, 'high': 15, },
         'threads': 1,
     }
 
@@ -55,7 +57,7 @@ def luna_config(reference):
             },
             'dbsnp_params': {
                 'db': '/juno/work/shah/reference/dbsnp_142.human_9606.all.vcf.gz'
-             },
+            },
             'thousandgen_params': {
                 'db': '/juno/work/shah/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
@@ -65,7 +67,7 @@ def luna_config(reference):
         },
         'plot_params': {
             'threshold': 0.5,
-            'refdata_single_sample':'/juno/work/shah/reference/single_sample_plot_reference.h5',
+            'refdata_single_sample': '/juno/work/shah/reference/single_sample_plot_reference.h5',
             'thousandgen_params': {
                 'db': '/juno/work/shah/reference/1000G_release_20130502_genotypes.vcf.gz'
             },
@@ -73,7 +75,7 @@ def luna_config(reference):
                 'db': '/juno/work/shah/reference/dbsnp_142.human_9606.all.vcf.gz'
             },
         },
-        'parse_strelka':{
+        'parse_strelka': {
             'keep_1000gen': True,
             ## TODO: why is this missing
             # 'keep_cosmic': True,
@@ -81,7 +83,7 @@ def luna_config(reference):
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/juno/work/shah/reference/mask_regions_blacklist_crg_align36_table.txt',
-         },
+        },
         'parse_museq': {
             'keep_1000gen': True,
             'keep_cosmic': True,
@@ -90,7 +92,7 @@ def luna_config(reference):
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/juno/work/shah/reference/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
-         },
+        },
         'museq_params': {
             'threshold': 0.5,
             'verbose': True,
@@ -110,7 +112,7 @@ def luna_config(reference):
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
         'refdata_destruct': '/juno/work/shah/reference/',
-        'parse_lumpy':{
+        'parse_lumpy': {
             'foldback_threshold': None,
             'mappability_ref': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
@@ -203,9 +205,9 @@ def luna_config(reference):
     }
 
     alignment = {
-        "ref_genome":{
+        "ref_genome": {
             'file': reference,
-            'header':{
+            'header': {
                 'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
                 'AS': 'hg19/1000genomes',
                 'SP': 'Homo sapiens'
@@ -229,7 +231,6 @@ def luna_config(reference):
 
 
 def azure_config(reference):
-
     docker_containers = containers()['docker']
 
     if reference == 'grch37':
@@ -238,7 +239,7 @@ def azure_config(reference):
         reference = None
 
     globals = {
-        'memory': {'low': 5, 'med': 10, 'high': 15,},
+        'memory': {'low': 5, 'med': 10, 'high': 15, },
         'threads': 1,
     }
 
@@ -273,7 +274,7 @@ def azure_config(reference):
                 'db': '/refdata/dbsnp_142.human_9606.all.vcf.gz'
             },
         },
-        'parse_strelka':{
+        'parse_strelka': {
             'keep_1000gen': True,
             ## TODO: why is this missing
             # 'keep_cosmic': True,
@@ -281,7 +282,7 @@ def azure_config(reference):
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/refdata/mask_regions_blacklist_crg_align36_table.txt',
-         },
+        },
         'parse_museq': {
             'keep_1000gen': True,
             'keep_cosmic': True,
@@ -290,7 +291,7 @@ def azure_config(reference):
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'mappability_ref': '/refdata/mask_regions_blacklist_crg_align36_table.txt',
             'pr_threshold': 0.85
-         },
+        },
         'museq_params': {
             'threshold': 0.5,
             'verbose': True,
@@ -318,7 +319,7 @@ def azure_config(reference):
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
         'refdata_destruct': '/refdata/',
-        'parse_lumpy':{
+        'parse_lumpy': {
             'foldback_threshold': None,
             'mappability_ref': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
@@ -360,7 +361,7 @@ def azure_config(reference):
         'chromosomes': map(str, range(1, 23) + ['X']),
         'dbsnp_positions': '/refdata/common_all_dbSNP138.pos',
         'readcounter': {'w': 1000, 'q': 0},
-        'correction' : {
+        'correction': {
             'gc': '/refdata/GRCh37-lite.gc.ws_1000.wig',
         },
         'titan_intervals': [
@@ -426,9 +427,9 @@ def azure_config(reference):
     }
 
     alignment = {
-        "ref_genome":{
+        "ref_genome": {
             'file': reference,
-            'header':{
+            'header': {
                 'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
                 'AS': 'hg19/1000genomes',
                 'SP': 'Homo sapiens'
@@ -445,29 +446,26 @@ def azure_config(reference):
             'PL': 'ILLUMINA',
         },
         'docker': {
-          'wgs': docker_containers['wgs'],
-          'bwa': docker_containers['bwa'],
-          'samtools': docker_containers['samtools'],
-          'picard': docker_containers['picard'],
+            'wgs': docker_containers['wgs'],
+            'bwa': docker_containers['bwa'],
+            'samtools': docker_containers['samtools'],
+            'picard': docker_containers['picard'],
         }
     }
-
 
     config = locals()
 
     return config
 
 
-
 def shahlab_config(reference):
-
     if reference == 'grch37':
         reference = "/shahlab/pipelines/reference/GRCh37-lite.fa"
     else:
         reference = None
 
     globals = {
-        'memory': {'low': 5, 'med': 10, 'high': 15,},
+        'memory': {'low': 5, 'med': 10, 'high': 15, },
         'threads': 1,
     }
 
@@ -539,7 +537,7 @@ def shahlab_config(reference):
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
         'refdata_destruct': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/',
-        'parse_lumpy':{
+        'parse_lumpy': {
             'foldback_threshold': None,
             'mappability_ref': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
@@ -632,9 +630,9 @@ def shahlab_config(reference):
     }
 
     alignment = {
-        "ref_genome":{
+        "ref_genome": {
             'file': reference,
-            'header':{
+            'header': {
                 'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
                 'AS': 'hg19/1000genomes',
                 'SP': 'Homo sapiens'
@@ -656,8 +654,25 @@ def shahlab_config(reference):
 
     return config
 
-def get_config(override):
 
+def override_config(config, override):
+    def update(d, u):
+        for k, v in u.iteritems():
+            if isinstance(v, collections.Mapping):
+                d[k] = update(d.get(k, {}), v)
+            else:
+                d[k] = v
+        return d
+
+    if not override:
+        return config
+
+    cfg = update(config, override)
+
+    return cfg
+
+
+def get_config(override):
     if override["cluster"] == "shahlab":
         config = shahlab_config(override["reference"])
     elif override["cluster"] == "juno":
@@ -666,6 +681,11 @@ def get_config(override):
         config = azure_config(override["reference"])
     else:
         raise Exception()
+
+    override.pop('cluster')
+    override.pop('reference')
+
+    config = override_config(config, override)
 
     return config
 
@@ -676,7 +696,6 @@ def write_config(params, filepath):
 
 
 def generate_pipeline_config(args):
-
     if args['which'] == 'generate_config':
         config_yaml = args['pipeline_config']
         config_yaml = os.path.abspath(config_yaml)
@@ -695,7 +714,6 @@ def generate_pipeline_config(args):
             config_yaml = os.path.join(os.getcwd(), config_yaml)
 
         config_yaml = helpers.get_incrementing_filename(config_yaml)
-    print config_yaml
 
     params_override = {'cluster': 'azure', 'reference': 'grch37'}
     if args['config_override']:
@@ -708,6 +726,4 @@ def generate_pipeline_config(args):
 
     args["config_file"] = config_yaml
 
-    print config_yaml
     return args
-

@@ -36,7 +36,7 @@ def call_breakpoints(
 
     workflow.subworkflow(
         name='destruct',
-        func=destruct_wgs.create_destruct_workflow,
+        func=destruct_wgs.create_destruct_wgs_workflow,
         axes=('sample_id',),
         args=(
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,

@@ -53,6 +53,7 @@ def wgs_workflow(args):
         workflow.subworkflow(
             name='wgs_alignment_paired_lanes',
             func=paired_alignment,
+            ctx={'docker_image': config['cna_calling']['docker']['wgs']},
             args=(
                 config,
                 mgd.OutputFile("tumour.bam", 'sample_id', fnames=tumours,
@@ -82,6 +83,7 @@ def wgs_workflow(args):
         workflow.subworkflow(
             name='variant_calling',
             func=call_variants,
+            ctx={'docker_image': config['cna_calling']['docker']['wgs']},
             args=(
                 samples,
                 config,
@@ -111,6 +113,7 @@ def wgs_workflow(args):
         workflow.subworkflow(
             name="call_breakpoints",
             func=call_breakpoints,
+            ctx={'docker_image': config['sv_calling']['docker']['wgs']},
             args=(
                 samples,
                 config,
@@ -126,10 +129,21 @@ def wgs_workflow(args):
                 mgd.OutputFile('destruct_reads', 'sample_id', template=destruct_reads, axes_origin=[]),
                 mgd.OutputFile('lumpy_vcf', 'sample_id', template=lumpy_vcf, axes_origin=[]),
                 mgd.OutputFile('parsed_csv', 'sample_id', template=parsed_csv, axes_origin=[])
-            )
+            ),
+            kwargs={'single_node': single_node}
         )
 
     if run_cn_calling:
+        if run_bkp_calling:
+            sv_outdir = os.path.join(args['out_dir'], 'breakpoints', '{sample_id}')
+            destruct_breakpoints = os.path.join(sv_outdir, 'destruct_breakpoints.csv')
+            destruct_breakpoints = mgd.InputFile(
+                'destruct_breakpoints', 'sample_id', axes_origin=[],
+                template=destruct_breakpoints
+            )
+        else:
+            destruct_breakpoints = None
+
         cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
         remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
         titan_raw_dir = os.path.join(cna_outdir, 'titan')
@@ -140,6 +154,7 @@ def wgs_workflow(args):
         workflow.subworkflow(
             name='titan',
             func=titan.create_titan_workflow,
+            ctx={'docker_image': config['cna_calling']['docker']['wgs']},
             axes=('sample_id',),
             args=(
                 mgd.InputFile('tumour.bam', 'sample_id', fnames=tumours, extensions=['.bai']),
@@ -159,11 +174,12 @@ def wgs_workflow(args):
         workflow.subworkflow(
             name='remixt',
             func=remixt.create_remixt_workflow,
+            ctx={'docker_image': config['cna_calling']['docker']['wgs']},
             axes=('sample_id',),
             args=(
                 mgd.InputFile('tumour.bam', 'sample_id', fnames=tumours, extensions=['.bai']),
                 mgd.InputFile('normal.bam', 'sample_id', fnames=normals, extensions=['.bai']),
-                mgd.InputFile('destruct_breakpoints', 'sample_id', axes_origin=[], template=destruct_breakpoints),
+                destruct_breakpoints,
                 mgd.InputInstance('sample_id'),
                 config['cna_calling']['remixt_refdata'],
                 mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[],
@@ -171,6 +187,7 @@ def wgs_workflow(args):
                 mgd.Template(remixt_raw_dir, 'sample_id'),
                 config['cna_calling']['min_num_reads']
             ),
+            kwargs={'docker_containers': config['cna_calling']['docker']}
         )
 
     pyp.run(workflow)

@@ -4,11 +4,11 @@ import tarfile
 import pandas as pd
 import pypeliner
 import pysam
-from wgs.utils import vcfutils, helpers
+from wgs.utils import vcfutils
 
+from scripts import PygeneAnnotation
 from scripts import ReadCounter
 from scripts import TransformVcfCounts
-from scripts import PygeneAnnotation
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -26,6 +26,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
     return intervals
 
+
 def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
 
@@ -39,15 +40,14 @@ def convert_museq_vcf2counts(infile, outfile, config):
     :param config: dictionary of parameters for the run
     '''
 
-    transformer = TransformVcfCounts(infile, outfile, config['dbsnp_positions'])
+    transformer = TransformVcfCounts(infile, outfile, None)  # config['dbsnp_positions'])
     transformer.main()
 
 
 def run_readcounter(input_bam, output_wig, config):
-
     rc = ReadCounter(
-        input_bam, output_wig, config['hmmcopy_readcounter']['w'],
-        config['chromosomes'], config['hmmcopy_readcounter']['q'],
+        input_bam, output_wig, config['readcounter']['w'],
+        config['chromosomes'], config['readcounter']['q'],
     )
     rc.main()
 
@@ -69,19 +69,21 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
         target_list = 'NULL'
     genome_type = config['titan_params']['genome_type']
 
-    cmd = ['Rscript', script, tumour_wig, normal_wig, gc, map_wig,
+    cmd = [script, tumour_wig, normal_wig, gc, map_wig,
            target_list, outfile, genome_type]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_titan(infile, cnfile, outfile, obj_outfile, outparam, titan_params, num_clusters, ploidy, docker_image=None):
+def run_titan(
+        infile, cnfile, outfile, obj_outfile, outparam,
+        titan_params, num_clusters, ploidy, sample_id,
+        docker_image=None
+):
     script = 'titan.R'
     map_wig = titan_params['map']
 
-    sample_id = os.path.basename(outfile).split('_')[0]
-
-    cmd = ['Rscript', script, sample_id, infile, cnfile, map_wig, num_clusters,
+    cmd = [script, sample_id, infile, cnfile, map_wig, num_clusters,
            titan_params['num_cores'], ploidy, outfile, outparam,
            titan_params['myskew'], titan_params['estimate_ploidy'], titan_params['normal_param_nzero'],
            titan_params['normal_estimate_method'], titan_params['max_iters'], titan_params['pseudo_counts'],
@@ -98,7 +100,7 @@ def make_tarfile(output_filename, source_dir):
         tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 
-def plot_titan(obj_file,  output, tempdir, num_clusters, ploidy, docker_image=None):
+def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, docker_image=None):
     script = 'plot_titan.R'
 
     chrom = 'c(1:22,\'X\')'

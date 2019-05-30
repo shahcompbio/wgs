@@ -5,7 +5,7 @@ class TransformVcfCounts(object):
         self.positions = positions
 
     def read_ref_positions(self):
-        if not self.args.positions_file:
+        if not self.positions:
             return
 
         ref_pos = set()
@@ -17,8 +17,8 @@ class TransformVcfCounts(object):
 
         return ref_pos
 
-    def main(self, ref_pos):
-
+    def main(self):
+        ref_pos = self.read_ref_positions()
         with open(self.infile) as inputdata:
             with open(self.outfile, 'w') as outputdata:
 

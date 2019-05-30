@@ -21,9 +21,9 @@ def run_museq(
     '''
 
     if titan_mode:
-        cmd = ['museq']
-    else:
         cmd = ['museq_het']
+    else:
+        cmd = ['museq']
 
     if tumour_bam:
         cmd.append('tumour:' + tumour_bam)
