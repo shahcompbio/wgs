@@ -2,7 +2,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-
+from wgs.utils import helpers
 
 def lumpy_preprocess_workflow(
         global_config, bamfile, sv_config, discordants_sorted_bam,
@@ -13,8 +13,11 @@ def lumpy_preprocess_workflow(
     if single_node:
         workflow.transform(
             name='run_lumpy_preprocess',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['med'],
+                walltime='48:00',
+                disk=300
+            ),
             func=tasks.run_lumpy_preprocess,
             args=(
                 mgd.InputFile(bamfile),
@@ -30,8 +33,10 @@ def lumpy_preprocess_workflow(
     else:
         workflow.transform(
             name='run_samtools_view_normal',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['med'],
+                walltime='24:00',
+            ),
             func=tasks.run_samtools_view,
             args=(
                 mgd.InputFile(bamfile),
@@ -42,8 +47,10 @@ def lumpy_preprocess_workflow(
 
         workflow.transform(
             name='run_lumpy_extract_split_reads_bwamem_normal',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['med'],
+                walltime='24:00',
+            ),
             func=tasks.run_lumpy_extract_split_reads_bwamem,
             args=(
                 mgd.InputFile(bamfile),
@@ -55,8 +62,10 @@ def lumpy_preprocess_workflow(
 
         workflow.transform(
             name='run_samtools_sort_discordants_normal',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['med'],
+                walltime='24:00',
+            ),
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
@@ -67,8 +76,10 @@ def lumpy_preprocess_workflow(
 
         workflow.transform(
             name='run_samtools_sort_splitters_normal',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['med'],
+                walltime='24:00',
+            ),
             func=tasks.run_samtools_sort,
             args=(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
@@ -105,8 +116,6 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
     if normal_bam:
         workflow.subworkflow(
             name='preprocess_lumpy_normal',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
             func=lumpy_preprocess_workflow,
             args=(
                 global_config,
@@ -121,8 +130,6 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
     if tumour_bam:
         workflow.subworkflow(
             name='preprocess_lumpy_tumour',
-            ctx={'mem': global_config['memory']['med'],
-                 'ncpus': 1},
             func=lumpy_preprocess_workflow,
             args=(
                 global_config,
@@ -136,8 +143,10 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
 
     workflow.transform(
         name=lumpy_job_name,
-        ctx={'mem': global_config['memory']['med'],
-             'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['med'],
+            disk=500
+        ),
         func=tasks.run_lumpyexpress,
         args=(
             mgd.OutputFile(lumpy_vcf),

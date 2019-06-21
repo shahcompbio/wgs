@@ -57,7 +57,9 @@ def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, samtools_doc
     unsorted_disc = os.path.join(tempdir, 'discordants.unsorted.bam')
     run_samtools_view(bamfile, unsorted_disc, docker_image=samtools_docker_image)
     run_samtools_sort(unsorted_disc, disc_reads, docker_image=samtools_docker_image)
+    os.remove(unsorted_disc)
 
     unsorted_split = os.path.join(tempdir, 'splitters.unsorted.bam')
     run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, docker_image=lumpy_docker_image)
     run_samtools_sort(unsorted_split, split_reads, docker_image=samtools_docker_image)
+    os.remove(unsorted_split)

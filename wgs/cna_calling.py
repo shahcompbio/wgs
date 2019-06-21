@@ -75,6 +75,7 @@ def cna_calling_workflow(args):
                            axes_origin=[], template=remixt_results_filename),
             mgd.Template(remixt_raw_dir, 'sample_id'),
             config['cna_calling']['min_num_reads'],
+            config['globals']
         ),
         kwargs={'single_node': args['single_node'],
                 'docker_containers': config['docker']}

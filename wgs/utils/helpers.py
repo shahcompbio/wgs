@@ -3,20 +3,34 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 '''
-import os
 import errno
-import tarfile
-import yaml
-
+import multiprocessing
+import os
 import shutil
-
+import tarfile
+from multiprocessing.pool import ThreadPool
 from subprocess import Popen, PIPE
 
-import multiprocessing
-
-from multiprocessing.pool import ThreadPool
-
 import pypeliner
+import yaml
+
+
+def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=None):
+    ctx = {
+        'mem': memory,
+        'walltime': walltime,
+        'mem_num_retry': 3,
+        'mem_retry_factor': 2,
+        'walltime_num_retry': 5,
+        'walltime_retry_increment': '24:00',
+        'ncpus': ncpus,
+        'disk': disk
+    }
+
+    if docker_image:
+        ctx['docker_image'] = docker_image
+
+    return ctx
 
 
 def get_fastqs(inputs, samples, sample_type):
@@ -50,7 +64,7 @@ def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
 
     scriptfiles = []
 
-    for tag,command in enumerate(commands):
+    for tag, command in enumerate(commands):
         scriptfiles.append(build_shell_script(command, tag, tempdir))
 
     parallel_outfile = os.path.join(tempdir, "commands.txt")
@@ -65,11 +79,9 @@ def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
     pypeliner.commandline.execute(*gnu_parallel_cmd, docker_image=docker_image)
 
 
-
 def get_values_from_input(yamldata, key):
     values = {str(sample): yamldata[sample].get(key) for sample in yamldata}
     return values
-
 
 
 def get_coltype_reference():
@@ -106,8 +118,9 @@ def get_coltype_reference():
 
 
 def resolve_template(regions, template, format_key):
-    outputs = {v: template.format(**{format_key:v}) for v in regions}
+    outputs = {v: template.format(**{format_key: v}) for v in regions}
     return outputs
+
 
 def get_fastq_files(input_yaml):
     data = load_yaml(input_yaml)
@@ -121,17 +134,19 @@ def get_fastq_files(input_yaml):
             items[cell_id][lane]['fastq_2'] = format_file_yaml(laneinfo['fastq_2'])
     return items
 
+
 def format_file_yaml(filepath):
     ext = os.path.splitext(filepath)
 
     if ext[1] == ".gz":
         ext = os.path.splitext(ext[0])
 
-    mapping = {'.bam':'bam', '.pdf': 'PDF',
+    mapping = {'.bam': 'bam', '.pdf': 'PDF',
                '.fastq': 'fastq', '.h5': 'H5',
                '.tar': 'tar'}
 
     return {'filename': filepath, 'type': mapping[ext[1]]}
+
 
 def get_container_ctx(container_config, image_name, docker_only=False):
     if docker_only and not container_config['container_type'] == 'docker':
@@ -139,13 +154,13 @@ def get_container_ctx(container_config, image_name, docker_only=False):
 
     credentials = container_config['images'][image_name]
     docker_context = {
-              'image': credentials['image'],
-              'container_type': container_config['container_type'],
-              'mounts': container_config['mounts'],
-              'username': credentials['username'],
-              'password': credentials['password'],
-              'server': credentials['server'],
-          }
+        'image': credentials['image'],
+        'container_type': container_config['container_type'],
+        'mounts': container_config['mounts'],
+        'username': credentials['username'],
+        'password': credentials['password'],
+        'server': credentials['server'],
+    }
     return docker_context
 
 
@@ -168,7 +183,6 @@ def write_to_yaml(outfile, data):
 
 
 def eval_expr(val, operation, threshold):
-
     if operation == "gt":
         if val > threshold:
             return True
@@ -210,7 +224,6 @@ def get_incrementing_filename(path):
 
 
 def run_in_parallel(worker, args, ncores=None):
-
     def args_unpack(worker, args):
         return worker(*args)
 
@@ -224,7 +237,6 @@ def run_in_parallel(worker, args, ncores=None):
     tasks = []
 
     for arg in args:
-
         task = pool.apply_async(args_unpack,
                                 args=(worker, arg),
                                 )
@@ -240,7 +252,6 @@ def run_in_parallel(worker, args, ncores=None):
 
 
 def run_cmd(cmd, output=None):
-
     stdout = PIPE
     if output:
         stdout = open(output, "w")
@@ -301,7 +312,6 @@ def copy_file(infile, output):
 
 
 def get_instrument_info(fastqs_file):
-
     data = load_yaml(fastqs_file)
 
     for cell in data.keys():
@@ -323,7 +333,6 @@ def get_instrument_info(fastqs_file):
 
 
 def get_center_info(fastqs_file):
-
     data = load_yaml(fastqs_file)
 
     for cell in data.keys():
@@ -360,19 +369,17 @@ def get_sample_info(fastqs_file):
         del data[cell]["bam"]
         del data[cell]["pick_met"]
         del data[cell]["condition"]
-    
+
     return data
 
 
 def get_samples(fastqs_file):
-
     data = load_yaml(fastqs_file)
 
     return data.keys()
 
 
 def get_bams(fastqs_file):
-
     data = load_yaml(fastqs_file)
 
     for cell in data.keys():
@@ -386,12 +393,10 @@ def get_bams(fastqs_file):
 
 
 def load_config(args):
-
     return load_yaml(args["config_file"])
 
 
 def makedirs(directory, isfile=False):
-
     if isfile:
         directory = os.path.dirname(directory)
 

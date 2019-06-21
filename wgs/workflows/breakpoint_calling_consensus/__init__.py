@@ -7,7 +7,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-
+from wgs.utils import helpers
 
 def create_consensus_workflow(
         destruct_breakpoints,
@@ -20,9 +20,10 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_lumpy',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00',
+        ),
         func=tasks.parse_lumpy,
         args=(
             mgd.InputFile(lumpy_vcf),
@@ -36,9 +37,10 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_destruct',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00',
+        ),
         func=tasks.parse_destruct,
         args=(
             mgd.InputFile(destruct_breakpoints),

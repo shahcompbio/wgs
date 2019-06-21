@@ -4,6 +4,15 @@ import pypeliner
 
 from wgs.utils import helpers
 
+
+def index_and_flagstat(bamfile, indexfile, flagstatfile, docker_image=None):
+    cmd = ['samtools', 'index', bamfile, indexfile]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    cmd = ['samtools', 'flagstat', bamfile, '>', flagstatfile]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
 def markdups(input, output, metrics, tempdir, mem="2G", docker_image=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
@@ -49,12 +58,10 @@ def bam_index(infile, outfile, **kwargs):
         **kwargs)
 
 
-def merge_bams(inputs, output, containers):
+def merge_bams(inputs, output, picard_docker_image=None, samtools_docker_image=None):
     output_index = output + '.bai'
-    if not containers:
-        containers = {}
-    picard_merge_bams(inputs, output, docker_image=containers.get('picard'))
-    bam_index(output, output_index, docker_image=containers.get('samtools'))
+    picard_merge_bams(inputs, output, docker_image=picard_docker_image)
+    bam_index(output, output_index, docker_image=samtools_docker_image)
 
 
 def bwa_mem_paired_end(fastq1, fastq2, output,
@@ -144,18 +151,11 @@ def align_bwa_mem(
     )
 
 
-def bam_sort(bam_filename, sorted_bam_filename, tempdir, mem="2G", **kwargs):
-    if not os.path.exists(tempdir):
-        helpers.makedirs(tempdir)
+def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_image=None):
 
     pypeliner.commandline.execute(
-        'picard', '-Xmx' + mem, '-Xms' + mem,
-        '-XX:ParallelGCThreads=1',
-        'SortSam',
-                  'INPUT=' + bam_filename,
-                  'OUTPUT=' + sorted_bam_filename,
-        'SORT_ORDER=coordinate',
-        'VALIDATION_STRINGENCY=LENIENT',
-                  'TMP_DIR=' + tempdir,
-        'MAX_RECORDS_IN_RAM=150000',
-        **kwargs)
+        'samtools', 'sort', '-@', threads, '-m', mem,
+        bam_filename,
+        '-o',
+        sorted_bam_filename,
+        docker_image=docker_image)

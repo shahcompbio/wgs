@@ -5,6 +5,60 @@ import pypeliner.managed as mgd
 from wgs.utils import helpers
 
 
+def call_germlines_only(
+        samples, config, normals, museq_ss_vcf,
+        museq_single_pdf, single_node=False
+):
+    museq_ss_vcf = dict([(sampid, museq_ss_vcf[sampid])
+                         for sampid in samples])
+    museq_single_pdf = dict([(sampid, museq_single_pdf[sampid])
+                             for sampid in samples])
+
+
+    ctx = {'docker_image': config['variant_calling']['docker']['wgs']}
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=samples)
+
+    workflow.subworkflow(
+        name="mutationseq_single",
+        func='wgs.workflows.mutationseq.create_museq_workflow',
+        axes=('sample_id',),
+        args=(
+            mgd.TempOutputFile("museq_germlines.vcf.gz", 'sample_id'),
+            mgd.OutputFile('museq_single_pdf', 'sample_id', fnames=museq_single_pdf),
+            config['globals'],
+            config['variant_calling'],
+        ),
+        kwargs={
+            'tumour_bam': None,
+            'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                                        extensions=['.bai'], axes_origin=[]),
+            'single_node': single_node,
+        }
+    )
+
+    workflow.subworkflow(
+        name="annotate_germline_museq",
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
+        axes=('sample_id',),
+        args=(
+            mgd.TempInputFile("museq_germlines.vcf.gz", 'sample_id'),
+            mgd.OutputFile('museq_germlines_ann.vcf.gz', 'sample_id',
+                           extensions=['.csi', '.tbi'], fnames=museq_ss_vcf),
+            config['globals'],
+            config['variant_calling']['annotation_params'],
+        ),
+        kwargs={'vcftools_docker': config['variant_calling']['docker']['vcftools'],
+                'snpeff_docker': config['variant_calling']['docker']['vcftools'],
+                }
+    )
+
+    return workflow
+
+
 def call_variants(
         samples, config, parsed_csv,
         tumours, normals, museq_vcf, museq_ss_vcf,
@@ -170,9 +224,6 @@ def call_variants(
 
 
 def variant_calling_workflow(args):
-    pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow()
-
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
@@ -189,30 +240,49 @@ def variant_calling_workflow(args):
     museq_paired_pdf = os.path.join(museq_dir, '{sample_id}', 'paired_museqportrait.pdf')
     museq_single_pdf = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.pdf')
 
+    pyp = pypeliner.app.Pypeline(config=args)
+    ctx = {'docker_image': config['variant_calling']['docker']['wgs']}
+    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
         value=samples,
     )
 
-    workflow.subworkflow(
-        name='variant_calling',
-        func=call_variants,
-        args=(
-            samples,
-            config,
-            mgd.OutputFile('parsed_snv_csv', 'sample_id', template=parsed_snv_csv, axes_origin=[]),
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile('museq', 'sample_id', template=museq_vcf, axes_origin=[]),
-            mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
-            mgd.OutputFile('strelka_snv', 'sample_id', template=strelka_snv_vcf, axes_origin=[]),
-            mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
-            mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
-            mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
-        ),
-        kwargs={'single_node': args['single_node']}
-    )
+    if not all(tumours.values()):
+        workflow.subworkflow(
+            name='variant_calling',
+            func=call_germlines_only,
+            args=(
+                samples,
+                config,
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                              extensions=['.bai'], axes_origin=[]),
+                mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
+                mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
+            ),
+            kwargs={'single_node': args['single_node']}
+        )
+    else:
+        workflow.subworkflow(
+            name='variant_calling',
+            func=call_variants,
+            args=(
+                samples,
+                config,
+                mgd.OutputFile('parsed_snv_csv', 'sample_id', template=parsed_snv_csv, axes_origin=[]),
+                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                              extensions=['.bai'], axes_origin=[]),
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                              extensions=['.bai'], axes_origin=[]),
+                mgd.OutputFile('museq', 'sample_id', template=museq_vcf, axes_origin=[]),
+                mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
+                mgd.OutputFile('strelka_snv', 'sample_id', template=strelka_snv_vcf, axes_origin=[]),
+                mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
+                mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
+                mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
+            ),
+            kwargs={'single_node': args['single_node']}
+        )
 
     pyp.run(workflow)

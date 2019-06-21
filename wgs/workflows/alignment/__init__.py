@@ -8,6 +8,7 @@ import biowrappers.components.io.fastq.tasks
 import biowrappers.pipelines.realignment.tasks
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.utils import helpers
 
 import tasks
 
@@ -21,7 +22,6 @@ def align_samples(
         outdir,
         single_node=False
 ):
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -46,14 +46,21 @@ def align_samples(
 
     workflow.transform(
         name='merge_tumour_lanes',
-        ctx={'mem': config_globals['memory']['med'], 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='24:00',
+            disk=500
+        ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('sample_id',),
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs),
-            config['docker']
-        )
+        ),
+        kwargs={
+            'picard_docker_image': config['docker']['picard'],
+            'samtools_docker_image': config['docker']['samtools']
+        }
     )
 
     return workflow
@@ -80,7 +87,12 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='align_bwa_mem',
-        ctx={'mem': 8, 'ncpus': config['threads'], 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00',
+            ncpus=config['threads'],
+            disk=300
+        ),
         func=tasks.align_bwa_mem,
         args=(
             pypeliner.managed.InputFile(fastq_1),
@@ -100,19 +112,32 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='sort',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00',
+            ncpus=config['threads'],
+            disk=300
+        ),
         func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
             pypeliner.managed.TempInputFile('aligned.bam'),
             pypeliner.managed.TempOutputFile('sorted.bam'),
-            mgd.TempSpace("sort_alignment")
         ),
-        kwargs={'docker_image': config['docker']['picard']}
+        kwargs={
+            'docker_image': config['docker']['samtools'],
+            'threads': config['threads'],
+            # 'mem': '8G',
+        }
     )
 
     workflow.transform(
         name='markdups',
-        ctx={'mem': 12, 'ncpus': 1, 'walltime': '24:00'},
+        ctx=helpers.get_default_ctx(
+            memory=12,
+            walltime='24:00',
+            ncpus=1,
+            disk=300
+        ),
         func=tasks.markdups,
         args=(
             pypeliner.managed.TempInputFile('sorted.bam'),
@@ -123,26 +148,17 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         kwargs={'docker_image': config['docker']['picard']}
     )
 
-    workflow.commandline(
-        name='index',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
-        args=(
-            'samtools',
-            'index',
-            pypeliner.managed.InputFile(out_file),
-            pypeliner.managed.OutputFile(out_bai)
+    workflow.transform(
+        name='index_and_flagstat',
+        func=tasks.index_and_flagstat,
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='24:00',
+            disk=150
         ),
-        kwargs={'docker_image': config['docker']['samtools']}
-    )
-
-    workflow.commandline(
-        name='flagstat',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
         args=(
-            'samtools',
-            'flagstat',
             pypeliner.managed.InputFile(out_file),
-            '>',
+            pypeliner.managed.OutputFile(out_bai),
             pypeliner.managed.OutputFile(samtools_flagstat)
         ),
         kwargs={'docker_image': config['docker']['samtools']}
@@ -170,7 +186,10 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='split_fastq_1',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '12:00'},
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='12:00',
+        ),
         func=biowrappers.components.io.fastq.tasks.split_fastq,
         args=(
             pypeliner.managed.InputFile(fastq_1),
@@ -181,7 +200,10 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='split_fastq_2',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '12:00'},
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='12:00',
+        ),
         func=biowrappers.components.io.fastq.tasks.split_fastq,
         args=(
             pypeliner.managed.InputFile(fastq_2),
@@ -193,7 +215,11 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
     workflow.transform(
         name='align_bwa_mem',
         axes=('split',),
-        ctx={'mem': 8, 'ncpus': config['threads'], 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00',
+            ncpus=config['threads'],
+        ),
         func=tasks.align_bwa_mem,
         args=(
             pypeliner.managed.TempInputFile('read_1', 'split'),
@@ -202,33 +228,54 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             pypeliner.managed.TempOutputFile('aligned.bam', 'split'),
             config['threads'],
         ),
-        kwargs={'sample_id': ids[0], 'lane_id': ids[1], 'read_group_info': config['read_group_info']}
+        kwargs={
+            'sample_id': ids[0],
+            'lane_id': ids[1],
+            'read_group_info': config['read_group_info'],
+            'docker_config': config['docker']
+        }
     )
 
     workflow.transform(
         name='sort',
         axes=('split',),
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
-        func=biowrappers.components.io.bam.tasks.sort,
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='8:00',
+        ),
+        func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
             pypeliner.managed.TempInputFile('aligned.bam', 'split'),
             pypeliner.managed.TempOutputFile('sorted.bam', 'split'),
         ),
+        kwargs={
+            'docker_image': config['docker']['samtools'],
+        }
     )
 
     workflow.transform(
         name='merge',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '24:00'},
-        func=biowrappers.components.io.bam.tasks.merge,
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
+        func="wgs.workflows.alignment.tasks.merge_bams",
         args=(
             pypeliner.managed.TempInputFile('sorted.bam', 'split'),
             pypeliner.managed.TempOutputFile('merged.bam'),
         ),
+        kwargs={
+            'picard_docker_image': config['docker']['picard'],
+            'samtools_docker_image': config['docker']['samtools']
+        }
     )
 
     workflow.transform(
         name='markdups',
-        ctx={'mem': 8, 'ncpus': 1, 'walltime': '24:00'},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func=tasks.markdups,
         args=(
             pypeliner.managed.TempInputFile('merged.bam'),
@@ -236,30 +283,41 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             pypeliner.managed.OutputFile(markdups_metrics),
             pypeliner.managed.TempSpace("temp_markdups"),
         ),
-        kwargs={'mem': '8G'},
+        kwargs={
+            'mem': '8G',
+            'docker_image': config['docker']['picard']
+        },
     )
 
     workflow.commandline(
         name='index',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='8:00',
+            docker_image=config['docker']['samtools']
+        ),
         args=(
             'samtools',
             'index',
             pypeliner.managed.InputFile(out_file),
             pypeliner.managed.OutputFile(out_bai)
-        )
+        ),
     )
 
     workflow.commandline(
         name='flagstat',
-        ctx={'mem': 4, 'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='8:00',
+            docker_image=config['docker']['samtools']
+        ),
         args=(
             'samtools',
             'flagstat',
             pypeliner.managed.InputFile(out_file),
             '>',
             pypeliner.managed.OutputFile(samtools_flagstat)
-        )
+        ),
     )
 
     return workflow

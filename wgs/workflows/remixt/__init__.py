@@ -7,7 +7,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-
+from wgs.utils import helpers
 
 def create_remixt_workflow(
         tumour_path,
@@ -18,6 +18,7 @@ def create_remixt_workflow(
         remixt_results_filename,
         remixt_raw_dir,
         min_num_reads,
+        global_config,
         single_node=False,
         docker_containers={}
 ):
@@ -37,7 +38,9 @@ def create_remixt_workflow(
     workflow.transform(
         name='filter_breakpoints',
         func=tasks.filter_destruct_breakpoints,
-        ctx={},
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='2:00'),
         args=(
             mgd.InputFile(breakpoints),
             mgd.TempOutputFile('filtered_breakpoints.csv'),
@@ -49,6 +52,10 @@ def create_remixt_workflow(
         workflow.transform(
             name='remixt',
             func=tasks.run_remixt_local,
+            ctx=helpers.get_default_ctx(
+                memory=global_config['memory']['high'],
+                walltime='72:00',
+                ncpus=global_config['threads']),
             args=(
                 mgd.TempSpace("remixt_temp"),
                 mgd.InputFile(breakpoints),

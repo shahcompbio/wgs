@@ -15,11 +15,13 @@ def wgs_workflow(args):
     run_var_calling = args['variant_calling']
     run_cn_calling = args['copynumber_calling']
     run_bkp_calling = args['breakpoint_calling']
+    run_alignment = args['alignment']
 
-    if not any((run_var_calling, run_cn_calling, run_bkp_calling)):
+    if not any((run_var_calling, run_cn_calling, run_bkp_calling, run_alignment)):
         run_cn_calling = True
         run_bkp_calling = True
         run_var_calling = True
+        run_alignment = True
 
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
@@ -39,7 +41,7 @@ def wgs_workflow(args):
         value=samples,
     )
 
-    if args['alignment']:
+    if run_alignment:
         tumour_fastqs_r1, tumour_fastqs_r2 = helpers.get_fastqs(inputs, samples, 'tumour')
         normal_fastqs_r1, normal_fastqs_r2 = helpers.get_fastqs(inputs, samples, 'normal')
 
@@ -73,7 +75,7 @@ def wgs_workflow(args):
 
     if run_var_calling:
         museq_dir = os.path.join(args['out_dir'], 'variants')
-        museq_vcf = os.path.join(museq_dir, '{sample_id}', 'museq_paired_annotated.vcf.gz')
+        museq_vcf = os.path.join(museq_dir,  '{sample_id}', 'museq_paired_annotated.vcf.gz')
         museq_ss_vcf = os.path.join(museq_dir, '{sample_id}', 'museq_single_annotated.vcf.gz')
         strelka_snv_vcf = os.path.join(museq_dir, '{sample_id}', 'strelka_snv_annotated.vcf.gz')
         strelka_indel_vcf = os.path.join(museq_dir, '{sample_id}', 'strelka_indel_annotated.vcf.gz')
@@ -98,7 +100,8 @@ def wgs_workflow(args):
                 mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
-            )
+            ),
+            kwargs={'single_node': single_node}
         )
 
     if run_bkp_calling:

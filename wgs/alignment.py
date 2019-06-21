@@ -15,10 +15,6 @@ def paired_alignment(
                     for sampid in samples])
     normals = dict([(sampid, normals[sampid])
                     for sampid in samples])
-    tumours_index = dict([(sampid, tumours[sampid] + '.bai')
-                          for sampid in samples])
-    normals_index = dict([(sampid, normals[sampid] + '.bai')
-                          for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -53,14 +49,19 @@ def paired_alignment(
 
     workflow.transform(
         name='merge_tumour_lanes',
-        ctx={'mem': global_config['memory']['med'], 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='48:00', ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('tum_sample_id',),
         args=(
             mgd.TempInputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
             mgd.OutputFile('output.bam', 'tum_sample_id', fnames=tumours),
-            None
-        )
+        ),
+        kwargs={
+            'samtools_docker_image': config['docker']['samtools'],
+            'picard_docker_image': config['docker']['picard']
+        }
     )
 
     workflow.subworkflow(
@@ -81,14 +82,19 @@ def paired_alignment(
 
     workflow.transform(
         name='merge_normal_lanes',
-        ctx={'mem': global_config['memory']['med'], 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='48:00', ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('norm_sample_id',),
         args=(
             mgd.TempInputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
             mgd.OutputFile('output.bam', 'norm_sample_id', fnames=normals),
-            None
-        )
+        ),
+        kwargs={
+            'samtools_docker_image': config['docker']['samtools'],
+            'picard_docker_image': config['docker']['picard']
+        }
     )
 
     return workflow

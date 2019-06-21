@@ -5,6 +5,7 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.utils import helpers
 
 
 def create_destruct_wgs_workflow(
@@ -21,6 +22,10 @@ def create_destruct_wgs_workflow(
     if single_node:
         workflow.transform(
             name='destruct_local',
+            ctx=helpers.get_default_ctx(
+                walltime='72:00',
+                disk=800
+            ),
             func='wgs.workflows.destruct_wgs.tasks.run_destruct_local',
             args=(
                 mgd.TempSpace("destruct_local_temp"),
@@ -38,7 +43,9 @@ def create_destruct_wgs_workflow(
     else:
         workflow.subworkflow(
             name='destruct_parallel',
-            ctx={'docker_image': sv_config['docker']['destruct']},
+            ctx=helpers.get_default_ctx(
+                docker_image=sv_config['docker']['destruct'],
+            ),
             func='destruct.workflow.create_destruct_workflow',
             args=(
                 {sample_id: mgd.InputFile(tumour_bam),
@@ -53,15 +60,12 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='filter_annotate_breakpoints',
-        ctx={
-            'mem': 4,
-            'ncpus': 1,
-        },
+        ctx=helpers.get_default_ctx(memory=4),
         func='wgs.workflows.destruct_wgs.filter_annotate.filter_annotate_breakpoints',
         args=(
             mgd.InputFile(raw_breakpoints),
             mgd.InputFile(raw_library),
-            [sample_id + 'N'],  # control_ids
+            [sample_id + 'N'],
             mgd.OutputFile(breakpoints),
             mgd.OutputFile(library),
         )

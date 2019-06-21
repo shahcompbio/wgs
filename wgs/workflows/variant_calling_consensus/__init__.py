@@ -7,7 +7,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 import tasks
-
+from wgs.utils import helpers
 
 def create_consensus_workflow(
         museq_germline,
@@ -21,9 +21,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_museq_snv',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.parse_museq,
         args=(
             mgd.InputFile(museq_snv),
@@ -36,9 +36,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_museq_germlines',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.parse_museq,
         args=(
             mgd.InputFile(museq_germline),
@@ -51,9 +51,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_strelka_snv',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.parse_strelka,
         args=(
             mgd.InputFile(strelka_snv),
@@ -66,9 +66,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='parse_strelka_indel',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.parse_strelka,
         args=(
             mgd.InputFile(strelka_indel),
@@ -81,9 +81,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='merge_snvs',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.merge_overlap,
         args=(
             [mgd.TempInputFile('strelka_snv.csv'),
@@ -95,9 +95,9 @@ def create_consensus_workflow(
 
     workflow.transform(
         name='concatenate',
-        ctx={'num_retry': 3, 'mem_retry_increment': 2,
-             'mem': global_config['memory']['high'],
-             'ncpus': 1, 'walltime': '08:00'},
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         func=tasks.concatenate,
         args=(
             [mgd.TempInputFile('merged_snv.csv'),
