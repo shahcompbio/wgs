@@ -55,7 +55,6 @@ def lumpy_preprocess_workflow(
             args=(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
-                sv_config,
             ),
             kwargs={'docker_image': sv_config['docker']['lumpy']}
         )
