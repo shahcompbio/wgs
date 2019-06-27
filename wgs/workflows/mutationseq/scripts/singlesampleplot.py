@@ -107,7 +107,7 @@ class PlotSingleSample(object):
         ax.plot(keys, [ref_percentages[k] for k in keys], linewidth=1.5, label='concordance reference')
 
         plt.ylim(0, 100)
-        # ax.legend(loc='lower right', fontsize=6, handlelength=5)
+        ax.legend(loc='lower right', fontsize=6, handlelength=5)
 
     def counts_plot(self, counts_all, counts_matched, subplot_axes, plot, loc='upper right', cumulative=False):
 
