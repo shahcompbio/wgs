@@ -12,10 +12,11 @@ def run_samtools_view(infile, outfile, docker_image=None):
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_lumpy_extract_split_reads_bwamem(infile, outfile, docker_image=None):
+def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=None):
+    extract_split_reads = config['extractSplitReads_BwaMem']
     cmd = [
         'samtools', 'view', '-h', infile, '|',
-        'extractSplitReads_BwaMem', '-i', 'stdin', '|',
+        extract_split_reads, '-i', 'stdin', '|',
         'samtools', 'view', '-Sb', '-',
         '>', outfile
     ]
@@ -50,7 +51,7 @@ def run_lumpyexpress(
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, samtools_docker_image=None, lumpy_docker_image=None):
+def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config, samtools_docker_image=None, lumpy_docker_image=None):
     helpers.makedirs(tempdir)
 
     # disc
@@ -60,6 +61,6 @@ def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, samtools_doc
     os.remove(unsorted_disc)
 
     unsorted_split = os.path.join(tempdir, 'splitters.unsorted.bam')
-    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, docker_image=lumpy_docker_image)
+    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config, docker_image=lumpy_docker_image)
     run_samtools_sort(unsorted_split, split_reads, docker_image=samtools_docker_image)
     os.remove(unsorted_split)
