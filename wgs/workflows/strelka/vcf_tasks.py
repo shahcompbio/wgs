@@ -16,6 +16,7 @@ import vcf
 
 from components_utils import flatten_input
 
+from wgs.utils import helpers
 
 # from ._merge import merge_vcfs
 
@@ -95,7 +96,9 @@ def index_vcf(vcf_file, docker_image=None):
     pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file, docker_image=docker_image)
 
 
-def concatenate_vcf(in_files, out_file, allow_overlap=False):
+def concatenate_vcf(
+        in_files, out_file, tempdir, docker_image=None,
+        allow_overlap=False):
     """ Fast concatenation of VCF file using `bcftools`.
 
     :param in_files: dict with values being files to be concatenated. Files will be concatenated based on sorted order of keys.
@@ -103,17 +106,25 @@ def concatenate_vcf(in_files, out_file, allow_overlap=False):
     :param out_file: path where output file will be written in VCF format.
 
     """
+    helpers.makedirs(tempdir)
+
+    merged_file = os.path.join(tempdir, 'merged.vcf')
     if allow_overlap:
-        cmd = ['bcftools', 'concat', '-a', '-O', 'z', '-o', out_file]
+        cmd = ['bcftools', 'concat', '-a', '-O', 'z', '-o', merged_file]
     else:
-        cmd = ['bcftools', 'concat', '-O', 'z', '-o', out_file]
+        cmd = ['bcftools', 'concat', '-O', 'z', '-o', merged_file]
 
     cmd += flatten_input(in_files)
 
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    index_vcf(out_file)
-    index_bcf(out_file)
+    #sort merged vcf file
+    cmd = ['bcftools', 'sort', '-O', 'z', '-o', out_file,  merged_file]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    index_vcf(out_file, docker_image=docker_image)
+    index_bcf(out_file, docker_image=docker_image)
+
 
 
 def concatenate_bcf(in_files, out_file):

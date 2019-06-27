@@ -15,6 +15,7 @@ import pypeliner
 import pysam
 import vcf
 from wgs.utils import helpers
+from wgs.utils import vcfutils
 
 import vcf_tasks
 
@@ -188,7 +189,8 @@ def call_somatic_variants_one_job(
         max_window_filtered_basecall_frac_indel=0.3,
         quality_lower_bound_indel=30,
         use_depth_filter_indel=True,
-        docker_image=None
+        strelka_docker_image=None,
+        vcftools_docker_image=None
 ):
     commands = []
     for i, interval in enumerate(intervals):
@@ -216,7 +218,7 @@ def call_somatic_variants_one_job(
         commands.append(command)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
 
     snv_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf')
                 for i, ival in enumerate(intervals)}
@@ -253,11 +255,15 @@ def call_somatic_variants_one_job(
 
     vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'snv.vcf') for chrom in chromosomes]
     vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
-    vcf_tasks.concatenate_vcf(vcf_files, strelka_snv_vcf)
+    concat_snvs = os.path.join(tempdir, 'concat_snv.vcf')
+    vcfutils.concatenate_vcf(vcf_files, concat_snvs)
+    vcf_tasks.finalise_vcf(concat_snvs, strelka_snv_vcf, docker_image=vcftools_docker_image)
 
     vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'indel.vcf') for chrom in chromosomes]
     vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
-    vcf_tasks.concatenate_vcf(vcf_files, strelka_indel_vcf)
+    concat_indels = os.path.join(tempdir, 'concat_indels.vcf')
+    vcfutils.concatenate_vcf(vcf_files, concat_indels)
+    vcf_tasks.finalise_vcf(concat_indels, strelka_indel_vcf)
 
 
 # =======================================================================================================================

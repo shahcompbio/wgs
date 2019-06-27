@@ -87,7 +87,10 @@ def create_strelka_workflow(
                 chromosomes,
                 mgd.TempSpace("strelka_single_node_run"),
             ),
-            kwargs={'docker_image': docker_config['strelka']}
+            kwargs={
+                'strelka_docker_image': docker_config['strelka'],
+                'vcftools_docker_image': docker_config['vcftools']
+            }
         )
     else:
         workflow.transform(
@@ -157,6 +160,7 @@ def create_strelka_workflow(
             args=(
                 mgd.TempInputFile('somatic.indels.filtered.vcf', 'chrom'),
                 mgd.TempOutputFile('somatic.indels.filtered.vcf.gz'),
+                mgd.TempSpace('merge_indels_tempdir')
             ),
         )
 
@@ -169,6 +173,7 @@ def create_strelka_workflow(
             args=(
                 mgd.TempInputFile('somatic.snvs.filtered.vcf', 'chrom'),
                 mgd.TempOutputFile('somatic.snvs.filtered.vcf.gz'),
+                mgd.TempSpace('merge_snvs_tempdir')
             ),
         )
 
