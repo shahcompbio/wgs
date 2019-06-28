@@ -61,7 +61,7 @@ def create_titan_workflow(
             func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
                 mgd.TempSpace("run_museq_temp"),
-                mgd.TempOutputFile('merged.vcf'),
+                mgd.TempOutputFile(museq_vcf),
                 config['reference_genome'],
                 mgd.InputChunks('interval'),
                 config['museq_params'],
@@ -105,7 +105,7 @@ def create_titan_workflow(
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
                 mgd.TempInputFile('museq.vcf', 'interval'),
-                mgd.TempOutputFile('merged.vcf'),
+                mgd.OutputFile(museq_vcf),
                 mgd.TempSpace('merge_vcf'),
             ),
             kwargs={'docker_image': config['docker']['vcftools']}
