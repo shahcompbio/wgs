@@ -263,7 +263,7 @@ def call_somatic_variants_one_job(
     vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
     concat_indels = os.path.join(tempdir, 'concat_indels.vcf')
     vcfutils.concatenate_vcf(vcf_files, concat_indels)
-    vcf_tasks.finalise_vcf(concat_indels, strelka_indel_vcf)
+    vcf_tasks.finalise_vcf(concat_indels, strelka_indel_vcf, docker_image=vcftools_docker_image)
 
 
 # =======================================================================================================================
