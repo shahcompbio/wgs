@@ -1,5 +1,6 @@
 import pygenes
 
+
 class InputArgsException(Exception):
     pass
 
@@ -22,16 +23,16 @@ class PygeneAnnotation(object):
     def write_output(self):
         gene_models = pygenes.GeneModels()
 
-        with open(self.infile, 'r') as titan_output:
+        with open(self.infile, 'r') as titan_output, open(self.outfile, 'w') as writer:
             while True:
                 line = titan_output.readline()
                 if line[0] == '#':
                     continue
                 header = line.rstrip()
-                self.outfile.write("%s\tPygenes(gene_id,gene_name;)\n" % header)
+                writer.write("%s\tPygenes(gene_id,gene_name;)\n" % header)
                 break
 
-            ##do something to.. data lines
+            # do something to.. data lines
             for row in titan_output:
                 row = row.rstrip()
                 col = row.split('\t')
@@ -40,7 +41,7 @@ class PygeneAnnotation(object):
                 start = int(col[2])
                 end = int(col[3])
 
-                if (self.is_contained):
+                if self.is_contained:
                     gene_ids = gene_models.find_contained_genes(chrom, start, end)
                 else:
                     gene_ids = gene_models.find_overlapping_genes(chrom, start, end)
@@ -50,5 +51,4 @@ class PygeneAnnotation(object):
                     gene_name = gene_models.get_gene(gene_id).name
 
                     pygenes_addition += "%s,%s;" % (gene_id, gene_name)
-                self.outfile.write("%s\t%s\n" % (row, pygenes_addition))
-            self.outfile.close()
+                    writer.write("%s\t%s\n" % (row, pygenes_addition))
