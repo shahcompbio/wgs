@@ -22,7 +22,7 @@ class PygeneAnnotation(object):
     def write_output(self):
         gene_models = pygenes.GeneModels()
 
-        with open(args.infile, 'r') as titan_output:
+        with open(self.infile, 'r') as titan_output:
             while True:
                 line = titan_output.readline()
                 if line[0] == '#':

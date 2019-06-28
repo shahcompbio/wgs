@@ -125,10 +125,10 @@ def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def annot_pygenes(infile, outfile, config, docker_image=None):
+def annot_pygenes(infile, outfile, config):
     gene_sets_gtf = config['pygenes_gtf']
-    annotator = PygeneAnnotation(infile, outfile, gene_sets_gtf=gene_sets_gtf)
-    annotator.main()
+    annotator = PygeneAnnotation(infile, outfile, gtf=gene_sets_gtf)
+    annotator.write_output()
 
 
 def merge_to_h5(inputs, output, intervals, dtype=None):

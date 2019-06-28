@@ -199,7 +199,6 @@ def create_titan_workflow(
             mgd.TempInputFile('titan.Rdata', 'numclusters', 'ploidy'),
             mgd.OutputFile('titan_plots', 'numclusters', 'ploidy', template=plots_template),
             mgd.TempSpace("titan_plots_tempdir", 'numclusters', 'ploidy'),
-            config,
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy')
         ),
