@@ -21,8 +21,6 @@ class PygeneAnnotation(object):
             self.gene_models.load_ensembl_gtf(gtf)
 
     def write_output(self):
-        gene_models = pygenes.GeneModels()
-
         with open(self.infile, 'r') as titan_output, open(self.outfile, 'w') as writer:
             while True:
                 line = titan_output.readline()
@@ -42,13 +40,13 @@ class PygeneAnnotation(object):
                 end = int(col[3])
 
                 if self.is_contained:
-                    gene_ids = gene_models.find_contained_genes(chrom, start, end)
+                    gene_ids = self.gene_models.find_contained_genes(chrom, start, end)
                 else:
-                    gene_ids = gene_models.find_overlapping_genes(chrom, start, end)
+                    gene_ids = self.gene_models.find_overlapping_genes(chrom, start, end)
 
                 pygenes_addition = ""
                 for gene_id in gene_ids:
-                    gene_name = gene_models.get_gene(gene_id).name
+                    gene_name = self.gene_models.get_gene(gene_id).name
 
                     pygenes_addition += "%s,%s;" % (gene_id, gene_name)
                     writer.write("%s\t%s\n" % (row, pygenes_addition))
