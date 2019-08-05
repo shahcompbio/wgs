@@ -34,6 +34,8 @@ def containers():
 
 
 def luna_config(reference):
+    docker_containers = containers()['docker']
+
     if reference == 'grch37':
         reference = "/juno/work/shah/reference/gr37.fasta"
     else:
@@ -104,6 +106,14 @@ def luna_config(reference):
             'normal_variant': 25,
             'tumour_variant': 2,
             'baseq_threshold': 20,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'strelka': docker_containers['strelka'],
+            'vcftools': docker_containers['vcftools'],
+            'mutationseq': docker_containers['mutationseq'],
+            'museqportrait': docker_containers['museqportrait'],
+            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -138,6 +148,13 @@ def luna_config(reference):
             'readsupport_threshold': 4,
             'breakdistance_threshold': 30,
         },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'destruct': docker_containers['destruct'],
+            'lumpy': docker_containers['lumpy'],
+            'samtools': docker_containers['samtools'],
+            'vizutils': docker_containers['vizutils'],
+        }
     }
 
     cna_calling = {
@@ -201,6 +218,14 @@ def luna_config(reference):
             'chromosomes': map(str, range(1, 23) + ['X']),
             'genes': None,
             'types': None,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'titan': docker_containers['titan'],
+            'vizutils': docker_containers['vizutils'],
+            'mutationseq': docker_containers['mutationseq'],
+            'vcftools': docker_containers['vcftools'],
+            'remixt': docker_containers['remixt']
         }
     }
 
@@ -222,6 +247,12 @@ def luna_config(reference):
             'PU': '{lane_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'bwa': docker_containers['bwa'],
+            'samtools': docker_containers['samtools'],
+            'picard': docker_containers['picard'],
         }
     }
 
