@@ -20,7 +20,7 @@ def create_titan_workflow(
     outfile_template = os.path.join(titan_outdir, 'titan_markers.txt')
     params_template = os.path.join(titan_outdir, 'titan_params.txt')
     segs_template = os.path.join(titan_outdir, 'titan_segs.txt')
-    plots_template = os.path.join(titan_outdir, 'titan_plots.tar.gz')
+    plots_template = os.path.join(titan_outdir, 'titan_plots.pdf')
     parsed_template = os.path.join(titan_outdir, 'titan_parsed.csv')
     museq_vcf = os.path.join(titan_raw_dir, 'museq.vcf')
 

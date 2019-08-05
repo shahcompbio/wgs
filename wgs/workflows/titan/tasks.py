@@ -4,6 +4,7 @@ import tarfile
 import pandas as pd
 import pypeliner
 import pysam
+from wgs.utils import pdfutils
 from wgs.utils import vcfutils
 
 from scripts import PygeneAnnotation
@@ -109,7 +110,8 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, docker_image=Non
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    make_tarfile(output, tempdir)
+    chromosomes = map(str, range(1, 23)) + ['X']
+    pdfutils.merge_pngs(tempdir, output, chromosomes)
 
 
 def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
@@ -126,7 +128,6 @@ def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
 
 
 def annot_pygenes(infile, outfile, config):
-
     gene_sets_gtf = config['pygenes_gtf']
     annotator = PygeneAnnotation(infile, outfile, gtf=gene_sets_gtf)
     annotator.write_output()
