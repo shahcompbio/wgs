@@ -33,13 +33,12 @@ def merge_vcfs(inputs, output):
 
 
 def convert_museq_vcf2counts(infile, outfile, config):
-    '''
+    """
     Transform museq vcf file to a text file of counts
 
     :param infile: merged temporary vcf file from museq run (museq.vcf)
     :param outfile: temporary text file of counts (museq_postprocess.txt)
-    :param config: dictionary of parameters for the run
-    '''
+    """
 
     transformer = TransformVcfCounts(infile, outfile, None)  # config['dbsnp_positions'])
     transformer.main()
