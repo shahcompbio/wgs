@@ -3,12 +3,12 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
+from wgs.workflows import remixt
+from wgs.workflows import titan
 
 from alignment import paired_alignment
 from sv_calling import call_breakpoints
 from variant_calling import call_variants
-from wgs.workflows import remixt
-from wgs.workflows import titan
 
 
 def wgs_workflow(args):
@@ -75,13 +75,13 @@ def wgs_workflow(args):
 
     if run_var_calling:
         museq_dir = os.path.join(args['out_dir'], 'variants')
-        museq_vcf = os.path.join(museq_dir,  '{sample_id}', 'museq_paired_annotated.vcf.gz')
-        museq_ss_vcf = os.path.join(museq_dir, '{sample_id}', 'museq_single_annotated.vcf.gz')
-        strelka_snv_vcf = os.path.join(museq_dir, '{sample_id}', 'strelka_snv_annotated.vcf.gz')
-        strelka_indel_vcf = os.path.join(museq_dir, '{sample_id}', 'strelka_indel_annotated.vcf.gz')
-        parsed_snv_csv = os.path.join(museq_dir, '{sample_id}', 'allcalls.csv')
-        museq_paired_pdf = os.path.join(museq_dir, '{sample_id}', 'paired_museqportrait.pdf')
-        museq_single_pdf = os.path.join(museq_dir, '{sample_id}', 'single_museqportrait.pdf')
+        museq_vcf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.vcf.gz')
+        museq_ss_vcf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_museq_single_annotated.vcf.gz')
+        strelka_snv_vcf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_strelka_snv_annotated.vcf.gz')
+        strelka_indel_vcf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_strelka_indel_annotated.vcf.gz')
+        parsed_snv_csv = os.path.join(museq_dir, '{sample_id}', '{sample_id}_allcalls.csv')
+        museq_paired_pdf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_paired_museqportrait.pdf')
+        museq_single_pdf = os.path.join(museq_dir, '{sample_id}', '{sample_id}_single_museqportrait.pdf')
         workflow.subworkflow(
             name='variant_calling',
             func=call_variants,
@@ -106,13 +106,13 @@ def wgs_workflow(args):
 
     if run_bkp_calling:
         sv_outdir = os.path.join(args['out_dir'], 'breakpoints', '{sample_id}')
-        destruct_breakpoints = os.path.join(sv_outdir, 'destruct_breakpoints.csv')
-        destruct_library = os.path.join(sv_outdir, 'destruct_library.csv')
-        destruct_raw_breakpoints = os.path.join(sv_outdir, 'destruct_raw_breakpoints.csv')
-        destruct_raw_library = os.path.join(sv_outdir, 'destruct_raw_library.csv')
-        destruct_reads = os.path.join(sv_outdir, 'destruct_reads.csv')
-        lumpy_vcf = os.path.join(sv_outdir, 'lumpy.vcf')
-        parsed_csv = os.path.join(sv_outdir, 'filtered_consensus_calls.csv')
+        destruct_breakpoints = os.path.join(sv_outdir, '{sample_id}_destruct_breakpoints.csv')
+        destruct_library = os.path.join(sv_outdir, '{sample_id}_destruct_library.csv')
+        destruct_raw_breakpoints = os.path.join(sv_outdir, '{sample_id}_destruct_raw_breakpoints.csv')
+        destruct_raw_library = os.path.join(sv_outdir, '{sample_id}_destruct_raw_library.csv')
+        destruct_reads = os.path.join(sv_outdir, '{sample_id}_destruct_reads.csv')
+        lumpy_vcf = os.path.join(sv_outdir, '{sample_id}_lumpy.vcf')
+        parsed_csv = os.path.join(sv_outdir, '{sample_id}_filtered_consensus_calls.csv')
         workflow.subworkflow(
             name="call_breakpoints",
             func=call_breakpoints,
@@ -150,10 +150,10 @@ def wgs_workflow(args):
         cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
         remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
         titan_raw_dir = os.path.join(cna_outdir, 'titan')
-        remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
-        titan_segments_filename = os.path.join(titan_raw_dir, 'segments.h5')
-        titan_markers_filename = os.path.join(titan_raw_dir, 'markers.h5')
-        titan_params_filename = os.path.join(titan_raw_dir, 'params.h5')
+        remixt_results_filename = os.path.join(cna_outdir, 'remixt', '{sample_id}_results.h5')
+        titan_segments_filename = os.path.join(titan_raw_dir, '{sample_id}_segments.h5')
+        titan_markers_filename = os.path.join(titan_raw_dir, '{sample_id}_markers.h5')
+        titan_params_filename = os.path.join(titan_raw_dir, '{sample_id}_params.h5')
         workflow.subworkflow(
             name='titan',
             func=titan.create_titan_workflow,

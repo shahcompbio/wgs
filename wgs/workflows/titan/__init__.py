@@ -16,13 +16,13 @@ def create_titan_workflow(
         single_node=None
 ):
     titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
-    igv_template = os.path.join(titan_outdir, 'igv_segs.txt')
-    outfile_template = os.path.join(titan_outdir, 'titan_markers.txt')
-    params_template = os.path.join(titan_outdir, 'titan_params.txt')
-    segs_template = os.path.join(titan_outdir, 'titan_segs.txt')
-    plots_template = os.path.join(titan_outdir, 'titan_plots.pdf')
-    parsed_template = os.path.join(titan_outdir, 'titan_parsed.csv')
-    museq_vcf = os.path.join(titan_raw_dir, 'museq.vcf')
+    igv_template = os.path.join(titan_outdir, '{}_igv_segs.txt'.format(sample_id))
+    outfile_template = os.path.join(titan_outdir, '{}_titan_markers.txt'.format(sample_id))
+    params_template = os.path.join(titan_outdir, '{}_titan_params.txt'.format(sample_id))
+    segs_template = os.path.join(titan_outdir, '{}_titan_segs.txt'.format(sample_id))
+    plots_template = os.path.join(titan_outdir, '{}_titan_plots.pdf'.format(sample_id))
+    parsed_template = os.path.join(titan_outdir, '{}_titan_parsed.csv'.format(sample_id))
+    museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
