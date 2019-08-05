@@ -355,6 +355,7 @@ def azure_config(reference):
     }
 
     cna_calling = {
+        'threads': 8,
         'split_size': 1e7,
         "min_num_reads": 5,
         "reference_genome": reference,
@@ -376,7 +377,7 @@ def azure_config(reference):
             {'num_clusters': 4, 'ploidy': 4},
             {'num_clusters': 5, 'ploidy': 4},
         ],
-        'pygenes_gtf': '/refdata/databases/Homo_sapiens.GRCh37.73.gtf',
+        'pygenes_gtf': '/refdata/wgs_pipeline/Homo_sapiens.GRCh37.73.gtf',
         'remixt_refdata': '/refdata/reference-remixt',
         'museq_params': {
             'threshold': 0.85,

@@ -61,7 +61,7 @@ def create_titan_workflow(
             func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
                 mgd.TempSpace("run_museq_temp"),
-                mgd.TempOutputFile(museq_vcf),
+                mgd.OutputFile(museq_vcf),
                 config['reference_genome'],
                 mgd.InputChunks('interval'),
                 config['museq_params'],
@@ -128,7 +128,9 @@ def create_titan_workflow(
         name='run_readcounter_tumour',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='2:00',
+            disk=200
+        ),
         func='wgs.workflows.titan.tasks.run_readcounter',
         args=(
             mgd.InputFile(tumour_bam, extensions=['.bai']),
@@ -141,7 +143,9 @@ def create_titan_workflow(
         name='run_readcounter_normal',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='2:00',
+            disk=200
+        ),
         func='wgs.workflows.titan.tasks.run_readcounter',
         args=(
             mgd.InputFile(normal_bam, extensions=['.bai']),

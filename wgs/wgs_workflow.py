@@ -7,8 +7,8 @@ from wgs.utils import helpers
 from alignment import paired_alignment
 from sv_calling import call_breakpoints
 from variant_calling import call_variants
-from workflows import remixt
-from workflows import titan
+from wgs.workflows import remixt
+from wgs.workflows import titan
 
 
 def wgs_workflow(args):
@@ -173,6 +173,7 @@ def wgs_workflow(args):
                 config['cna_calling']['titan_intervals'],
                 mgd.InputInstance('sample_id'),
             ),
+            kwargs={'single_node': single_node}
         )
         workflow.subworkflow(
             name='remixt',
@@ -188,7 +189,8 @@ def wgs_workflow(args):
                 mgd.OutputFile('remixt_results_filename', 'sample_id', axes_origin=[],
                                template=remixt_results_filename),
                 mgd.Template(remixt_raw_dir, 'sample_id'),
-                config['cna_calling']['min_num_reads']
+                config['cna_calling']['min_num_reads'],
+                config['globals']
             ),
             kwargs={'docker_containers': config['cna_calling']['docker']}
         )

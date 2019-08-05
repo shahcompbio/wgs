@@ -22,7 +22,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            intervals.append(name + "_" + str(i * size) + "_" + str((i + 1) * size))
+            intervals.append(name + "_" + str(int(i * size)) + "_" + str(int((i + 1) * size)))
 
     return intervals
 
@@ -105,7 +105,7 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, docker_image=Non
 
     chrom = 'c(1:22,\'X\')'
 
-    cmd = ['Rscript', script, obj_file, tempdir, num_clusters, chrom, ploidy]
+    cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
@@ -126,6 +126,7 @@ def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
 
 
 def annot_pygenes(infile, outfile, config):
+
     gene_sets_gtf = config['pygenes_gtf']
     annotator = PygeneAnnotation(infile, outfile, gtf=gene_sets_gtf)
     annotator.write_output()
@@ -157,12 +158,12 @@ def merge_to_h5(inputs, output, intervals, dtype=None):
 
 
 def parse_titan(infile, params_file, titan_file, output, config, sample_id, docker_image=None):
-    '''
+    """
     Parse the input VCF file into a TSV file
 
     :param infile: temporary input VCF file
     :param output: path to the output TSV file
-    '''
+    """
 
     cmd = [
         'vizutils_parse_titan',
