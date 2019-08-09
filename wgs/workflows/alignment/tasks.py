@@ -13,6 +13,16 @@ def index_and_flagstat(bamfile, indexfile, flagstatfile, docker_image=None):
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
+def flagstat(bamfile, flagstatfile, docker_image=None):
+    cmd = ['samtools', 'flagstat', bamfile, '>', flagstatfile]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+def index(bamfile, indexfile, docker_image=None):
+    cmd = ['samtools', 'index', bamfile, indexfile]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
 def markdups(input, output, metrics, tempdir, mem="2G", docker_image=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',

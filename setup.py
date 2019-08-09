@@ -10,6 +10,6 @@ setup(
     description='variant_calling',
     author='Diljot Grewal',
     author_email='diljot.grewal@gmail.com',
-    entry_points={'console_scripts': ['wgs = wgs.run:main']},
+    entry_points={'console_scripts': ['wgs = wgs.run:main', 'wgs_bamtofastq = wgs.workflows.realignment.bamtofastq:main']},
     package_data={'':['scripts/*.py', 'scripts/*.R', 'scripts/*.npz', 'scripts/*.pl', "config/*.yaml", "data/*"]}
 )

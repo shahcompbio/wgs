@@ -46,11 +46,18 @@ def parse_args():
     subparsers = parser.add_subparsers()
 
     # ================
-    # copy number calling
+    # alignment
     # ================
     alignment = subparsers.add_parser("alignment")
     alignment.set_defaults(which='alignment')
     alignment = add_global_args(alignment)
+
+    # ================
+    # realignment
+    # ================
+    realignment = subparsers.add_parser("realignment")
+    realignment.set_defaults(which='realignment')
+    realignment = add_global_args(realignment)
 
     # ================
     # variant calling
@@ -72,33 +79,6 @@ def parse_args():
     cna_calling = subparsers.add_parser("copynumber_calling")
     cna_calling.set_defaults(which='copynumber_calling')
     cna_calling = add_global_args(cna_calling)
-
-    # ================
-    # copy number calling
-    # ================
-    all_wgs = subparsers.add_parser("all")
-    all_wgs.set_defaults(which='all')
-    all_wgs = add_global_args(all_wgs)
-    all_wgs.add_argument('--alignment',
-                         default=False,
-                         action='store_true',
-                         help='start with fastqs and run alignment')
-
-    all_wgs.add_argument('--variant_calling',
-                         default=False,
-                         action='store_true',
-                         help='run variant calling workflow')
-
-    all_wgs.add_argument('--breakpoint_calling',
-                         default=False,
-                         action='store_true',
-                         help='run breakpoint_calling')
-
-    all_wgs.add_argument('--copynumber_calling',
-                         default=False,
-                         action='store_true',
-                         help='run copynumber workflow')
-
 
     # ======================================
     # generates pipeline and batch configs

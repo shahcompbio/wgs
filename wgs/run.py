@@ -3,14 +3,14 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 """
-from wgs.config import batch_config
-from wgs.config import pipeline_config
-
 from alignment import alignment_workflow
 from cmdline import parse_args
 from cna_calling import cna_calling_workflow
+from realign import realign_bam_workflow
 from sv_calling import sv_calling_workflow
 from variant_calling import variant_calling_workflow
+from wgs.config import batch_config
+from wgs.config import pipeline_config
 
 
 def generate_config(args):
@@ -48,6 +48,10 @@ def main():
     if args["which"] == "copynumber_calling":
         args = generate_config(args)
         cna_calling_workflow(args)
+
+    if args["which"] == "realignment":
+        args = generate_config(args)
+        realign_bam_workflow(args)
 
 
 if __name__ == "__main__":
