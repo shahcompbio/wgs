@@ -49,7 +49,7 @@ def align_samples(
         ctx=helpers.get_default_ctx(
             memory=config_globals['memory']['med'],
             walltime='24:00',
-            disk=500
+            disk=400
         ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         axes=('sample_id',),
@@ -154,7 +154,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='24:00',
-            disk=150
+            disk=200
         ),
         args=(
             pypeliner.managed.InputFile(out_file),
