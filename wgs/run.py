@@ -19,12 +19,12 @@ def generate_config(args):
         if args.get("pipeline_config"):
             args = pipeline_config.generate_pipeline_config(args)
         if args.get("batch_config"):
-            args = batch_config.generate_pipeline_config(args)
+            args = batch_config.generate_submit_config_in_temp(args)
     else:
         if not args.get("config_file"):
             args = pipeline_config.generate_pipeline_config(args)
         if not args.get("submit_config"):
-            args = batch_config.generate_batch_config(args)
+            args = batch_config.generate_submit_config_in_temp(args)
     return args
 
 
