@@ -103,11 +103,12 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
 
 def get_readgroup(read_group_info, sample_id, lane_id):
     if read_group_info:
-        rg_id = read_group_info['ID'].format(**{'sample_id': sample_id, 'lane_id': lane_id})
+        rg_id = read_group_info['ID'].format(sample_id=sample_id, lane_id=lane_id)
         read_group = ['@RG', 'ID:{0}'.format(rg_id)]
         for key, value in sorted(read_group_info.items()):
             if key == 'ID':
                 continue
+            value = value.format(sample_id=sample_id, lane_id=lane_id)
             read_group.append(':'.join((key, value)))
         read_group = '\\t'.join(read_group)
     elif sample_id or lane_id:
