@@ -205,8 +205,8 @@ def get_compute_start_commands(imageid):
 
 def get_compute_finish_commands():
     commands = (
-        'sg docker -c "docker run -v {0}:{0} -w /datadrive/$AZ_BATCH_TASK_WORKING_DIR continuumio/miniconda find . -xtype l -delete"\n',
-        'sg docker -c "docker run -v {0}:{0} -w /datadrive/$AZ_BATCH_TASK_WORKING_DIR continuumio/miniconda find . -xtype f -delete"\n',
+        'sg docker -c "docker run -v /datadrive:/datadrive -w /datadrive/$AZ_BATCH_TASK_WORKING_DIR continuumio/miniconda find . -xtype l -delete"\n',
+        'sg docker -c "docker run -v /datadrive:/datadrive -w /datadrive/$AZ_BATCH_TASK_WORKING_DIR continuumio/miniconda find . -xtype f -delete"\n',
     )
     commands = ''.join(commands)
 
