@@ -17,6 +17,17 @@ conda config --add channels dranew
 conda config --add channels aroth85
 conda config --add channels componc
 conda config --add channels bioconda
+//added 10/10 by Douglas
+channels also needed for juno:
+conda config --add channels r
+conda config --add channels conda-forge
+packages removed:
+  - openjdk==8.0.121=1
+  - matplotlib==2.1.1=py27_0
+  - libssh2==1.8.0=2
+  - r-pillar==1.2.2=r341h6115d3f_1
+  - qt==5.6.2=6
+
 ```
 
 Then create an environment with the required packages:
