@@ -1,6 +1,5 @@
 import os
 
-import biowrappers
 import biowrappers.components
 import biowrappers.components.io
 import biowrappers.components.io.bam.tasks
@@ -8,9 +7,10 @@ import biowrappers.components.io.fastq.tasks
 import biowrappers.pipelines.realignment.tasks
 import pypeliner
 import pypeliner.managed as mgd
+import tasks
 from wgs.utils import helpers
 
-import tasks
+import biowrappers
 
 
 def align_samples(
@@ -39,7 +39,8 @@ def align_samples(
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             outdir,
-            mgd.InputInstance("sample_id"),
+            [mgd.InputInstance("sample_id"),
+             mgd.InputInstance("lane_id")]
         ),
         kwargs={'single_node': single_node}
     )
