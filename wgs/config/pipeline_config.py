@@ -21,15 +21,20 @@ def get_version():
 def containers():
     version = get_version()
     docker_images = {
-        'bwa': 'wgs/bwa:v0.0.1', 'samtools': 'wgs/samtools:v0.0.1',
-        'picard': 'wgs/picard:v0.0.1',
-        'wgs': 'wgs/wgs:v{}'.format(version),
-        'strelka': 'wgs/strelka:v0.0.1', 'mutationseq': 'wgs/mutationseq:v0.0.1',
-        'vcftools': 'wgs/vcftools:v0.0.1', 'snpeff': 'wgs/vcftools:v0.0.1',
-        'titan': 'wgs/titan:v0.0.1', 'remixt': 'wgs/remixt:v{}'.format(version),
-        'destruct': 'wgs/destruct:v{}'.format(version),
-        'lumpy': 'wgs/lumpy:v0.0.1', 'museqportrait': 'wgs/museqportrait:v0.0.1',
-        'vizutils': 'wgs/vizutils:v0.0.1'
+        'bwa': 'wgspipeline/bwa:v0.0.1',
+        'samtools': 'wgspipeline/samtools:v0.0.1',
+        'picard': 'wgspipeline/picard:v0.0.1',
+        'wgs': 'wgspipeline/wgs:v{}'.format(version),
+        'strelka': 'wgspipeline/strelka:v0.0.1',
+        'mutationseq': 'wgspipeline/mutationseq:v0.0.1',
+        'vcftools': 'wgspipeline/vcftools:v0.0.1',
+        'snpeff': 'wgspipeline/vcftools:v0.0.1',
+        'titan': 'wgspipeline/titan:v0.0.1',
+        'remixt': 'wgspipeline/remixt:v{}'.format(version),
+        'destruct': 'wgspipeline/destruct:v{}'.format(version),
+        'lumpy': 'wgspipeline/lumpy:v0.0.1',
+        'museqportrait': 'wgspipeline/museqportrait:v0.0.1',
+        'vizutils': 'wgspipeline/vizutils:v0.0.1'
     }
 
     singularity = {}
