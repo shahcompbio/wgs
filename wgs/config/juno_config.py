@@ -1,7 +1,7 @@
 
 
 def juno_config(reference, containers):
-    docker_containers = containers()['docker']
+    docker_containers = containers['docker']
 
     if reference == 'grch37':
         reference = "/juno/work/shah/reference/genomes/gr37_decoys/gr37.fasta"
