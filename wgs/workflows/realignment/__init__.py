@@ -1,12 +1,10 @@
-import os
 import pypeliner
-from wgs.utils import helpers
 import pypeliner.managed as mgd
-
+from wgs.utils import helpers
 from wgs.workflows import alignment
 
-def realign_bam_file(input, output, outdir, config, single_node=False):
 
+def realign_bam_file(input, output, outdir, config, single_node=False):
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -37,7 +35,6 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
         kwargs={'single_node': single_node}
     )
 
-
     workflow.transform(
         name='merge_tumour_lanes',
         ctx=helpers.get_default_ctx(
@@ -46,7 +43,7 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'readgroup'),
             mgd.OutputFile(output),
-            mgd.OutputFile(output+'.bai'),
+            mgd.OutputFile(output + '.bai'),
         ),
         kwargs={
             'picard_docker_image': config['docker']['picard'],
@@ -55,6 +52,3 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
     )
 
     return workflow
-
-
-                                                                                                                                                                                                  8,1           Top

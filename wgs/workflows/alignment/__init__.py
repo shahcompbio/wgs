@@ -22,6 +22,9 @@ def align_samples(
         outdir,
         single_node=False
 ):
+
+    output_template = os.path.join(outdir, '{sample_id}', '{lane_id}')
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -38,7 +41,7 @@ def align_samples(
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            outdir,
+            mgd.Template(output_template, 'sample_id', 'lane_id'),
             [mgd.InputInstance("sample_id"),
              mgd.InputInstance("lane_id")]
         ),
@@ -56,7 +59,7 @@ def align_samples(
         axes=('sample_id',),
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs),
+            mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
         ),
         kwargs={
             'picard_docker_image': config['docker']['picard'],

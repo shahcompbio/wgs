@@ -6,6 +6,7 @@ from wgs.utils import helpers
 from wgs.workflows import remixt
 from wgs.workflows import titan
 
+
 def cna_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
