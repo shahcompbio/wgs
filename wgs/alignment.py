@@ -1,14 +1,15 @@
+import os
+
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-
 from workflows import alignment
 
 
 def paired_alignment(
         config, tumours, normals, samples, tumour_fastqs_r1,
         tumour_fastqs_r2, normal_fastqs_r1, normal_fastqs_r2,
-        outdir_template_normal, outdir_template_tumour,
+        outdir,
         single_node=False
 ):
     tumours = dict([(sampid, tumours[sampid])
@@ -20,6 +21,9 @@ def paired_alignment(
 
     global_config = config['globals']
     config = config['alignment']
+
+    tumour_outdir = os.path.join(outdir, 'tumour')
+    normal_outdir = os.path.join(outdir, 'normal')
 
     workflow.setobj(
         obj=mgd.OutputChunks('tum_sample_id', 'tum_lane'),
@@ -33,75 +37,34 @@ def paired_alignment(
 
     workflow.subworkflow(
         name='align_tumours',
-        func=alignment.align_sample,
-        axes=('tum_sample_id', 'tum_lane'),
+        func=alignment.align_samples,
         args=(
             config,
-            mgd.InputFile('input.r1.fastq.gz', 'tum_sample_id', 'tum_lane', fnames=tumour_fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'tum_sample_id', 'tum_lane', fnames=tumour_fastqs_r2),
-            mgd.TempOutputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
-            mgd.Template(outdir_template_tumour, 'tum_sample_id', 'tum_lane'),
-            [mgd.InputInstance('tum_sample_id'),
-             mgd.InputInstance('tum_lane')]
-        ),
-        kwargs={'single_node': single_node}
-    )
-
-    workflow.transform(
-        name='merge_tumour_lanes',
-        ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
-            walltime='48:00', ),
-        func="wgs.workflows.alignment.tasks.merge_bams",
-        axes=('tum_sample_id',),
-        args=(
-            mgd.TempInputFile('tumour.bam', 'tum_sample_id', 'tum_lane'),
-            mgd.OutputFile('output.bam', 'tum_sample_id', fnames=tumours),
-        ),
-        kwargs={
-            'samtools_docker_image': config['docker']['samtools'],
-            'picard_docker_image': config['docker']['picard']
-        }
+            global_config,
+            tumour_fastqs_r1,
+            tumour_fastqs_r2,
+            mgd.OutputFile('tumour.bam', 'tum_sample_id', fnames=tumours, extensions=['.bai'], axes_origin=[]),
+            tumour_outdir
+        )
     )
 
     workflow.subworkflow(
         name='align_normals',
-        func=alignment.align_sample,
-        axes=('norm_sample_id', 'norm_lane'),
+        func=alignment.align_samples,
         args=(
             config,
-            mgd.InputFile('input.r1.fastq.gz', 'norm_sample_id', 'norm_lane', fnames=normal_fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'norm_sample_id', 'norm_lane', fnames=normal_fastqs_r2),
-            mgd.TempOutputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
-            mgd.Template(outdir_template_normal, 'norm_sample_id', 'norm_lane'),
-            [mgd.InputInstance('norm_sample_id'),
-             mgd.InputInstance('norm_lane')]
-        ),
-        kwargs={'single_node': single_node}
-    )
-
-    workflow.transform(
-        name='merge_normal_lanes',
-        ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
-            walltime='48:00', ),
-        func="wgs.workflows.alignment.tasks.merge_bams",
-        axes=('norm_sample_id',),
-        args=(
-            mgd.TempInputFile('normal.bam', 'norm_sample_id', 'norm_lane'),
-            mgd.OutputFile('output.bam', 'norm_sample_id', fnames=normals),
-        ),
-        kwargs={
-            'samtools_docker_image': config['docker']['samtools'],
-            'picard_docker_image': config['docker']['picard']
-        }
+            global_config,
+            normal_fastqs_r1,
+            normal_fastqs_r2,
+            mgd.OutputFile('normal.bam', 'tum_sample_id', fnames=normals, extensions=['.bai'], axes_origin=[]),
+            normal_outdir
+        )
     )
 
     return workflow
 
 
 def alignment_workflow(args):
-
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 

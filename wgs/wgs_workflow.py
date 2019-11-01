@@ -45,13 +45,6 @@ def wgs_workflow(args):
         tumour_fastqs_r1, tumour_fastqs_r2 = helpers.get_fastqs(inputs, samples, 'tumour')
         normal_fastqs_r1, normal_fastqs_r2 = helpers.get_fastqs(inputs, samples, 'normal')
 
-        normal_alignment_template = os.path.join(
-            args['out_dir'], 'alignment', '{norm_sample_id}', '{norm_lane}', 'normal'
-        )
-        tumour_alignment_template = os.path.join(
-            args['out_dir'], 'alignment', '{tum_sample_id}', '{tum_lane}', 'tumour'
-        )
-
         workflow.subworkflow(
             name='wgs_alignment_paired_lanes',
             func=paired_alignment,
@@ -67,8 +60,7 @@ def wgs_workflow(args):
                 tumour_fastqs_r2,
                 normal_fastqs_r1,
                 normal_fastqs_r2,
-                normal_alignment_template,
-                tumour_alignment_template,
+                args['out_dir'],
             ),
             kwargs={'single_node': single_node}
         )
