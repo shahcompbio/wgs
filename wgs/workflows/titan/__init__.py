@@ -120,6 +120,7 @@ def create_titan_workflow(
         args=(
             mgd.InputFile(museq_vcf),
             mgd.TempOutputFile('museq_postprocess.txt'),
+            config
         ),
     )
 

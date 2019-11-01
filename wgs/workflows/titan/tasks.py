@@ -40,7 +40,7 @@ def convert_museq_vcf2counts(infile, outfile, config):
     :param outfile: temporary text file of counts (museq_postprocess.txt)
     """
 
-    transformer = TransformVcfCounts(infile, outfile, None)  # config['dbsnp_positions'])
+    transformer = TransformVcfCounts(infile, outfile, config['dbsnp_positions'])
     transformer.main()
 
 
