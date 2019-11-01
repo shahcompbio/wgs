@@ -62,7 +62,7 @@ def get_vm_image_id():
     imagename = 'wgs-prod-bigdisk-v1-image'
 
     subscription = os.environ.get("SUBSCRIPTION_ID", "id-missing")
-    resource_group = os.environ.get("RESOURCE_GROUP", "scdna-prod")
+    resource_group = os.environ.get("RESOURCE_GROUP", "wgscompute")
     imageid = ['subscriptions', subscription, 'resourceGroups',
                resource_group, 'providers', 'Microsoft.Compute',
                'images', imagename]
@@ -266,9 +266,12 @@ def write_config(params, filepath):
 
 
 def get_batch_config(defaults, override=None):
+    pools = {}
+    pools.update(generate_standard_pool(defaults['reference']))
+    pools.update(generate_multicore_pool(defaults['reference']))
+
     config = {
-        'standard': generate_standard_pool(defaults['reference']),
-        'multicore': generate_standard_pool(defaults['reference']),
+        'pools': pools,
         "storage_container_name": defaults["storage_container_name"],
         "no_delete_pool": defaults["no_delete_pool"],
         "no_delete_job": defaults["no_delete_job"],
