@@ -11,7 +11,6 @@ from cmdline import parse_args
 from cna_calling import cna_calling_workflow
 from sv_calling import sv_calling_workflow
 from variant_calling import variant_calling_workflow
-from wgs_workflow import wgs_workflow
 
 
 def generate_config(args):
@@ -49,10 +48,6 @@ def main():
     if args["which"] == "copynumber_calling":
         args = generate_config(args)
         cna_calling_workflow(args)
-
-    if args["which"] == "all":
-        args = generate_config(args)
-        wgs_workflow(args)
 
 
 if __name__ == "__main__":
