@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
+import gzip
+import os
 import sys
-from string import *
+from string import maketrans
 
 import pysam
-import gzip
+from wgs.utils import helpers
+
 
 class OpenFile(object):
     def __init__(self, filename, mode='rt'):
@@ -21,6 +24,27 @@ class OpenFile(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.handle.close()
+
+
+def get_read_groups(file_name):
+    config = dict()
+
+    bam = pysam.AlignmentFile(file_name, mode='rb', check_sq=False)
+
+    readgroup_ref = {info['ID']: info for info in bam.header['RG']}
+
+    header_text = bam.text
+
+    for line in header_text.split('\n'):
+        if line.startswith("@RG"):
+            rgid = line.split()[1]
+            assert rgid.startswith("ID:")
+            rgid = rgid[3:]
+            config[rgid] = (readgroup_ref[rgid], line)
+
+    assert len(config) == len(readgroup_ref)
+    bam.close()
+    return config
 
 
 def get_bam_reader(infile):
@@ -49,57 +73,91 @@ def revcomp(seq):
     return seq2
 
 
-def bam_to_fastq(infile, out_r1, out_r2, readgroup):
+def get_outfiles(outdir, readgroups):
+    outfiles = {}
+
+    for readgroup in readgroups:
+        helpers.makedirs(os.path.join(outdir, readgroup))
+        r1 = os.path.join(outdir, readgroup, 'R1.fastq.gz')
+        r2 = os.path.join(outdir, readgroup, 'R2.fastq.gz')
+        outfiles[readgroup] = (r1, r2)
+
+    return outfiles
+
+
+def open_outfiles(outfiles):
+    opened_files = {}
+    for rgid, fastqs in outfiles.items():
+        opened_files[rgid] = (
+            OpenFile(fastqs[0], 'w').__enter__(),
+            OpenFile(fastqs[1], 'w').__enter__()
+        )
+    return opened_files
+
+
+def close_outfiles(outfiles):
+    for rgid, fastqs in outfiles.items():
+        fastqs[0].close()
+        fastqs[1].close()
+
+
+def bam_to_fastq(infile, outdir):
+    readgroups = get_read_groups(infile)
+
+    outfiles = get_outfiles(outdir, readgroups)
+    outfiles = open_outfiles(outfiles)
+
     read_data = {}
 
     bam = get_bam_reader(infile)
 
-    with OpenFile(out_r1, 'w') as fastq_r1, OpenFile(out_r2, 'w') as fastq_r2:
+    for al in bam:
 
-        for al in bam:
+        # must be primary read alignment, not secondary or supplementary
+        if al.is_secondary or al.flag & 2048 == 2048:
+            continue
 
-            # must be primary read alignment, not secondary or supplementary
-            if al.is_secondary or al.flag & 2048 == 2048:
-                continue
+        # skip unpaired reads
+        if not al.is_paired:
+            continue
 
-            # skip unpaired reads
-            if not al.is_paired:
-                continue
+        # ensures the read is not hard-clipped. important
+        # when the BAM doesn't have shorter hits flagged as
+        # secondary
+        if al.cigar is not None and 5 in [x[0] for x in al.cigar]:
+            continue
 
-            if not str(al.opt('RG')) == str(readgroup):
-                continue
+        # add read name to dictionary if not already there
+        key = al.qname
+        if key not in read_data:
+            read_data.setdefault(key, al)
+        # print matched read pairs
+        else:
+            # RG:Z:ID
+            try:
+                RG1 = read_data[key].opt('RG')
+            except KeyError:
+                RG1 = ""
+            try:
+                RG2 = al.opt('RG')
+            except KeyError:
+                RG2 = ""
 
-            # ensures the read is not hard-clipped. important
-            # when the BAM doesn't have shorter hits flagged as
-            # secondary
-            if al.cigar is not None and 5 in [x[0] for x in al.cigar]:
-                continue
+            rgid = str(al.opt('RG'))
+            fastq_r1 = outfiles[rgid][0]
+            fastq_r2 = outfiles[rgid][1]
 
-            # add read name to dictionary if not already there
-            key = al.qname
-            if key not in read_data:
-                read_data.setdefault(key, al)
-            # print matched read pairs
+            if al.is_read1:
+                write_to_fastq(al, 1, RG2, fastq_r1)
+                write_to_fastq(read_data[key], 2, RG1, fastq_r2)
             else:
-                # RG:Z:ID
-                try:
-                    RG1 = read_data[key].opt('RG')
-                except KeyError:
-                    RG1 = ""
-                try:
-                    RG2 = al.opt('RG')
-                except KeyError:
-                    RG2 = ""
+                write_to_fastq(read_data[key], 1, RG1, fastq_r1)
+                write_to_fastq(al, 2, RG2, fastq_r2)
+            del read_data[key]
+    if len(read_data) != 0:
+        sys.stderr.write('Warning: %s unmatched name groups\n' % len(read_data))
 
-                if al.is_read1:
-                    write_to_fastq(al, 1, RG2, fastq_r1)
-                    write_to_fastq(read_data[key], 2, RG1, fastq_r2)
-                else:
-                    write_to_fastq(read_data[key], 1, RG1, fastq_r1)
-                    write_to_fastq(al, 2, RG2, fastq_r2)
-                del read_data[key]
-        if len(read_data) != 0:
-            sys.stderr.write('Warning: %s unmatched name groups\n' % len(read_data))
+    close_outfiles(outfiles)
 
 
 def parse_args():
@@ -111,18 +169,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        'R1',
-        help='input bam file'
-    )
-
-    parser.add_argument(
-        'R2',
-        help='input bam file'
-    )
-
-    parser.add_argument(
-        '--readgroup',
-        help='input bam file'
+        'outdir',
+        help='output directory'
     )
 
     args = parser.parse_args()
@@ -131,10 +179,10 @@ def parse_args():
     return args
 
 
-def main(args):
+def main():
     args = parse_args()
-    bam_to_fastq(args['input'], args['R1'], args['R2'], args['readgroup'])
+    bam_to_fastq(args['input'], args['outdir'])
 
 
 if __name__ == '__main__':
-    main(args)
+    main()

@@ -17,7 +17,8 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
         args=(
             mgd.InputFile(input),
             mgd.TempOutputFile("inputdata_read1.fastq", "readgroup"),
-            mgd.TempOutputFile("inputdata_read2.fastq", "readgroup", axes_origin=[])
+            mgd.TempOutputFile("inputdata_read2.fastq", "readgroup", axes_origin=[]),
+            mgd.TempSpace("bamtofastq")
         )
     )
     workflow.subworkflow(
@@ -42,8 +43,7 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
         func="wgs.workflows.alignment.tasks.merge_bams",
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'readgroup'),
-            mgd.OutputFile(output),
-            mgd.OutputFile(output + '.bai'),
+            mgd.OutputFile(output, extensions=['.bai']),
         ),
         kwargs={
             'picard_docker_image': config['docker']['picard'],
