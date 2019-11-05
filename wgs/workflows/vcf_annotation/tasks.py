@@ -58,7 +58,7 @@ def run_DBSNP(infile, output, config):
     :param output: temporary output VCF file
     '''
 
-    script = os.path.join(scripts_directory, 'flagPos.py')
+    script = os.path.join(scripts_directory, 'add_db_anno.py')
     db = config['dbsnp_params']['db']
 
     cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
@@ -75,7 +75,7 @@ def run_1000gen(infile, output, config):
     :param output: temporary output VCF file
     '''
 
-    script = os.path.join(scripts_directory, 'flagPos.py')
+    script = os.path.join(scripts_directory, 'add_db_anno.py')
     db = config['thousandgen_params']['db']
 
     cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
@@ -92,7 +92,7 @@ def run_cosmic(infile, output, config):
     :param output: temporary output VCF file
     '''
 
-    script = os.path.join(scripts_directory, 'flagPos.py')
+    script = os.path.join(scripts_directory, 'add_db_anno.py')
     db = config['cosmic_params']['db']
 
     cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,

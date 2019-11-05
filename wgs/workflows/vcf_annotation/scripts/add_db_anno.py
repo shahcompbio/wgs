@@ -11,7 +11,6 @@ from collections import defaultdict
 
 version = '1.3.1'
 
-
 def resolve_db_position(input_type, pos):
     '''
     adjust databse position to match convention of
@@ -21,7 +20,6 @@ def resolve_db_position(input_type, pos):
         pos += 1
 
     return pos
-
 
 def load_chromosome(db, chromosome):
     ''' load genome reference '''
@@ -130,8 +128,13 @@ def write_header(out):
     out.write(''.join(hdr))
 
 
-def flag_positions(chromosome, db_file):
-    ''' flag the positions '''
+
+#changed because "flagpos" seems confusing
+#as some of the annotations are themselves
+#'flags'
+def add_db_annotation(chromosome, db_file):
+    ''' flag the vcf entries with
+    information from the database annotator '''
 
     db_dict = None
 
@@ -160,22 +163,26 @@ def flag_positions(chromosome, db_file):
                 key = ','.join([chrom, pos])
                 value = db_dict[1].get(key)
 
+                #according to vcf style, don't need anything
+                # on !value
                 if value:
-                    flag = '[' + ','.join(value) + ']'
-                else:
-                    flag = 'F'
-
-                info = '{};{}={}'.format(info, args.label, flag)
+                    if args.flag_with_id:
+                        flag = ','.join(value)
+                        info = '{};{}={}'.format(info, args.label, flag)
+                    else:
+                        info = '{};{}'.format(info, args.label)
+                
                 line[7] = info
                 line = '\t'.join(line) + '\n'
                 out.write(line)
+
 
 
 def main():
     ''' main function '''
 
     #    db_dict = load_db_positions(args.db, args.chrom)
-    flag_positions(args.chrom, args.db)
+    add_db_annotation(args.chrom, args.db)
 
 
 if __name__ == '__main__':
