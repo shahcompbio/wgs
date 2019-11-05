@@ -21,8 +21,9 @@ def get_table_hdr():
     with open(ma_file) as f:
         line = f.readline()
 
-    return line.rstrip().split('\t')
-
+    colnames =  line.rstrip().split('\t')
+    #taking out first
+    return colnames[1:]
 
 def load_table(chrom):
     ''' load mutationassessor data for chromosome chrom '''
@@ -51,7 +52,7 @@ def get_ma_description():
 
     ma_vcf_hdr = ('##INFO=<ID=MA,Number=.,Type=String,Description='
                   '\"Predicted functional impact of amino-acid substitutions'
-                  'in proteins.Format: ({}) \">\n'.format('|'.join(get_table_hdr())))
+                  'in proteins. Format: \'{}\' \">\n'.format('|'.join(get_table_hdr() ) ) ) 
     return ma_vcf_hdr
 
 
@@ -78,7 +79,7 @@ def annot_lookup(key, table):
     annot = table.get(key)
     if annot:
         print 'found match: {}'.format(key)
-        annot = ';MA=({})'.format('|'.join(annot))
+        annot = ';MA={}'.format('|'.join(annot[1:]))
     else:
         annot = ';MA=()'
 
