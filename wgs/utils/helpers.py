@@ -4,6 +4,7 @@ Created on Feb 19, 2018
 @author: dgrewal
 '''
 import errno
+import logging
 import multiprocessing
 import os
 import shutil
@@ -13,6 +14,42 @@ from subprocess import Popen, PIPE
 
 import pypeliner
 import yaml
+
+
+class getFileHandle(object):
+    def __init__(self, filename, mode='rt'):
+        self.filename = filename
+        self.mode = mode
+
+    def __enter__(self):
+        if self.get_file_format(self.filename) in ["csv", 'plain-text']:
+            self.handle = open(self.filename, self.mode)
+        elif self.get_file_format(self.filename) == "gzip":
+            self.handle = gzip.open(self.filename, self.mode)
+        elif self.get_file_format(self.filename) == "h5":
+            self.handle = pd.HDFStore(self.filename, self.mode)
+        return self.handle
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.handle.close()
+
+    def get_file_format(self, filepath):
+        if filepath.endswith('.tmp'):
+            filepath = filepath[:-4]
+
+        _, ext = os.path.splitext(filepath)
+
+        if ext == ".csv":
+            return "csv"
+        elif ext == ".gz":
+            return "gzip"
+        elif ext == ".h5" or ext == ".hdf5":
+            return "h5"
+        else:
+            logging.getLogger("wgs.helpers").warning(
+                "Couldn't detect output format. extension {}".format(ext)
+            )
+            return "plain-text"
 
 
 def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=None):
@@ -25,7 +62,7 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=No
         'walltime_retry_increment': '24:00',
         'ncpus': ncpus,
         'disk': disk,
-        'singularity_image':'wgs/wgs.simg'
+        'singularity_image': 'wgs/wgs.simg'
     }
 
     if docker_image:

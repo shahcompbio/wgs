@@ -3,21 +3,59 @@ Created on Feb 21, 2018
 
 @author: pwalters
 '''
+import os
+
 import pypeliner
 import pypeliner.managed as mgd
-
 import tasks
 from wgs.utils import helpers
+
 
 def create_consensus_workflow(
         museq_germline,
         museq_snv,
         strelka_snv,
         strelka_indel,
-        output,
+        somatic_calls,
+        indel_calls,
+        germline_calls,
+        outdir,
         global_config,
-        varcall_config):
+        varcall_config
+):
+    germline_snpeff_annotations = os.path.join(outdir, 'germline_snpeff_annotations.csv.gz')
+    indel_snpeff_annotations = os.path.join(outdir, 'indel_snpeff_annotations.csv.gz')
+    somatic_snpeff_annotations = os.path.join(outdir, 'somatic_snpeff_annotations.csv.gz')
+
     workflow = pypeliner.workflow.Workflow()
+
+    workflow.transform(
+        name='parse_museq_germlines',
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
+        func=tasks.parse_museq,
+        args=(
+            mgd.InputFile(museq_germline),
+            mgd.OutputFile(germline_calls),
+            mgd.OutputFile(germline_snpeff_annotations),
+            varcall_config["parse_museq"],
+        ),
+    )
+
+    workflow.transform(
+        name='parse_strelka_indel',
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
+        func=tasks.parse_strelka,
+        args=(
+            mgd.InputFile(strelka_indel),
+            mgd.OutputFile(indel_calls),
+            mgd.OutputFile(indel_snpeff_annotations),
+            varcall_config["parse_strelka"],
+        ),
+    )
 
     workflow.transform(
         name='parse_museq_snv',
@@ -28,25 +66,9 @@ def create_consensus_workflow(
         args=(
             mgd.InputFile(museq_snv),
             mgd.TempOutputFile('museq_snv.csv'),
-            mgd.TempOutputFile('museq_snv_filt.csv'),
+            mgd.TempOutputFile('museq_snpeff.csv'),
             varcall_config["parse_museq"],
         ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
-    )
-
-    workflow.transform(
-        name='parse_museq_germlines',
-        ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
-            walltime='8:00', ),
-        func=tasks.parse_museq,
-        args=(
-            mgd.InputFile(museq_germline),
-            mgd.TempOutputFile('museq_germlines.csv'),
-            mgd.TempOutputFile('museq_germlines_filt.csv'),
-            varcall_config["parse_museq"],
-        ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -58,25 +80,9 @@ def create_consensus_workflow(
         args=(
             mgd.InputFile(strelka_snv),
             mgd.TempOutputFile('strelka_snv.csv'),
-            mgd.TempOutputFile('strelka_snv_filt.csv'),
+            mgd.TempOutputFile('strelka_snv_snpeff.csv'),
             varcall_config["parse_strelka"],
         ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
-    )
-
-    workflow.transform(
-        name='parse_strelka_indel',
-        ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
-            walltime='8:00', ),
-        func=tasks.parse_strelka,
-        args=(
-            mgd.InputFile(strelka_indel),
-            mgd.TempOutputFile('strelka_indel.csv'),
-            mgd.TempOutputFile('strelka_indel_filt.csv'),
-            varcall_config["parse_strelka"],
-        ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
@@ -88,25 +94,21 @@ def create_consensus_workflow(
         args=(
             [mgd.TempInputFile('strelka_snv.csv'),
              mgd.TempInputFile('museq_snv.csv')],
-            mgd.TempOutputFile('merged_snv.csv'),
+            mgd.OutputFile(somatic_calls),
         ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     workflow.transform(
-        name='concatenate',
+        name='merge_snpeff',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.concatenate,
+        func=tasks.merge_overlap,
         args=(
-            [mgd.TempInputFile('merged_snv.csv'),
-             mgd.TempInputFile('museq_germlines.csv'),
-             mgd.TempInputFile('strelka_indel.csv'),
-             ],
-            mgd.OutputFile(output),
+            [mgd.TempInputFile('strelka_snv_snpeff.csv'),
+             mgd.TempInputFile('museq_snpeff.csv')],
+            mgd.OutputFile(somatic_snpeff_annotations),
         ),
-        kwargs={'docker_image': varcall_config['docker']['vizutils']}
     )
 
     return workflow
