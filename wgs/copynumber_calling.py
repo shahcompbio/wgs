@@ -7,12 +7,14 @@ from wgs.workflows import remixt
 from wgs.workflows import titan
 
 
-def cna_calling_workflow(args):
+def copynumber_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow()
 
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
+
+    global_config = config['globals']
+    config = config['copynumber_calling']
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
@@ -28,6 +30,10 @@ def cna_calling_workflow(args):
     titan_segments_filename = os.path.join(titan_raw_dir, 'segments.h5')
     titan_markers_filename = os.path.join(titan_raw_dir, 'markers.h5')
     titan_params_filename = os.path.join(titan_raw_dir, 'params.h5')
+
+    workflow = pypeliner.workflow.Workflow(
+        ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
+    )
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
@@ -51,9 +57,9 @@ def cna_calling_workflow(args):
                            axes_origin=[], template=titan_params_filename),
             mgd.OutputFile('titan_markers_filename', 'sample_id',
                            axes_origin=[], template=titan_markers_filename),
-            config['globals'],
-            config['cna_calling'],
-            config['cna_calling']['titan_intervals'],
+            global_config,
+            config,
+            config['titan_intervals'],
             mgd.InputInstance('sample_id'),
         ),
         kwargs={'single_node': args['single_node']}
@@ -71,12 +77,12 @@ def cna_calling_workflow(args):
             mgd.InputFile('destruct_breakpoints', 'sample_id',
                           axes_origin=[], fnames=breakpoints),
             mgd.InputInstance('sample_id'),
-            config['cna_calling']['remixt_refdata'],
+            config['remixt_refdata'],
             mgd.OutputFile('remixt_results_filename', 'sample_id',
                            axes_origin=[], template=remixt_results_filename),
             mgd.Template(remixt_raw_dir, 'sample_id'),
-            config['cna_calling']['min_num_reads'],
-            config['globals']
+            config['min_num_reads'],
+            global_config
         ),
         kwargs={'single_node': args['single_node'],
                 'docker_containers': config['docker']}

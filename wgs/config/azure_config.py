@@ -123,8 +123,8 @@ def azure_config(reference, containers):
         }
     }
 
-    cna_calling = {
-        'threads': 8,
+    copynumber_calling = {
+        'ncpus': 8,
         'split_size': 1e7,
         "min_num_reads": 5,
         "reference_genome": reference,

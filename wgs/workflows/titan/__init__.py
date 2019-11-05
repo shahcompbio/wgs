@@ -176,7 +176,7 @@ def create_titan_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='24:00',
-            ncpus=config['threads']),
+            ncpus=config['ncpus']),
         func='wgs.workflows.titan.tasks.run_titan',
         args=(
             mgd.TempInputFile('museq_postprocess.txt'),
