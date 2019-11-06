@@ -554,8 +554,6 @@ def filter_indel_file_list(
 
                 tumour.data = _convert_dict_to_call(tumour_data)
 
-                print normal.data
-
                 # Add filters
 
                 # Normal depth filter

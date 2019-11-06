@@ -28,7 +28,7 @@ def get_table_hdr():
 def load_table(chrom):
     ''' load mutationassessor data for chromosome chrom '''
 
-    print 'loading table for chromosome {}'.format(chrom)
+    print('loading table for chromosome {}'.format(chrom))
     ma_table = {}
     chrom = chrom.replace('chr', '')
 
@@ -40,7 +40,8 @@ def load_table(chrom):
         for line in f:
             if line.startswith('#'):
                 continue
-            line = line.rstrip().split()
+            line = line.strip('\n').split('\t')
+            line = [val.replace(' ','_') for val in line]
             key = '_'.join(line[0].split(',')[1:5])
             ma_table[key] = line
 
@@ -50,7 +51,7 @@ def load_table(chrom):
 def get_ma_description():
     ''' add new mutation assessor header line '''
 
-    ma_vcf_hdr = ('##INFO=<ID=MA,Number=.,Type=String,Description='
+    ma_vcf_hdr = ('##INFO=<ID=MA,Number=1,Type=String,Description='
                   '\"Predicted functional impact of amino-acid substitutions'
                   'in proteins. Format: \'{}\' \">\n'.format('|'.join(get_table_hdr() ) ) ) 
     return ma_vcf_hdr
@@ -78,10 +79,10 @@ def annot_lookup(key, table):
 
     annot = table.get(key)
     if annot:
-        print 'found match: {}'.format(key)
+        print('found match: {}'.format(key))
         annot = ';MA={}'.format('|'.join(annot[1:]))
     else:
-        annot = ';MA=()'
+        annot = ';MA=.'
 
     return annot
 
@@ -102,7 +103,6 @@ def write_annot_data(infile, out):
     ma_table = None
     chr_seen = []
     chr_no_table = []
-    chr_current = None
     chr_table = None
 
     with open(infile, 'r') as vcf:
@@ -119,14 +119,14 @@ def write_annot_data(infile, out):
             if chr_table is None or chr_current != chr_table:
                 if chr_current in chr_seen:
                     warnings.warn('detected unsorted bam file, annotation could be very slow')
-                    print chr_current
-                    print chr_table
-                    print chr_seen
+                    print(chr_current)
+                    print(chr_table)
+                    print(chr_seen)
 
                 try:
                     ma_table = load_table(chr_current)
                 except IOError:
-                    print 'no matching table found for {}'.format(chr_current)
+                    print ('no matching table found for {}'.format(chr_current))
                     chr_no_table.append(chr_current)
                     out.write('\t'.join(line) + '\n')
                     continue

@@ -9,11 +9,14 @@ import os
 import warnings
 from collections import defaultdict
 
+import pysam
+
 version = '1.3.1'
+
 
 def resolve_db_position(input_type, pos):
     '''
-    adjust databse position to match convention of
+    adjust database position to match convention of
     input file type for indexing a deletion
     '''
     if input_type == 'snv':
@@ -21,9 +24,8 @@ def resolve_db_position(input_type, pos):
 
     return pos
 
-def load_chromosome(db, chromosome):
-    ''' load genome reference '''
-    import pysam
+
+def load_chromosome(db, chromosome, input_type, flag_with_id):
     db_dict = defaultdict(list)
 
     f = pysam.Tabixfile(db)
@@ -38,12 +40,12 @@ def load_chromosome(db, chromosome):
 
         # resolve position when record is a deletion
         if len(line.split()[3]) > len(line.split()[4]):
-            pos = resolve_db_position(args.input_type, int(pos))
+            pos = resolve_db_position(input_type, int(pos))
 
         chrom.replace('chr', '')
         key = ','.join([chrom, str(pos)])
 
-        if args.flag_with_id:
+        if flag_with_id:
             value = line.split('\t')[2]
         else:
             value = 'T'
@@ -108,13 +110,17 @@ def load_db_positions(db_file, chrom):
     return db_dict
 
 
-def write_header(out):
+def write_header(infile, label, database, out, flag_with_id):
     ''' write the header for the output vcf '''
 
-    db_hdr = '##{}_DB={}\n'.format(args.label, os.path.abspath(args.db))
-    db_hdr += '##INFO=<ID={0},Number=.,Type=String,Description="{0} flag">\n'.format(args.label)
+    db_hdr = '##{}_DB={}\n'.format(label, os.path.abspath(database))
 
-    with open(args.infile, 'r') as f:
+    if flag_with_id:
+        db_hdr += '##INFO=<ID={0},Number=.,Type=String,Description="{0} flag">\n'.format(label)
+    else:
+        db_hdr += '##INFO=<ID={0},Number=0,Type=Flag,Description="{0} flag">\n'.format(label)
+
+    with open(infile, 'r') as f:
 
         # write the hdr and add new db descriptor
         hdr = []
@@ -128,21 +134,22 @@ def write_header(out):
     out.write(''.join(hdr))
 
 
-
-#changed because "flagpos" seems confusing
-#as some of the annotations are themselves
-#'flags'
-def add_db_annotation(chromosome, db_file):
+# changed because "flagpos" seems confusing
+# as some of the annotations are themselves
+# 'flags'
+def add_db_annotation(
+        database, input_vcf, chromosome, output, label, flag_with_id, input_type
+):
     ''' flag the vcf entries with
     information from the database annotator '''
 
     db_dict = None
 
-    with open(args.out, 'w') as out:
+    with open(output, 'w') as out:
 
-        write_header(out)
+        write_header(input_vcf, label, database, out, flag_with_id)
 
-        with open(args.infile, 'r') as f:
+        with open(input_vcf, 'r') as f:
             for line in f:
 
                 if line.startswith('#'):
@@ -156,36 +163,28 @@ def add_db_annotation(chromosome, db_file):
                     continue
 
                 if not db_dict or not db_dict[0] == chrom:
-                    db_dict = (chrom, load_chromosome(db_file, chrom))
+                    db_dict = (chrom, load_chromosome(database, chromosome, input_type, flag_with_id))
 
                 info = line[7]
 
                 key = ','.join([chrom, pos])
                 value = db_dict[1].get(key)
 
-                #according to vcf style, don't need anything
-                # on !value
-                if value:
-                    if args.flag_with_id:
-                        flag = ','.join(value)
-                        info = '{};{}={}'.format(info, args.label, flag)
-                    else:
-                        info = '{};{}'.format(info, args.label)
-                
+                if flag_with_id:
+                    flag = ','.join(value) if value else '.'
+                    info = '{};{}={}'.format(info, label, flag)
+                else:
+                    # according to vcf style, don't need anything
+                    # on !value
+                    if value:
+                        info = '{};{}'.format(info, label)
+
                 line[7] = info
                 line = '\t'.join(line) + '\n'
                 out.write(line)
 
 
-
-def main():
-    ''' main function '''
-
-    #    db_dict = load_db_positions(args.db, args.chrom)
-    add_db_annotation(args.chrom, args.db)
-
-
-if __name__ == '__main__':
+def parse_args():
     chromosomes = map(str, range(1, 23))
     chromosomes.append('X')
     chromosomes.append('Y')
@@ -228,6 +227,16 @@ if __name__ == '__main__':
                         default=None,
                         help='''chromosome''')
 
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
 
-    main()
+    args = vars(args)
+
+    return args
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    add_db_annotation(
+        args['db'], args['infile'], args['chrom'], args['out'],
+        args['label'], args['flag_with_id'], args['input_type']
+    )

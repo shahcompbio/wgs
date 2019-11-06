@@ -1,50 +1,111 @@
 import vcf
 from wgs.utils import helpers
 
-VCF_FILE = "museq_paired_annotated.vcf"
+VCF_FILE = "museq_single_annotated.vcf.gz"
 
-ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd']
-
-
-def get_reader(vcf_file):
-    return vcf.Reader(open(vcf_file, 'rt'))
+ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd', '1000gen']
 
 
-def get_snpeff_cols(reader):
-    info = reader.infos['ANN']
+class VcfParser(object):
+    def __init__(self, vcf_file, outfile, snpeff_outfile, ma_outfile, ids_outfile):
+        self.vcf_file = vcf_file
+        self.outfile = outfile
+        self.snpeff_outfile = snpeff_outfile
+        self.ma_outfile = ma_outfile
+        self.ids_outfile = ids_outfile
 
-    desc = info.desc
+        self.reader = self.get_reader(self.vcf_file)
 
-    desc = desc.split("'")[1]
+        self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
+        self.cols = None
 
-    desc = desc.split('|')
+    def __enter__(self):
+        self.outfile = helpers.GetFileHandle(self.outfile, 'wt').handler
+        self.snpeff_outfile = helpers.GetFileHandle(self.snpeff_outfile, 'wt').handler
+        self.ma_outfile = helpers.GetFileHandle(self.ma_outfile, 'wt').handler
+        self.ids_outfile = helpers.GetFileHandle(self.ids_outfile, 'wt').handler
+        self.write_headers()
+        return self
 
-    desc = [v.replace(' ', '') for v in desc]
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.outfile.close()
+        self.snpeff_outfile.close()
+        self.ma_outfile.close()
+        self.ids_outfile.close()
 
-    return desc
+    def init_headers(self):
+        snpeff_cols = self.get_cols_from_header(self.reader, 'ANN') + ['chrom','pos']
+        ma_cols = self.get_cols_from_header(self.reader, 'MA') + ['chrom','pos']
+        ids_cols = ['chrom', 'pos', 'value', 'type']
+        return snpeff_cols, ma_cols, ids_cols
 
+    def write_headers(self):
+        self.write_header(self.snpeff_cols, self.snpeff_outfile)
+        self.write_header(self.ma_cols, self.ma_outfile)
+        self.write_header(self.ids_cols, self.ids_outfile)
 
-def parse_snpeff(snpeff_cols, snpeff_entries, chrom, pos):
-    records = []
-    for record in snpeff_entries:
+    def get_reader(self, vcf_file):
+        return vcf.Reader(filename=vcf_file)
+
+    def get_cols_from_header(self, reader, key):
+        info = reader.infos[key]
+
+        desc = info.desc
+
+        desc = desc.split("'")[1]
+
+        desc = desc.split('|')
+
+        desc = [v.replace(' ', '') for v in desc]
+
+        return desc
+
+    def parse_snpeff(self, snpeff_cols, snpeff_entries, chrom, pos):
+        records = []
+        for record in snpeff_entries:
+            record = record.strip().split('|')
+
+            record = dict(zip(snpeff_cols, record))
+
+            record['chrom'] = chrom
+            record['pos'] = pos
+
+            records.append(record)
+
+        return records
+
+    def parse_mutation_assessor(self, cols, record, chrom, pos):
+        if not record:
+            return
+
         record = record.strip().split('|')
 
-        record = dict(zip(snpeff_cols, record))
+        record = dict(zip(cols, record))
 
         record['chrom'] = chrom
         record['pos'] = pos
 
-        records.append(record)
+        return record
 
-    return records
+    def parse_list_annotations(self, records, chrom, pos, label):
+        if records == [None]:
+            return []
 
+        parsed_records = []
+        for entry in records:
+            parsed_records.append(
+                {'chrom': chrom, 'pos': pos, 'value': entry, 'type': label}
+            )
 
-def parse_vcf(vcf_file):
-    reader = get_reader(vcf_file)
+        return parsed_records
 
-    snpeff_cols = get_snpeff_cols(reader)
+    def parse_flag_annotation(self, record, chrom, pos, label):
+        if not record:
+            return []
 
-    for record in reader:
+        return [{'chrom': chrom, 'pos': pos, 'value': record, 'type': label}]
+
+    def parse_main_cols(self, record):
         data = {
             'chrom': record.CHROM,
             'pos': record.POS,
@@ -73,47 +134,61 @@ def parse_vcf(vcf_file):
                     v = ';'.join([str(val) for val in v])
                 data[k] = v
 
-        snpeff_annotations = parse_snpeff(snpeff_cols, info['ANN'], record.CHROM, record.POS)
-        # annotations['dbsnp'] = info['DBSNP']
-        # annotations['ma'] = info['MA']
-        # annotations['cosmic'] = info['Cosmic']
+        return data
 
-        yield data, (snpeff_annotations,)
+    def parse_vcf(self):
 
+        for record in self.reader:
+            data = self.parse_main_cols(record)
+            info = record.INFO
 
-def write_record(record, header, outfile):
-    outstr = [record[col] for col in header]
+            snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
+            ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
 
-    outstr = ','.join(map(str, outstr)) + '\n'
+            id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
+            id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
+            ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
+            id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
 
-    outfile.write(outstr)
+            yield data, (snpeff_annotations, ma_annotations, id_annotations)
 
+    def write_record(self, record, header, outfile):
+        outstr = [record[col] for col in header]
+        outstr = ','.join(map(str, outstr)) + '\n'
+        outfile.write(outstr)
 
-def write(outputs, data):
-    with helpers.GetFileHandle(outputs['primary'], 'w') as primary_outfile, \
-            helpers.GetFileHandle(outputs['snpeff'], 'w') as snpeff_outfile:
+    def write_header(self, header, outfile):
+        outstr = ','.join(map(str, header)) + '\n'
+        outfile.write(outstr)
+
+    def write(self):
+
+        data = self.parse_vcf()
 
         primary_header = None
-        snpeff_header = None
 
         for record in data:
             primary, annotations = record
 
             if not primary_header:
                 primary_header = list(primary.keys())
+                self.write_header(primary_header, self.outfile)
 
-            write_record(primary, primary_header, primary_outfile)
+            self.write_record(primary, primary_header, self.outfile)
 
             snpeff_anns = annotations[0]
-
             for snpeff_record in snpeff_anns:
-                if not snpeff_header:
-                    snpeff_header = list(snpeff_record.keys())
+                self.write_record(snpeff_record, self.snpeff_cols, self.snpeff_outfile)
 
-                write_record(snpeff_record, snpeff_header, snpeff_outfile)
+            ma_ann = annotations[1]
+            if ma_ann:
+                self.write_record(ma_ann, self.ma_cols, self.ma_outfile)
+
+            id_anns = annotations[2]
+            for id_ann in id_anns:
+                self.write_record(id_ann, self.ids_cols, self.ids_outfile)
 
 
 if __name__ == "__main__":
-    vcfdata = parse_vcf(VCF_FILE)
-
-    write({'primary': 'parsed', 'snpeff': 'snpeff'}, vcfdata)
+    with VcfParser(VCF_FILE, 'parsed', 'snpeff', 'ma', 'ids') as vcf_parser:
+        vcf_parser.write()

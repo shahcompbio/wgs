@@ -4,6 +4,7 @@ Created on Feb 19, 2018
 @author: dgrewal
 '''
 import errno
+import gzip
 import logging
 import multiprocessing
 import os
@@ -16,7 +17,7 @@ import pypeliner
 import yaml
 
 
-class getFileHandle(object):
+class GetFileHandle(object):
     def __init__(self, filename, mode='rt'):
         self.filename = filename
         self.mode = mode
@@ -32,6 +33,10 @@ class getFileHandle(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.handle.close()
+
+    @property
+    def handler(self):
+        return self.__enter__()
 
     def get_file_format(self, filepath):
         if filepath.endswith('.tmp'):

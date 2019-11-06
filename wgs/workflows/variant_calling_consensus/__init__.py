@@ -27,6 +27,16 @@ def create_consensus_workflow(
     indel_snpeff_annotations = os.path.join(outdir, 'indel_snpeff_annotations.csv.gz')
     somatic_snpeff_annotations = os.path.join(outdir, 'somatic_snpeff_annotations.csv.gz')
 
+    germline_ma_annotations = os.path.join(outdir, 'germline_ma_annotations.csv.gz')
+    indel_ma_annotations = os.path.join(outdir, 'indel_ma_annotations.csv.gz')
+    somatic_ma_annotations = os.path.join(outdir, 'somatic_ma_annotations.csv.gz')
+
+
+    germline_ids_annotations = os.path.join(outdir, 'germline_ids_annotations.csv.gz')
+    indel_ids_annotations = os.path.join(outdir, 'indel_ids_annotations.csv.gz')
+    somatic_ids_annotations = os.path.join(outdir, 'somatic_ids_annotations.csv.gz')
+
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -34,11 +44,13 @@ def create_consensus_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.parse_museq,
+        func=tasks.parse_vcf,
         args=(
             mgd.InputFile(museq_germline),
             mgd.OutputFile(germline_calls),
             mgd.OutputFile(germline_snpeff_annotations),
+            mgd.OutputFile(germline_ma_annotations),
+            mgd.OutputFile(germline_ids_annotations),
             varcall_config["parse_museq"],
         ),
     )
@@ -48,11 +60,13 @@ def create_consensus_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.parse_strelka,
+        func=tasks.parse_vcf,
         args=(
             mgd.InputFile(strelka_indel),
             mgd.OutputFile(indel_calls),
             mgd.OutputFile(indel_snpeff_annotations),
+            mgd.OutputFile(indel_ma_annotations),
+            mgd.OutputFile(indel_ids_annotations),
             varcall_config["parse_strelka"],
         ),
     )
@@ -62,11 +76,13 @@ def create_consensus_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.parse_museq,
+        func=tasks.parse_vcf,
         args=(
             mgd.InputFile(museq_snv),
             mgd.TempOutputFile('museq_snv.csv'),
             mgd.TempOutputFile('museq_snpeff.csv'),
+            mgd.TempOutputFile('museq_ma.csv'),
+            mgd.TempOutputFile('museq_ids.csv'),
             varcall_config["parse_museq"],
         ),
     )
@@ -76,11 +92,13 @@ def create_consensus_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.parse_strelka,
+        func=tasks.parse_vcf,
         args=(
             mgd.InputFile(strelka_snv),
             mgd.TempOutputFile('strelka_snv.csv'),
             mgd.TempOutputFile('strelka_snv_snpeff.csv'),
+            mgd.TempOutputFile('strelka_snv_ma.csv'),
+            mgd.TempOutputFile('strelka_snv_ids.csv'),
             varcall_config["parse_strelka"],
         ),
     )
@@ -109,6 +127,38 @@ def create_consensus_workflow(
              mgd.TempInputFile('museq_snpeff.csv')],
             mgd.OutputFile(somatic_snpeff_annotations),
         ),
+        kwargs={'on': ['chrom', 'pos']}
     )
+
+
+    workflow.transform(
+        name='merge_ma',
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
+        func=tasks.merge_overlap,
+        args=(
+            [mgd.TempInputFile('strelka_snv_ma.csv'),
+             mgd.TempInputFile('museq_ma.csv')],
+            mgd.OutputFile(somatic_ma_annotations),
+        ),
+        kwargs={'on': ['chrom', 'pos']}
+    )
+
+
+    workflow.transform(
+        name='merge_ids',
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
+        func=tasks.merge_overlap,
+        args=(
+            [mgd.TempInputFile('strelka_snv_ids.csv'),
+             mgd.TempInputFile('museq_ids.csv')],
+            mgd.OutputFile(somatic_ids_annotations),
+        ),
+        kwargs={'on': ['chrom', 'pos']}
+    )
+
 
     return workflow

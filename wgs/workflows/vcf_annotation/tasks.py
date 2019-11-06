@@ -62,7 +62,7 @@ def run_DBSNP(infile, output, config):
     db = config['dbsnp_params']['db']
 
     cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
-           '--label', 'DBSNP', '--input_type', 'snv', '--flag_with_id', 'True']
+           '--label', 'DBSNP', '--input_type', 'snv', '--flag_with_id']
 
     pypeliner.commandline.execute(*cmd)
 
@@ -96,8 +96,7 @@ def run_cosmic(infile, output, config):
     db = config['cosmic_params']['db']
 
     cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
-           '--label', 'Cosmic', '--input_type', 'snv', '--flag_with_id',
-           'True']
+           '--label', 'Cosmic', '--input_type', 'snv', '--flag_with_id']
 
     pypeliner.commandline.execute(*cmd)
 
