@@ -120,7 +120,7 @@ class VcfParser(object):
             if k.lower() in ANNOTATIONS:
                 continue
             if isinstance(v, list):
-                v = ';'.join(v)
+                v = ';'.join(map(str,v))
             data[k] = v
 
         for sample in record.samples:
