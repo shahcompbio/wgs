@@ -1,7 +1,9 @@
-import pypeliner
+from .scripts import consensus
+from .scripts import parse_destruct
+from .scripts import parse_lumpy
 
 
-def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, sample_id, docker_image=None):
+def parse_destruct(infile, output, config):
     '''
     Parse the input VCF file into a TSV file
 
@@ -9,46 +11,15 @@ def parse_destruct(infile, lumpy_data, output, low_map_filt_output, config, samp
     :param output: path to the output TSV file
     '''
 
-    cmd = ['vizutils_parse_destruct', '--infile', infile,
-           '--pre_mappability_output', output,
-           '--lumpy_data', lumpy_data,
-           '--output', low_map_filt_output,
-           '--case_id', sample_id,
-           '--tumour_id', sample_id,
-           '--normal_id', sample_id + 'N',
-           ]
-
-    for key, val in config.iteritems():
-        if val is None:
-            continue
-        elif isinstance(val, bool):
-            if val:
-                cmd.append('--{}'.format(key))
-        else:
-            cmd.append('--{}'.format(key))
-            if isinstance(val, list):
-                cmd.extend(val)
-            else:
-                cmd.append(val)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    parse_destruct.parser(infile, output, foldback_threshold=config['foldback_threshold'])
 
 
-def parse_lumpy(infile, output, low_map_filt_output, config, sample_id, docker_image=None):
-    cmd = ['vizutils_parse_lumpy', '--infile', infile,
-           '--pre_mappability_output', output,
-           '--output', low_map_filt_output,
-           '--case_id', sample_id]
+def parse_lumpy(infile, output, config):
+    vcfdata = parse_lumpy.parse_vcf(infile)
+    parse_lumpy.write(output, vcfdata)
 
-    for key, val in config.iteritems():
-        if val is None:
-            continue
-        elif isinstance(val, bool):
-            if val:
-                cmd.append('--{}'.format(key))
-        else:
-            cmd.append('--{}'.format(key))
-            if isinstance(val, list):
-                cmd.extend(val)
-            else:
-                cmd.append(val)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+def consensus_calls(destruct_data, lumpy_data, consensus_calls, config):
+    consensus.consensus(
+        destruct_data, lumpy_data, consensus_calls, confidence_interval=config['confidence_interval']
+    )
