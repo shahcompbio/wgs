@@ -1,9 +1,61 @@
 import os
 
 import pypeliner
+import pypeliner.managed as mgd
 
 from wgs.utils import helpers
 
+def calc_bam_metrics(config, bamfile, 
+                    picard_insert_metrics, picard_insert_pdf, flagstat_metrics,
+                    picard_gc, picard_gc_summary, picard_gc_pdf, 
+                    picard_wgs, picard_wgs_params,
+                    tempdir
+):
+    workflow = pypeliner.workflow.Workflow()
+    ref = config["reference"]
+
+    workflow.transform(
+        name = "calc_picard_insert_metrics",
+        func = bam_collect_insert_metrics,
+        args = (
+            bamfile,
+            flagstat_metrics,
+            picard_insert_metrics,
+            picard_insert_pdf,
+            tempdir,
+            docker_image = config["docker"]["picard_insert"]
+        )
+    )
+     workflow.transform(
+        name = "calc_picard_gc_metrics",
+        func = bam_collect_gc_metrics,
+        args = (
+            bamfile,
+            ref,
+            picard_gc,
+            picard_gc_summary,
+            picard_gc_pdf,
+            tempdir,
+            docker_image = config["docker"]["picard_gc"]
+        )
+    )
+     workflow.transform(
+        name = "calc_picard_wgs_metrics",
+        func = bam_collect_wgs_metrics,
+        args = (
+            bamfile,
+            ref,
+            picard_wgs,
+            picard_wgs_params,
+            tempdir,
+            docker_image = config["docker"]["picard_wgs"]
+        )
+    )
+ 
+
+
+
+    
 
 def index_and_flagstat(bamfile, indexfile, flagstatfile, docker_image=None):
     cmd = ['samtools', 'index', bamfile, indexfile]
@@ -170,3 +222,93 @@ def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_imag
         '-o',
         sorted_bam_filename,
         docker_image=docker_image)
+
+#taken from single cell
+def bam_collect_wgs_metrics(bam_filename, ref_genome, metrics_filename,
+                            config, tempdir, mem="2G", docker_image=None):
+    if not os.path.exists(tempdir):
+        makedirs(tempdir)
+
+    pypeliner.commandline.execute(
+        'picard', '-Xmx' + mem, '-Xms' + mem,
+        '-XX:ParallelGCThreads=1',
+        'CollectWgsMetrics',
+                  'INPUT=' + bam_filename,
+                  'OUTPUT=' + metrics_filename,
+                  'REFERENCE_SEQUENCE=' + ref_genome,
+                  'MINIMUM_BASE_QUALITY=' +
+                  str(config['min_bqual']),
+                  'MINIMUM_MAPPING_QUALITY=' +
+                  str(config['min_mqual']),
+        'COVERAGE_CAP=500',
+        'VALIDATION_STRINGENCY=LENIENT',
+                  'COUNT_UNPAIRED=' +
+                  ('True' if config['count_unpaired'] else 'False'),
+                  'TMP_DIR=' + tempdir,
+        'MAX_RECORDS_IN_RAM=150000',
+        docker_image=docker_image
+    )
+
+
+def bam_collect_gc_metrics(bam_filename, ref_genome, metrics_filename,
+                           summary_filename, chart_filename, tempdir,
+                           mem="2G", docker_image=None):
+    if not os.path.exists(tempdir):
+        makedirs(tempdir)
+
+    pypeliner.commandline.execute(
+        'picard', '-Xmx' + mem, '-Xms' + mem,
+        '-XX:ParallelGCThreads=1',
+        'CollectGcBiasMetrics',
+                  'INPUT=' + bam_filename,
+                  'OUTPUT=' + metrics_filename,
+                  'REFERENCE_SEQUENCE=' + ref_genome,
+                  'S=' + summary_filename,
+                  'CHART_OUTPUT=' + chart_filename,
+        'VALIDATION_STRINGENCY=LENIENT',
+                  'TMP_DIR=' + tempdir,
+        'MAX_RECORDS_IN_RAM=150000',
+        docker_image=docker_image
+    )
+
+
+def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
+                               metrics_filename, histogram_filename, tempdir,
+                               mem="2G", docker_image=None):
+    # Check if any paired reads exist
+    has_paired = None
+    with open(flagstat_metrics_filename) as f:
+        for line in f:
+            if 'properly paired' in line:
+                if line.startswith('0 '):
+                    has_paired = False
+                else:
+                    has_paired = True
+
+    if has_paired is None:
+        raise Exception('Unable to determine number of properly paired reads from {}'.format(
+            flagstat_metrics_filename))
+
+    if not has_paired:
+        with open(metrics_filename, 'w') as f:
+            f.write('## FAILED: No properly paired reads\n')
+        with open(histogram_filename, 'w'):
+            pass
+        return
+
+    if not os.path.exists(tempdir):
+        makedirs(tempdir)
+
+    pypeliner.commandline.execute(
+        'picard', '-Xmx' + mem, '-Xms' + mem,
+        '-XX:ParallelGCThreads=1',
+        'CollectInsertSizeMetrics',
+                  'INPUT=' + bam_filename,
+                  'OUTPUT=' + metrics_filename,
+                  'HISTOGRAM_FILE=' + histogram_filename,
+        'ASSUME_SORTED=True',
+        'VALIDATION_STRINGENCY=LENIENT',
+                  'TMP_DIR=' + tempdir,
+        'MAX_RECORDS_IN_RAM=150000',
+        docker_image=docker_image
+    )

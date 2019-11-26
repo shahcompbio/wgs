@@ -12,7 +12,84 @@ from wgs.utils import helpers
 
 import biowrappers
 
+def calc_metrics(config,
+                    bams,
+                    metrics_csv,
+                    outdir,
+                    fastq1,
+                    fastq2,
+                    single_node = False
+):
+    '''
+    calculates bam metrics in bams
+    1. picard insert metrics
+    2. picard GC metrics
+    3. picard wgs metrics
+    4. fastqc metrics
 
+    :param config: config containing docker 
+    images for metrics
+    :param bams: sample:bam dictionary
+    :param metrics_csv: output csv containing
+        metrics
+    :param single_node:
+    '''
+    workflow = pypeliner.workflow.Workflow()
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=bams.keys(),
+    )
+
+    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
+    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
+    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
+
+    picard_GC_metrics = os.path.join(outdir, '{sample_id}', 'picard_GC_metrics')
+    picard_GC_summary = os.path.join(outdir, '{sample_id}', 'picard_GC_summary')
+    picard_GC_pdf = os.path.join(outdir, '{sample_id}', 'picard_GC_pdf')
+
+    picard_wgs_metrics = os.path.join(outdir, '{sample_id}', 'picard_wgs_metrics')
+    picard_wgs_params = os.path.join(outdir, '{sample_id}', 'picard_wgs_params')
+
+
+    workflow.subworkflow(
+        name = "calc_metrics",
+        func = tasks.calc_bam_metrics,
+        axes = ('sample_id'),
+        args = (
+            config,
+            mgd.InputFile("bam", "sample_id", template = bams),
+            mgd.TempOutputFile("picard_insert_metrics", "sample_id", template = picard_insert_metrics),
+            mgd.TempOutputFile("picard_insert_pdf", "sample_id", template = picard_insert_pdf),
+            mgd.TempOutputFile("flagstat_metrics", "sample_id", template = flagstat_metrics),
+   
+            mgd.TempOutputFile("picard_GC_metrics", "sample_id", template = picard_GC_metrics),
+            mgd.TempOutputFile("picard_GC_summary", "sample_id", template = picard_GC_summary),
+            mgd.TempOutputFile("picard_GC_pdf", "sample_id", template = picard_GC_pdf),
+
+            mgd.TempOutputFile("picard_wgs_metrics","sample_id", template = picard_wgs_metrics),
+            mgd.TempOutputFile("picard_wgs_params","sample_id", template = picard_wgs_params)
+
+        )
+    )
+    workflow.transform(
+        name = "write_metrics_to_csv",
+        func = tasks.write_metrics_to_csv,
+        args(
+            mgd.TempOutputFile("picard_insert_metrics"),
+            mgd.TempOutputFile("picard_insert_pdf" ),
+            mgd.TempOutputFile("flagstat_metrics"),
+   
+            mgd.TempOutputFile("picard_GC_metrics"),
+            mgd.TempOutputFile("picard_GC_summary"),
+            mgd.TempOutputFile("picard_GC_pdf"),
+
+            mgd.TempOutputFile("picard_wgs_metrics"),
+            mgd.TempOutputFile("picard_wgs_params"),
+
+            mgd.OutputFile("metrics_csv", template = metrics_csv)
+        )
+    )
 def align_samples(
         config,
         config_globals,
@@ -30,6 +107,16 @@ def align_samples(
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
         value=fastqs_r1.keys(),
+    )
+    
+    #TODO
+    workflow.transform(
+        name='fastqc',
+        func=tasks.fastqc,
+        axes=('sample_id', 'lane_id'),
+        args=(
+
+        ),
     )
 
     workflow.subworkflow(
