@@ -12,13 +12,9 @@ from wgs.utils import helpers
 
 import biowrappers
 
-def calc_metrics(config,
-                    bams,
-                    metrics_csv,
-                    outdir,
-                    fastq1,
-                    fastq2,
-                    single_node = False
+
+def calc_metrics(
+        config, bam, markdups_metrics, outdir, metrics, sample_id
 ):
     '''
     calculates bam metrics in bams
@@ -34,62 +30,79 @@ def calc_metrics(config,
         metrics
     :param single_node:
     '''
+
     workflow = pypeliner.workflow.Workflow()
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=bams.keys(),
-    )
 
-    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
-    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
-    picard_insert_metrics = os.path.join(outdir, '{sample_id}', 'picard_insert_metrics')
+    picard_insert_metrics = os.path.join(outdir, 'picard_insert_metrics')
+    picard_insert_pdf = os.path.join(outdir, 'picard_insert_pdf')
 
-    picard_GC_metrics = os.path.join(outdir, '{sample_id}', 'picard_GC_metrics')
-    picard_GC_summary = os.path.join(outdir, '{sample_id}', 'picard_GC_summary')
-    picard_GC_pdf = os.path.join(outdir, '{sample_id}', 'picard_GC_pdf')
+    flagstat_metrics = os.path.join(outdir, 'flagstat_metrics')
 
-    picard_wgs_metrics = os.path.join(outdir, '{sample_id}', 'picard_wgs_metrics')
-    picard_wgs_params = os.path.join(outdir, '{sample_id}', 'picard_wgs_params')
+    picard_GC_metrics = os.path.join(outdir, 'picard_GC_metrics')
+    picard_GC_summary = os.path.join(outdir, 'picard_GC_summary')
+    picard_GC_pdf = os.path.join(outdir, 'picard_GC_pdf')
 
+    picard_wgs_metrics = os.path.join(outdir, 'picard_wgs_metrics')
 
-    workflow.subworkflow(
-        name = "calc_metrics",
-        func = tasks.calc_bam_metrics,
-        axes = ('sample_id'),
-        args = (
-            config,
-            mgd.InputFile("bam", "sample_id", template = bams),
-            mgd.TempOutputFile("picard_insert_metrics", "sample_id", template = picard_insert_metrics),
-            mgd.TempOutputFile("picard_insert_pdf", "sample_id", template = picard_insert_pdf),
-            mgd.TempOutputFile("flagstat_metrics", "sample_id", template = flagstat_metrics),
-   
-            mgd.TempOutputFile("picard_GC_metrics", "sample_id", template = picard_GC_metrics),
-            mgd.TempOutputFile("picard_GC_summary", "sample_id", template = picard_GC_summary),
-            mgd.TempOutputFile("picard_GC_pdf", "sample_id", template = picard_GC_pdf),
-
-            mgd.TempOutputFile("picard_wgs_metrics","sample_id", template = picard_wgs_metrics),
-            mgd.TempOutputFile("picard_wgs_params","sample_id", template = picard_wgs_params)
-
-        )
-    )
     workflow.transform(
-        name = "write_metrics_to_csv",
-        func = tasks.write_metrics_to_csv,
-        args(
-            mgd.TempOutputFile("picard_insert_metrics"),
-            mgd.TempOutputFile("picard_insert_pdf" ),
-            mgd.TempOutputFile("flagstat_metrics"),
-   
-            mgd.TempOutputFile("picard_GC_metrics"),
-            mgd.TempOutputFile("picard_GC_summary"),
-            mgd.TempOutputFile("picard_GC_pdf"),
-
-            mgd.TempOutputFile("picard_wgs_metrics"),
-            mgd.TempOutputFile("picard_wgs_params"),
-
-            mgd.OutputFile("metrics_csv", template = metrics_csv)
-        )
+        name="calc_picard_insert_metrics",
+        func=tasks.bam_collect_insert_metrics,
+        args=(
+            mgd.InputFile(bam),
+            mgd.OutputFile(flagstat_metrics),
+            mgd.OutputFile(picard_insert_metrics),
+            mgd.OutputFile(picard_insert_pdf),
+            mgd.TempSpace('picard_insert'),
+        ),
+        kwargs={
+            'picard_docker': config["docker"]["picard"],
+            'samtools_docker': config["docker"]["samtools"]
+        }
     )
+
+    workflow.transform(
+        name="calc_picard_gc_metrics",
+        func=tasks.bam_collect_gc_metrics,
+        args=(
+            mgd.InputFile(bam),
+            config["ref_genome"]['file'],
+            mgd.OutputFile(picard_GC_metrics),
+            mgd.OutputFile(picard_GC_summary),
+            mgd.OutputFile(picard_GC_pdf),
+            mgd.TempSpace('picard_gc')
+        ),
+        kwargs={'docker_image': config["docker"]["picard"]}
+    )
+
+    workflow.transform(
+        name="calc_picard_wgs_metrics",
+        func=tasks.bam_collect_wgs_metrics,
+        args=(
+            mgd.InputFile(bam),
+            config['ref_genome']['file'],
+            mgd.OutputFile(picard_wgs_metrics),
+            config['picard_wgs_params'],
+            mgd.TempSpace('picard_wgs')
+        ),
+        kwargs={'docker_image': config["docker"]["picard"]}
+    )
+
+    workflow.transform(
+        name='collect_metrics',
+        func=tasks.bam_collect_all_metrics,
+        args=(
+            mgd.InputFile(flagstat_metrics),
+            mgd.InputFile(picard_insert_metrics),
+            mgd.InputFile(picard_wgs_metrics),
+            mgd.InputFile(markdups_metrics),
+            mgd.OutputFile(metrics),
+            sample_id
+        ),
+    )
+
+    return workflow
+
+
 def align_samples(
         config,
         config_globals,
@@ -99,8 +112,12 @@ def align_samples(
         outdir,
         single_node=False
 ):
-
     output_template = os.path.join(outdir, '{sample_id}', '{lane_id}')
+
+    if single_node:
+        align_func = align_sample_no_split
+    else:
+        align_func = align_sample_split
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -108,20 +125,10 @@ def align_samples(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
         value=fastqs_r1.keys(),
     )
-    
-    #TODO
-    workflow.transform(
-        name='fastqc',
-        func=tasks.fastqc,
-        axes=('sample_id', 'lane_id'),
-        args=(
-
-        ),
-    )
 
     workflow.subworkflow(
         name='align_samples',
-        func=align_sample,
+        func=align_func,
         axes=('sample_id', 'lane_id'),
         args=(
             config,
@@ -131,8 +138,7 @@ def align_samples(
             mgd.Template(output_template, 'sample_id', 'lane_id'),
             [mgd.InputInstance("sample_id"),
              mgd.InputInstance("lane_id")]
-        ),
-        kwargs={'single_node': single_node}
+        )
     )
 
     workflow.transform(
@@ -146,7 +152,7 @@ def align_samples(
         axes=('sample_id',),
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            mgd.OutputFile('merged_lanes.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
+            mgd.TempOutputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
         ),
         kwargs={
             'picard_docker_image': config['docker']['picard'],
@@ -154,22 +160,52 @@ def align_samples(
         }
     )
 
+    metrics_outdir = os.path.join(outdir, 'metrics', '{sample_id}')
+    markdups_outputs = os.path.join(metrics_outdir, 'markdups_metrics.txt')
+    metrics_output = os.path.join(metrics_outdir, 'metrics.txt')
+
+    workflow.transform(
+        name='markdups',
+        ctx=helpers.get_default_ctx(
+            memory=12,
+            walltime='24:00',
+            ncpus=1,
+            disk=300
+        ),
+        func=tasks.markdups,
+        axes=('sample_id',),
+        args=(
+            mgd.TempInputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
+            mgd.OutputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
+            mgd.OutputFile('markdups_metrics', 'sample_id', template=markdups_outputs),
+            pypeliner.managed.TempSpace("temp_markdups", "sample_id"),
+        ),
+        kwargs={
+            'picard_docker': config['docker']['picard'],
+            'samtools_docker': config['docker']['samtools'],
+        }
+    )
+
+    workflow.subworkflow(
+        name='metrics',
+        func=calc_metrics,
+        axes=('sample_id',),
+        args=(
+            config,
+            mgd.InputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
+            mgd.InputFile('markdups_metrics', 'sample_id', template=markdups_outputs),
+            mgd.Template('metrics_outdir', 'sample_id', template=metrics_outdir),
+            mgd.OutputFile('metrics_output', 'sample_id', template=metrics_output),
+            mgd.InputInstance('sample_id')
+        )
+    )
+
     return workflow
-
-
-def align_sample(
-        config, fastq_1, fastq_2, out_file, outdir, ids, single_node=False
-):
-    if single_node:
-        return align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids)
-    else:
-        return align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids)
 
 
 def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
     ref_genome = config['ref_genome']['file']
 
-    markdups_metrics = os.path.join(outdir, 'markdups_metrics.pdf')
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
     out_bai = out_file + '.bai'
@@ -212,31 +248,13 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
             pypeliner.managed.TempInputFile('aligned.bam'),
-            pypeliner.managed.TempOutputFile('sorted.bam'),
+            pypeliner.managed.OutputFile(out_file),
         ),
         kwargs={
             'docker_image': config['docker']['samtools'],
             'threads': config['threads'],
             # 'mem': '8G',
         }
-    )
-
-    workflow.transform(
-        name='markdups',
-        ctx=helpers.get_default_ctx(
-            memory=12,
-            walltime='24:00',
-            ncpus=1,
-            disk=300
-        ),
-        func=tasks.markdups,
-        args=(
-            pypeliner.managed.TempInputFile('sorted.bam'),
-            pypeliner.managed.OutputFile(out_file),
-            pypeliner.managed.OutputFile(markdups_metrics),
-            pypeliner.managed.TempSpace("temp_markdups"),
-        ),
-        kwargs={'docker_image': config['docker']['picard']}
     )
 
     workflow.transform(
@@ -263,7 +281,6 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     read_group_config = config.get('read_group', {})
 
-    markdups_metrics = os.path.join(outdir, 'markdups_metrics.pdf')
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
     out_bai = out_file + '.bai'
@@ -354,31 +371,12 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         func="wgs.workflows.alignment.tasks.merge_bams",
         args=(
             pypeliner.managed.TempInputFile('sorted.bam', 'split'),
-            pypeliner.managed.TempOutputFile('merged.bam'),
+            pypeliner.managed.OutputFile(out_file),
         ),
         kwargs={
             'picard_docker_image': config['docker']['picard'],
             'samtools_docker_image': config['docker']['samtools']
         }
-    )
-
-    workflow.transform(
-        name='markdups',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='24:00',
-        ),
-        func=tasks.markdups,
-        args=(
-            pypeliner.managed.TempInputFile('merged.bam'),
-            pypeliner.managed.OutputFile(out_file),
-            pypeliner.managed.OutputFile(markdups_metrics),
-            pypeliner.managed.TempSpace("temp_markdups"),
-        ),
-        kwargs={
-            'mem': '8G',
-            'docker_image': config['docker']['picard']
-        },
     )
 
     workflow.commandline(

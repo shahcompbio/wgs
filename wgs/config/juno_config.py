@@ -206,6 +206,11 @@ def juno_config(reference, containers):
                 'SP': 'Homo sapiens'
             }
         },
+        'picard_wgs_params': {
+            "min_bqual": 20,
+            "min_mqual": 20,
+            "count_unpaired": False,
+        },
         'threads': 8,
         'aligner': 'bwa-mem',
         'split_size': 1e7,

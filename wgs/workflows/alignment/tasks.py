@@ -1,61 +1,9 @@
 import os
 
+import collect_metrics
 import pypeliner
-import pypeliner.managed as mgd
-
 from wgs.utils import helpers
 
-def calc_bam_metrics(config, bamfile, 
-                    picard_insert_metrics, picard_insert_pdf, flagstat_metrics,
-                    picard_gc, picard_gc_summary, picard_gc_pdf, 
-                    picard_wgs, picard_wgs_params,
-                    tempdir
-):
-    workflow = pypeliner.workflow.Workflow()
-    ref = config["reference"]
-
-    workflow.transform(
-        name = "calc_picard_insert_metrics",
-        func = bam_collect_insert_metrics,
-        args = (
-            bamfile,
-            flagstat_metrics,
-            picard_insert_metrics,
-            picard_insert_pdf,
-            tempdir,
-            docker_image = config["docker"]["picard_insert"]
-        )
-    )
-     workflow.transform(
-        name = "calc_picard_gc_metrics",
-        func = bam_collect_gc_metrics,
-        args = (
-            bamfile,
-            ref,
-            picard_gc,
-            picard_gc_summary,
-            picard_gc_pdf,
-            tempdir,
-            docker_image = config["docker"]["picard_gc"]
-        )
-    )
-     workflow.transform(
-        name = "calc_picard_wgs_metrics",
-        func = bam_collect_wgs_metrics,
-        args = (
-            bamfile,
-            ref,
-            picard_wgs,
-            picard_wgs_params,
-            tempdir,
-            docker_image = config["docker"]["picard_wgs"]
-        )
-    )
- 
-
-
-
-    
 
 def index_and_flagstat(bamfile, indexfile, flagstatfile, docker_image=None):
     cmd = ['samtools', 'index', bamfile, indexfile]
@@ -75,7 +23,7 @@ def index(bamfile, indexfile, docker_image=None):
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def markdups(input, output, metrics, tempdir, mem="2G", docker_image=None):
+def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
@@ -89,7 +37,9 @@ def markdups(input, output, metrics, tempdir, mem="2G", docker_image=None):
            'MAX_RECORDS_IN_RAM=150000'
            ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd, docker_image=picard_docker)
+
+    index(output, output + '.bai', docker_image=samtools_docker)
 
 
 def picard_merge_bams(inputs, output, mem="2G", **kwargs):
@@ -127,16 +77,16 @@ def merge_bams(inputs, output, picard_docker_image=None, samtools_docker_image=N
 
 
 def bwa_mem_paired_end(fastq1, fastq2, output,
-                         reference, readgroup,
+                       reference, readgroup,
                        numthreads,
-                         **kwargs):
+                       **kwargs):
     """
     run bwa aln on both fastq files,
     bwa sampe to align, and convert to bam with samtools view
     """
 
     if not numthreads:
-        numthreads=1
+        numthreads = 1
 
     if not readgroup:
         pypeliner.commandline.execute(
@@ -186,7 +136,7 @@ def get_readgroup(read_group_info, sample_id, lane_id):
 
 
 def samtools_sam_to_bam(samfile, bamfile,
-                         **kwargs):
+                        **kwargs):
     pypeliner.commandline.execute(
         'samtools', 'view', '-bSh', samfile,
         '>', bamfile,
@@ -198,7 +148,6 @@ def align_bwa_mem(
         sample_id=None, lane_id=None, read_group_info=None,
         docker_config=None
 ):
-
     readgroup = get_readgroup(read_group_info, sample_id, lane_id)
 
     helpers.makedirs(tempdir)
@@ -215,7 +164,6 @@ def align_bwa_mem(
 
 
 def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_image=None):
-
     pypeliner.commandline.execute(
         'samtools', 'sort', '-@', threads, '-m', mem,
         bam_filename,
@@ -223,11 +171,11 @@ def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_imag
         sorted_bam_filename,
         docker_image=docker_image)
 
-#taken from single cell
+
+# taken from single cell
 def bam_collect_wgs_metrics(bam_filename, ref_genome, metrics_filename,
                             config, tempdir, mem="2G", docker_image=None):
-    if not os.path.exists(tempdir):
-        makedirs(tempdir)
+    helpers.makedirs(tempdir)
 
     pypeliner.commandline.execute(
         'picard', '-Xmx' + mem, '-Xms' + mem,
@@ -253,8 +201,7 @@ def bam_collect_wgs_metrics(bam_filename, ref_genome, metrics_filename,
 def bam_collect_gc_metrics(bam_filename, ref_genome, metrics_filename,
                            summary_filename, chart_filename, tempdir,
                            mem="2G", docker_image=None):
-    if not os.path.exists(tempdir):
-        makedirs(tempdir)
+    helpers.makedirs(tempdir)
 
     pypeliner.commandline.execute(
         'picard', '-Xmx' + mem, '-Xms' + mem,
@@ -272,9 +219,24 @@ def bam_collect_gc_metrics(bam_filename, ref_genome, metrics_filename,
     )
 
 
+def bam_flagstat(bam, metrics, **kwargs):
+    pypeliner.commandline.execute(
+        'samtools', 'flagstat',
+        bam,
+        '>',
+        metrics,
+        **kwargs)
+
+
 def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
                                metrics_filename, histogram_filename, tempdir,
-                               mem="2G", docker_image=None):
+                               mem="2G", picard_docker=None, samtools_docker=None):
+    bam_flagstat(
+        bam_filename,
+        flagstat_metrics_filename,
+        docker_image=samtools_docker
+    )
+
     # Check if any paired reads exist
     has_paired = None
     with open(flagstat_metrics_filename) as f:
@@ -296,8 +258,7 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
             pass
         return
 
-    if not os.path.exists(tempdir):
-        makedirs(tempdir)
+    helpers.makedirs(tempdir)
 
     pypeliner.commandline.execute(
         'picard', '-Xmx' + mem, '-Xms' + mem,
@@ -310,5 +271,14 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
         'VALIDATION_STRINGENCY=LENIENT',
                   'TMP_DIR=' + tempdir,
         'MAX_RECORDS_IN_RAM=150000',
-        docker_image=docker_image
+        docker_image=picard_docker
     )
+
+
+def bam_collect_all_metrics(
+        flagstat, insert, wgs, markdups_metrics, output, sample_id
+):
+    collmet = collect_metrics.CollectMetrics(
+        wgs, insert, flagstat, markdups_metrics, output, sample_id
+    )
+    collmet.main()
