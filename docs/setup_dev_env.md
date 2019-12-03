@@ -64,6 +64,8 @@ docker:
       datadrive: /devsrc
 ```
 
+NOTE: you can set the server to `null` if all containers are available locally.
+
 
 ##### reference data
 You need to download the reference data to `/refdata' directory on the node. The data can be downloaded from blob. 
