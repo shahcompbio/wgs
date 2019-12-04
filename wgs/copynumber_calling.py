@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pypeliner
 import pypeliner.managed as mgd
@@ -15,6 +16,10 @@ def copynumber_calling_workflow(args):
 
     global_config = config['globals']
     config = config['copynumber_calling']
+
+    outdir = args['out_dir']
+    meta_yaml = os.path.join(outdir, 'metadata.yaml')
+    input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
@@ -86,6 +91,23 @@ def copynumber_calling_workflow(args):
         ),
         kwargs={'single_node': args['single_node'],
                 'docker_containers': config['docker']}
+    )
+
+    workflow.transform(
+        name='generate_meta_files_results',
+        func='wgs.utils.helpers.generate_and_upload_metadata',
+        args=(
+            sys.argv[0:],
+            args["out_dir"],
+            [titan_segments_filename, titan_params_filename,
+             titan_markers_filename, remixt_results_filename],
+            mgd.OutputFile(meta_yaml)
+        ),
+        kwargs={
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
+            'metadata': {'type': 'realignment'}
+        }
     )
 
     pyp.run(workflow)

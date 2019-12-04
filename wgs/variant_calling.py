@@ -1,8 +1,10 @@
 import os
+import sys
 
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
+from wgs.utils import inpututils
 
 
 def call_germlines_only(
@@ -86,12 +88,11 @@ def call_variants(
                              for sampid in samples])
 
     somatic_calls = dict([(sampid, somatic_calls[sampid])
-                       for sampid in samples])
+                          for sampid in samples])
     indel_calls = dict([(sampid, indel_calls[sampid])
-                       for sampid in samples])
+                        for sampid in samples])
     germline_calls = dict([(sampid, germline_calls[sampid])
-                       for sampid in samples])
-
+                           for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow(
         ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
@@ -243,6 +244,8 @@ def call_variants(
 def variant_calling_workflow(args):
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
+    meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
+    input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
@@ -259,7 +262,6 @@ def variant_calling_workflow(args):
     somatic_csv = os.path.join(var_dir, '{sample_id}', 'somatic.csv')
     indel_csv = os.path.join(var_dir, '{sample_id}', 'indel.csv')
     germline_csv = os.path.join(var_dir, '{sample_id}', 'germline.csv')
-
 
     pyp = pypeliner.app.Pypeline(config=args)
 
@@ -309,6 +311,24 @@ def variant_calling_workflow(args):
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
             ),
             kwargs={'single_node': args['single_node']}
+        )
+
+        workflow.transform(
+            name='generate_meta_files_results',
+            func='wgs.utils.helpers.generate_and_upload_metadata',
+            args=(
+                sys.argv[0:],
+                args['out_dir'],
+                [somatic_csv, indel_csv, germline_csv, museq_vcf,
+                 museq_ss_vcf, strelka_snv_vcf, strelka_indel_vcf,
+                 museq_paired_pdf, museq_single_pdf],
+                mgd.OutputFile(meta_yaml)
+            ),
+            kwargs={
+                'input_yaml_data': inpututils.load_yaml(args['input_yaml']),
+                'input_yaml': mgd.OutputFile(input_yaml_blob),
+                'metadata': {'type': 'variant_calling'}
+            }
         )
 
     pyp.run(workflow)

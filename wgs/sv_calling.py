@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pypeliner
 import pypeliner.managed as mgd
@@ -13,6 +14,9 @@ def sv_calling_workflow(args):
 
     config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
+
+    meta_yaml = os.path.join(args["out_dir"], 'metadata.yaml')
+    input_yaml_blob = os.path.join(args["out_dir"], 'input.yaml')
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
@@ -93,6 +97,23 @@ def sv_calling_workflow(args):
             config,
             mgd.InputInstance('sample_id')
         ),
+    )
+
+    workflow.transform(
+        name='generate_meta_files_results',
+        func=helpers.generate_and_upload_metadata,
+        args=(
+            sys.argv[0:],
+            args["out_dir"],
+            [destruct_breakpoints, destruct_library, destruct_raw_breakpoints,
+             destruct_reads, lumpy_vcf, parsed_csv],
+            mgd.OutputFile(meta_yaml)
+        ),
+        kwargs={
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
+            'metadata': {'type': 'realignment'}
+        }
     )
 
     pyp.run(workflow)
