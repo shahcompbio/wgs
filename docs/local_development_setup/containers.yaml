@@ -1,0 +1,15 @@
+wgs_containers:
+    bwa: wgspipeline/bwa:v0.0.1
+    destruct: wgspipeline/destruct:v0.0.2
+    lumpy: wgspipeline/lumpy:v0.0.1
+    museqportrait: wgspipeline/museqportrait:v0.0.1
+    mutationseq: wgspipeline/mutationseq:v0.0.1
+    picard: wgspipeline/picard:v0.0.1
+    remixt: wgspipeline/remixt:v0.0.2
+    samtools: wgspipeline/samtools:v0.0.1
+    snpeff: wgspipeline/vcftools:v0.0.1
+    strelka: wgspipeline/strelka:v0.0.1
+    titan: wgspipeline/titan:v0.0.1
+    vcftools: wgspipeline/vcftools:v0.0.1
+    vizutils: wgspipeline/vizutils:v0.0.1
+    wgs: wgspipeline/wgs:v0.0.2
