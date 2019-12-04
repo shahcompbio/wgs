@@ -226,6 +226,7 @@ def juno_config(reference, containers):
             'bwa': docker_containers['bwa'],
             'samtools': docker_containers['samtools'],
             'picard': docker_containers['picard'],
+            'fastqc': docker_containers['fastqc']
         }
     }
 

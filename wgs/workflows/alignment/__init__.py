@@ -13,7 +13,7 @@ from wgs.utils import helpers
 import biowrappers
 
 
-def calc_metrics(
+def collect_bam_metrics(
         config, bam, markdups_metrics, outdir, metrics, sample_id
 ):
     '''
@@ -103,6 +103,41 @@ def calc_metrics(
     return workflow
 
 
+def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
+    report_r1 = os.path.join(outdir, 'R1_fastqc.tar.gz')
+    report_r2 = os.path.join(outdir, 'R2_fastqc.tar.gz')
+
+    workflow = pypeliner.workflow.Workflow()
+
+    workflow.transform(
+        name="fastqc_r1",
+        func=tasks.run_fastqc,
+        args=(
+            mgd.InputFile(fastq_r1),
+            mgd.OutputFile(report_r1),
+            mgd.TempSpace('fastqc_R1'),
+        ),
+        kwargs={
+            'docker_image': config["docker"]["fastqc"],
+        }
+    )
+
+    workflow.transform(
+        name="fastqc_r2",
+        func=tasks.run_fastqc,
+        args=(
+            mgd.InputFile(fastq_r2),
+            mgd.OutputFile(report_r2),
+            mgd.TempSpace('fastqc_R2'),
+        ),
+        kwargs={
+            'docker_image': config["docker"]["fastqc"],
+        }
+    )
+
+    return workflow
+
+
 def align_samples(
         config,
         config_globals,
@@ -124,6 +159,20 @@ def align_samples(
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
         value=fastqs_r1.keys(),
+    )
+
+    fastqc_template = os.path.join(outdir, '{sample_id}', '{lane_id}', 'fastqc')
+
+    workflow.subworkflow(
+        name='fastqc_workflow',
+        func=fastqc_workflow,
+        axes=('sample_id', 'lane_id'),
+        args=(
+            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
+            mgd.Template('fastqc', 'sample_id', 'lane_id', template=fastqc_template),
+            config
+        )
     )
 
     workflow.subworkflow(
@@ -160,7 +209,7 @@ def align_samples(
         }
     )
 
-    metrics_outdir = os.path.join(outdir, 'metrics', '{sample_id}')
+    metrics_outdir = os.path.join(outdir, '{sample_id}', 'metrics')
     markdups_outputs = os.path.join(metrics_outdir, 'markdups_metrics.txt')
     metrics_output = os.path.join(metrics_outdir, 'metrics.txt')
 
@@ -188,7 +237,7 @@ def align_samples(
 
     workflow.subworkflow(
         name='metrics',
-        func=calc_metrics,
+        func=collect_bam_metrics,
         axes=('sample_id',),
         args=(
             config,

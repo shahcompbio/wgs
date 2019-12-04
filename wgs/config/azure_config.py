@@ -1,4 +1,3 @@
-
 def azure_config(reference, containers):
     docker_containers = containers['docker']
 
@@ -225,6 +224,7 @@ def azure_config(reference, containers):
             'bwa': docker_containers['bwa'],
             'samtools': docker_containers['samtools'],
             'picard': docker_containers['picard'],
+            'fastqc': docker_containers['fastqc']
         }
     }
 
