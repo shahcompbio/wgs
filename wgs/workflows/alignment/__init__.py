@@ -33,16 +33,13 @@ def collect_bam_metrics(
 
     workflow = pypeliner.workflow.Workflow()
 
-    picard_insert_metrics = os.path.join(outdir, 'picard_insert_metrics')
-    picard_insert_pdf = os.path.join(outdir, 'picard_insert_pdf')
-
-    flagstat_metrics = os.path.join(outdir, 'flagstat_metrics')
-
-    picard_GC_metrics = os.path.join(outdir, 'picard_GC_metrics')
-    picard_GC_summary = os.path.join(outdir, 'picard_GC_summary')
-    picard_GC_pdf = os.path.join(outdir, 'picard_GC_pdf')
-
-    picard_wgs_metrics = os.path.join(outdir, 'picard_wgs_metrics')
+    picard_insert_metrics = os.path.join(outdir, 'picard_insert_metrics.txt')
+    picard_insert_pdf = os.path.join(outdir, 'picard_insert.pdf')
+    flagstat_metrics = os.path.join(outdir, 'flagstat_metrics.txt')
+    picard_GC_metrics = os.path.join(outdir, 'picard_GC_metrics.txt')
+    picard_GC_summary = os.path.join(outdir, 'picard_GC_summary.txt')
+    picard_GC_pdf = os.path.join(outdir, 'picard_GC.pdf')
+    picard_wgs_metrics = os.path.join(outdir, 'picard_wgs_metrics.txt')
 
     workflow.transform(
         name="calc_picard_insert_metrics",
@@ -104,8 +101,8 @@ def collect_bam_metrics(
 
 
 def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
-    report_r1 = os.path.join(outdir, 'R1_fastqc.tar.gz')
-    report_r2 = os.path.join(outdir, 'R2_fastqc.tar.gz')
+    report_r1 = os.path.join(outdir, 'R1_fastqc_report')
+    report_r2 = os.path.join(outdir, 'R2_fastqc_report')
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -147,7 +144,7 @@ def align_samples(
         outdir,
         single_node=False
 ):
-    output_template = os.path.join(outdir, '{sample_id}', '{lane_id}')
+    lane_metrics_template = os.path.join(outdir, '{sample_id}', 'metrics', 'lane_metrics', '{lane_id}')
 
     if single_node:
         align_func = align_sample_no_split
@@ -161,8 +158,6 @@ def align_samples(
         value=fastqs_r1.keys(),
     )
 
-    fastqc_template = os.path.join(outdir, '{sample_id}', '{lane_id}', 'fastqc')
-
     workflow.subworkflow(
         name='fastqc_workflow',
         func=fastqc_workflow,
@@ -170,7 +165,7 @@ def align_samples(
         args=(
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
-            mgd.Template('fastqc', 'sample_id', 'lane_id', template=fastqc_template),
+            mgd.Template('fastqc', 'sample_id', 'lane_id', template=lane_metrics_template),
             config
         )
     )
@@ -184,7 +179,7 @@ def align_samples(
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            mgd.Template(output_template, 'sample_id', 'lane_id'),
+            mgd.Template(lane_metrics_template, 'sample_id', 'lane_id'),
             [mgd.InputInstance("sample_id"),
              mgd.InputInstance("lane_id")]
         )
@@ -211,7 +206,7 @@ def align_samples(
 
     metrics_outdir = os.path.join(outdir, '{sample_id}', 'metrics')
     markdups_outputs = os.path.join(metrics_outdir, 'markdups_metrics.txt')
-    metrics_output = os.path.join(metrics_outdir, 'metrics.txt')
+    metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.txt')
 
     workflow.transform(
         name='markdups',
