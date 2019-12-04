@@ -1,20 +1,20 @@
+import gzip
 import logging
 import os
 import shutil
-import gzip
-
 
 import pandas as pd
 import yaml
-
 from wgs.utils import helpers
 
 
 class CsvParseError(Exception):
     pass
 
+
 class CsvInputError(Exception):
     pass
+
 
 class CsvWriterError(Exception):
     pass
@@ -272,7 +272,6 @@ class CsvOutput(object):
             for line in reader:
                 writer.write(line)
 
-
     def concatenate_files(self, infiles):
         header = self.header_line if self.header else None
 
@@ -396,6 +395,10 @@ def concatenate_csv_files_quick_lowmem(inputfiles, output, write_header=True):
 def prep_csv_files(filepath, outputfile):
     """
     generate header less csv files
+    and generates a yaml extension
+    for an already-processed csv
+    file.
+
     :param filepath:
     :type filepath:
     :param outputfile:
@@ -506,6 +509,7 @@ def read_csv_and_yaml(infile, chunksize=None):
 def write_dataframe_to_csv_and_yaml(df, outfile, write_header=False, sep=','):
     csvoutput = CsvOutput(outfile, header=write_header, sep=sep)
     csvoutput.write_df(df)
+
 
 def get_metadata(infile):
     csvinput = CsvInput(infile)

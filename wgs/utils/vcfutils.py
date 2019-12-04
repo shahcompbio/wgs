@@ -5,8 +5,9 @@ Created on Feb 27, 2018
 '''
 import os
 import warnings
-import biowrappers.components.io.vcf.tasks
+
 import pypeliner
+
 
 def _get_header(infile):
     '''
@@ -29,6 +30,7 @@ def _get_header(infile):
     warnings.warn("One of the input files is empty")
     return []
 
+
 def concatenate_vcf(infiles, outfile):
     '''
     Concatenate VCF files
@@ -39,7 +41,7 @@ def concatenate_vcf(infiles, outfile):
     if isinstance(infiles, dict):
         keys = infiles.keys()
         keys = sorted(keys)
-        infiles= [infiles[val] for val in keys]
+        infiles = [infiles[val] for val in keys]
 
     with open(outfile, 'w') as ofile:
         header = None
@@ -64,8 +66,8 @@ def concatenate_vcf(infiles, outfile):
                 for l in f:
                     print >> ofile, l,
 
-def sort_vcf(infile, outfile, docker_image=None):
 
+def sort_vcf(infile, outfile, docker_image=None):
     cmd = ['cat', infile, '|', 'vcf-sort', '>', outfile]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
