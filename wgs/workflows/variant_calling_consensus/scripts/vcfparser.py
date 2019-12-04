@@ -1,13 +1,19 @@
 import vcf
 from wgs.utils import helpers
+from wgs.utils import vcfutils
 
 VCF_FILE = "museq_single_annotated.vcf.gz"
 
-ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd', '1000gen']
+ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd', '1000gen', 'is_low_mappability']
 
 
 class VcfParser(object):
-    def __init__(self, vcf_file, outfile, snpeff_outfile, ma_outfile, ids_outfile):
+    def __init__(self, vcf_file, outfile, snpeff_outfile, ma_outfile, ids_outfile, filter_low_mappability=False):
+        '''
+        constructor for parser
+        note, if filter_low_mappability is true,
+        will look for a "blacklist" in the parser config
+        '''
         self.vcf_file = vcf_file
         self.outfile = outfile
         self.snpeff_outfile = snpeff_outfile
@@ -18,6 +24,8 @@ class VcfParser(object):
 
         self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
         self.cols = None
+
+        self.filter_low_mappability = filter_low_mappability
 
     def __enter__(self):
         self.outfile = helpers.GetFileHandle(self.outfile, 'wt').handler
@@ -34,8 +42,8 @@ class VcfParser(object):
         self.ids_outfile.close()
 
     def init_headers(self):
-        snpeff_cols = self.get_cols_from_header(self.reader, 'ANN') + ['chrom','pos']
-        ma_cols = self.get_cols_from_header(self.reader, 'MA') + ['chrom','pos']
+        snpeff_cols = self.get_cols_from_header(self.reader, 'ANN') + ['chrom', 'pos']
+        ma_cols = self.get_cols_from_header(self.reader, 'MA') + ['chrom', 'pos']
         ids_cols = ['chrom', 'pos', 'value', 'type']
         return snpeff_cols, ma_cols, ids_cols
 
@@ -120,7 +128,7 @@ class VcfParser(object):
             if k.lower() in ANNOTATIONS:
                 continue
             if isinstance(v, list):
-                v = ';'.join(map(str,v))
+                v = ';'.join(v)
             data[k] = v
 
         for sample in record.samples:
@@ -136,57 +144,103 @@ class VcfParser(object):
 
         return data
 
-    def parse_vcf(self):
+    def parse_vcf_filter_low_mappability(self):
+
+        '''
+        parses vcf to csv and removes
+        calls flagged as occuring
+        in low mappability regions
+        '''
 
         for record in self.reader:
-            data = self.parse_main_cols(record)
             info = record.INFO
 
-            snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
-            ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+            if not info["is_low_mappability"]:
+                data = self.parse_main_cols(record)
 
-            id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
-            id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
-            ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
-            id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
+                snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
+                ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
 
-            yield data, (snpeff_annotations, ma_annotations, id_annotations)
+                id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
+                id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
+                ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
+                id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
 
-    def write_record(self, record, header, outfile):
-        outstr = [record[col] for col in header]
-        outstr = ','.join(map(str, outstr)) + '\n'
-        outfile.write(outstr)
+                yield data, (snpeff_annotations, ma_annotations, id_annotations)
 
-    def write_header(self, header, outfile):
-        outstr = ','.join(map(str, header)) + '\n'
-        outfile.write(outstr)
 
-    def write(self):
+def parse_vcf(self):
+    for record in self.reader:
+        data = self.parse_main_cols(record)
+        info = record.INFO
 
+        snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
+        ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+
+        id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
+        id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
+        ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
+        id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
+
+        yield data, (snpeff_annotations, ma_annotations, id_annotations)
+
+
+def write_record(self, record, header, outfile):
+    '''
+    writes a record to outfile
+    :param record: record to write
+    :param header: header containg colnames
+    :param outfile: path to outfile
+    '''
+    outstr = [record[col] for col in header]
+    chrom = outstr["chrom"]
+    pos = outstr["pos"]
+
+    if self.filter_low_mappability:
+        if not vcfutils.in_an_region(outstr["pos"], self.blacklist["chromosome"] == chrom):
+            outstr = ','.join(map(str, outstr)) + '\n'
+            outfile.write(outstr)
+        else:
+            outstr = ','.join(map(str, outstr)) + '\n'
+            outfile.write(outstr)
+
+
+def write_header(self, header, outfile):
+    outstr = ','.join(map(str, header)) + '\n'
+    outfile.write(outstr)
+
+
+def write(self):
+    '''
+    writes the parser to a csv
+    :param blacklist:
+    '''
+    if self.filter_low_mappability:
+        data = self.parse_vcf_filter_low_mappability()
+    else:
         data = self.parse_vcf()
 
-        primary_header = None
+    primary_header = None
 
-        for record in data:
-            primary, annotations = record
+    for record in data:
+        primary, annotations = record
 
-            if not primary_header:
-                primary_header = list(primary.keys())
-                self.write_header(primary_header, self.outfile)
+        if not primary_header:
+            primary_header = list(primary.keys())
+            self.write_header(primary_header, self.outfile)
+        self.write_record(primary, primary_header, self.outfile)
 
-            self.write_record(primary, primary_header, self.outfile)
+        snpeff_anns = annotations[0]
+        for snpeff_record in snpeff_anns:
+            self.write_record(snpeff_record, self.snpeff_cols, self.snpeff_outfile)
 
-            snpeff_anns = annotations[0]
-            for snpeff_record in snpeff_anns:
-                self.write_record(snpeff_record, self.snpeff_cols, self.snpeff_outfile)
+        ma_ann = annotations[1]
+        if ma_ann:
+            self.write_record(ma_ann, self.ma_cols, self.ma_outfile)
 
-            ma_ann = annotations[1]
-            if ma_ann:
-                self.write_record(ma_ann, self.ma_cols, self.ma_outfile)
-
-            id_anns = annotations[2]
-            for id_ann in id_anns:
-                self.write_record(id_ann, self.ids_cols, self.ids_outfile)
+        id_anns = annotations[2]
+        for id_ann in id_anns:
+            self.write_record(id_ann, self.ids_cols, self.ids_outfile)
 
 
 if __name__ == "__main__":

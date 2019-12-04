@@ -31,11 +31,9 @@ def create_consensus_workflow(
     indel_ma_annotations = os.path.join(outdir, 'indel_ma_annotations.csv.gz')
     somatic_ma_annotations = os.path.join(outdir, 'somatic_ma_annotations.csv.gz')
 
-
     germline_ids_annotations = os.path.join(outdir, 'germline_ids_annotations.csv.gz')
     indel_ids_annotations = os.path.join(outdir, 'indel_ids_annotations.csv.gz')
     somatic_ids_annotations = os.path.join(outdir, 'somatic_ids_annotations.csv.gz')
-
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -130,7 +128,6 @@ def create_consensus_workflow(
         kwargs={'on': ['chrom', 'pos']}
     )
 
-
     workflow.transform(
         name='merge_ma',
         ctx=helpers.get_default_ctx(
@@ -145,7 +142,6 @@ def create_consensus_workflow(
         kwargs={'on': ['chrom', 'pos']}
     )
 
-
     workflow.transform(
         name='merge_ids',
         ctx=helpers.get_default_ctx(
@@ -159,6 +155,5 @@ def create_consensus_workflow(
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
-
 
     return workflow
