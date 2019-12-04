@@ -66,6 +66,7 @@ docker:
 
 NOTE: you can set the server to `null` if all containers are available locally.
 
+To pull all containers locally, use the `pull_wgs_containers.py` script. The containers are specified in containers.yaml.
 
 ##### reference data
 You need to download the reference data to `/refdata' directory on the node. The data can be downloaded from blob. 
