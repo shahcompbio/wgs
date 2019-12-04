@@ -5,10 +5,10 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-from wgs.utils import vcf_tasks
-
 import tasks
 from wgs.utils import helpers
+from wgs.utils import vcf_tasks
+
 
 def create_annotation_workflow(
         input_vcf,
@@ -85,6 +85,15 @@ def create_annotation_workflow(
             varcall_config,
         ),
     )
+    workflow.transform(
+        name='low_mappability_flag',
+        func=tasks.flag_low_mappability,
+        args=(
+            mgd.TempInputFile('museq_cosmic.vcf'),
+            mgd.TempOutputFile('museq_low_mapp.vcf'),
+            varcall_config['mappability_ref']
+        ),
+    ),
 
     workflow.transform(
         name='finalize',
@@ -93,7 +102,7 @@ def create_annotation_workflow(
             walltime='8:00', ),
         func=vcf_tasks.finalise_vcf,
         args=(
-            mgd.TempInputFile('museq_cosmic.vcf'),
+            mgd.TempInputFile('museq_low_mapp.vcf'),
             mgd.OutputFile(annotated_vcf),
         ),
         kwargs={'docker_image': vcftools_docker}

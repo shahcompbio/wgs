@@ -5,7 +5,10 @@ Created on Feb 21, 2018
 '''
 import os
 
+import pandas as pd
 import pypeliner
+import vcf
+import wgs.utils.low_mappability_utils as low_mapp_utils
 
 scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
@@ -101,10 +104,37 @@ def run_cosmic(infile, output, config):
     pypeliner.commandline.execute(*cmd)
 
 
+def flag_low_mappability(infile, output, blacklist):
+    '''
+    adds a flag to infile at each row as to
+    whether or not they fall within a low-mappability
+    region
+    :param infile: input vcf
+    :param output: output path to vcf with flag
+    :param config: config
+    '''
+    blacklist = pd.read_csv(blacklist)
+    vcf_reader = vcf.Reader(open(infile))
+    output = vcf.Writer(open(output, "w"), vcf_reader)
+
+    chroms = [record.CHROM for record in vcf_reader]
+    positions = [record.POS for record in vcf_reader]
+
+    call_locations = pd.DataFrame({"chromosome": chroms, "positions": positions})
+
+    low_mapp_indexes = low_mapp_utils.is_low_mappability(call_locations, blacklist)
+
+    low_mapp_anno = low_mapp_utils.generate_low_mappability_annotation(low_mapp_indexes,
+                                                                       len(vcf_reader))
+
+    for i, record in enumerate(vcf_reader):
+        reader.INFO["is_low_mappability"] = low_mapp_anno[i]
+        output.write_record(record)
+
+
 def finalize_vcf(infile, outfile, config):
     # run  cat infile vcf-sort > temp_sorted
     # run  bgzip temp_sorted > outfile (infile + '.gz')
     # run  bcftools index outfile
     # run tabix -f -p vcf outfile
     raise NotImplementedError()
-
