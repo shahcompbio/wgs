@@ -13,6 +13,7 @@ https://bitbucket.org/aroth85/biowrappers/src/b6746d3584f702e7a81fef55afa2e56514
 
 import destruct.balanced
 import pandas as pd
+import wgs.utils.low_mappability_utils as low_mapp_utils
 
 
 def classify_rearrangement_type(entry):
@@ -42,12 +43,50 @@ def annotate_rearrangement_type(df):
     df['rearrangement_type'] = rearrangement_types
 
 
+def annotate_low_mappability(destruct_calls, blacklist):
+    '''
+    adds low mappability annotation to destruct
+    calls.
+    :param destruct_calls: pandas df of destruct
+    calls
+    '''
+    blacklist = pd.read_csv(blacklist)
+    is_low_mapp_1 = low_mapp_utils.is_low_mappability(destruct_calls,
+                                                      blacklist, "chromosome_1", "position_1")
+
+    is_low_mapp_2 = low_mapp_utils.is_low_mappability(destruct_calls,
+                                                      blacklist, "chromosome_2", "position_2")
+
+    low_mapp_indexes = list(set(is_low_mapp_1) | set(is_low_mapp_2))
+
+    low_mappability_annotation = low_mapp_utils.generate_low_mappability_annotation(
+        low_mapp_indexes, len(destruct_calls.index))
+
+    destruct_calls["is_low_mappability"] = low_mappability_annotation
+
+
+def filter_low_mappability(destruct_calls):
+    '''
+    removes low mappability calls from destruct df
+    with low_mappability annotation
+
+    :param destruct_calls: pandas df of destruct calls
+    '''
+
+    if 'is_low_mappability' not in destruct_calls:
+        return
+    else:
+        return destruct_calls[destruct_calls['is_low_mappability'] == False]
+
+
 def filter_annotate_breakpoints(
         input_breakpoint_filename,
         input_breakpoint_library_filename,
         control_ids,
         output_breakpoint_filename,
         output_breakpoint_library_filename,
+        filter_low_mappability,
+        blacklist,
         patient_libraries=None):
     """ Filter and annotate breakpoints.
 
@@ -57,7 +96,8 @@ def filter_annotate_breakpoints(
         control_ids (list): control id or ids
         output_breakpoint_filename (str): output filename of breakpoint table
         output_breakpoint_library_filename (str): output filename of breakpoint library table
-
+        :param filter_low_mappability: boolean of whether to filter calls in low mappability regions
+        :param blacklist: path to blacklist csv file
     KwArgs:
         patient_libraries (dict of list): library ids for each patient
 
@@ -177,6 +217,12 @@ def filter_annotate_breakpoints(
     # Annotate rearrangement type
     annotate_rearrangement_type(brk)
 
-    # Output filtered breakpoint tables
+    # annotate low mappability
+    annotate_low_mappability(brk, blacklist)  # does blacklist  need to be passed to calculate_dist_filtered?
+
+    if filter_low_mappability:
+        brk = filter_low_mappability(brk)
+
     brk.to_csv(output_breakpoint_filename, sep='\t', header=True, index=False)
+
     brklib.to_csv(output_breakpoint_library_filename, sep='\t', header=True, index=False)
