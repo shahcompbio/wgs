@@ -113,23 +113,29 @@ def flag_low_mappability(infile, output, blacklist):
     :param output: output path to vcf with flag
     :param config: config
     '''
-    blacklist = pd.read_csv(blacklist)
-    vcf_reader = vcf.Reader(open(infile))
-    output = vcf.Writer(open(output, "w"), vcf_reader)
+    blacklist = pd.read_csv(blacklist, sep='\t')
 
-    chroms = [record.CHROM for record in vcf_reader]
-    positions = [record.POS for record in vcf_reader]
+    vcf_reader = vcf.Reader(open(infile))
+    chroms = []
+    positions = []
+    for record in vcf_reader:
+        chroms.append(record.CHROM)
+        positions.append(record.POS)
 
     call_locations = pd.DataFrame({"chromosome": chroms, "positions": positions})
 
-    low_mapp_indexes = low_mapp_utils.is_low_mappability(call_locations, blacklist)
+    low_mapp_indexes = low_mapp_utils.is_low_mappability(call_locations, blacklist, "chromosome", "positions")
 
-    low_mapp_anno = low_mapp_utils.generate_low_mappability_annotation(low_mapp_indexes,
-                                                                       len(vcf_reader))
+    low_mapp_anno = low_mapp_utils.generate_low_mappability_annotation(
+        low_mapp_indexes, len(call_locations)
+    )
 
+    vcf_reader = vcf.Reader(open(infile))
+    vcf_writer = vcf.Writer(open(output, "w"), vcf_reader)
     for i, record in enumerate(vcf_reader):
-        reader.INFO["is_low_mappability"] = low_mapp_anno[i]
-        output.write_record(record)
+        record.INFO["is_low_mappability"] = True #low_mapp_anno[i]
+        vcf_writer.write_record(record)
+    vcf_writer.close()
 
 
 def finalize_vcf(infile, outfile, config):

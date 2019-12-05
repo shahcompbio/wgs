@@ -33,6 +33,7 @@ def juno_config(reference, containers):
             'cosmic_params': {
                 'db': '/juno/work/shah/reference/databases/CosmicMutantExport.sorted.vcf.gz'
             },
+            'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table.txt',
         },
         'plot_params': {
             'threshold': 0.5,
@@ -51,7 +52,7 @@ def juno_config(reference, containers):
             'remove_duplicates': False,
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table.txt',
+            'filter_low_mappability': True,
         },
         'parse_museq': {
             'keep_1000gen': True,
@@ -59,8 +60,8 @@ def juno_config(reference, containers):
             'remove_duplicates': False,
             'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table.txt',
-            'pr_threshold': 0.85
+            'pr_threshold': 0.85,
+            'filter_low_mappability': True,
         },
         'museq_params': {
             'threshold': 0.5,

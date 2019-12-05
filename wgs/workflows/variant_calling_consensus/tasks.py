@@ -21,10 +21,11 @@ def parse_vcf(
     ##assuming there will by a path to a blacklisted calls table in config
     '''
 
-    parse_low_mappability = parse_config['parse_low_mappability']
+    filters = {''}
 
-    with vcfparser.VcfParser(infile, primary_table, snpeff_table,
-                             ma_table, id_table, parse_low_mappability) as vcf_parser:
+    with vcfparser.VcfParser(
+            infile, primary_table, snpeff_table,
+            ma_table, id_table) as vcf_parser:
         vcf_parser.write()
 
     # add a yaml ext to parsed files

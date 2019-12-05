@@ -18,6 +18,7 @@ def create_annotation_workflow(
         vcftools_docker=None,
         snpeff_docker=None
 ):
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -85,6 +86,7 @@ def create_annotation_workflow(
             varcall_config,
         ),
     )
+
     workflow.transform(
         name='low_mappability_flag',
         func=tasks.flag_low_mappability,

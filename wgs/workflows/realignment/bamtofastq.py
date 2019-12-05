@@ -104,7 +104,7 @@ def close_outfiles(outfiles):
 def bam_to_fastq(infile, outdir):
     readgroups = get_read_groups(infile)
 
-    outfiles = get_outfiles(outdir, readgroups)
+    outfiles = get_outfiles(outdir,readgroups)
     outfiles = open_outfiles(outfiles)
 
     read_data = {}

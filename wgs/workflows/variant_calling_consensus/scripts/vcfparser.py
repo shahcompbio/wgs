@@ -196,13 +196,8 @@ def write_record(self, record, header, outfile):
     chrom = outstr["chrom"]
     pos = outstr["pos"]
 
-    if self.filter_low_mappability:
-        if not vcfutils.in_an_region(outstr["pos"], self.blacklist["chromosome"] == chrom):
-            outstr = ','.join(map(str, outstr)) + '\n'
-            outfile.write(outstr)
-        else:
-            outstr = ','.join(map(str, outstr)) + '\n'
-            outfile.write(outstr)
+    outstr = ','.join(map(str, outstr)) + '\n'
+    outfile.write(outstr)
 
 
 def write_header(self, header, outfile):
