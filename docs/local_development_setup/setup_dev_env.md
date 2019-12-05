@@ -30,6 +30,12 @@ RUN rm -rf /opt/conda/lib/python2.7/site-packages/pypeliner* /opt/conda/lib/pyth
 RUN pip install git+https://github.com/shahcompbio/pypeliner.git@master
 RUN pip install git+https://bitbucket.org/aroth85/biowrappers.git@singlecell
 RUN pip install dill
+RUN pip install fpdf
+RUN pip install intervaltree
+
+#if you plan to shell into container 
+RUN apt-get update && apt-get install vim # or editor of your choosing
+
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
@@ -43,10 +49,10 @@ CMD ["wgs"]
 ```
 
 build:
-`docker build -t wgspipeline/wgs:v0.0.1 .`
+`docker build -t wgspipeline/wgs:v0.0.2 .`
 
 push:
-`docker push wgspipeline/wgs:v0.0.1`
+`docker push wgspipeline/wgs:v0.0.2`
 
 
 ### Context config
