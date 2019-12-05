@@ -4,7 +4,6 @@ import sys
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.utils import inpututils
 
 
 def call_germlines_only(
@@ -325,7 +324,7 @@ def variant_calling_workflow(args):
                 mgd.OutputFile(meta_yaml)
             ),
             kwargs={
-                'input_yaml_data': inpututils.load_yaml(args['input_yaml']),
+                'input_yaml_data': helpers.load_yaml(args['input_yaml']),
                 'input_yaml': mgd.OutputFile(input_yaml_blob),
                 'metadata': {'type': 'variant_calling'}
             }

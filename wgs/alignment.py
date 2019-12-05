@@ -4,7 +4,6 @@ import sys
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.utils import inpututils
 from workflows import alignment
 
 
@@ -49,7 +48,7 @@ def alignment_workflow(args):
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
-            'input_yaml_data': inpututils.load_yaml(inputs),
+            'input_yaml_data': helpers.load_yaml(inputs),
             'input_yaml': mgd.OutputFile(input_yaml_blob),
             'metadata': {'type': 'alignment'}
         }

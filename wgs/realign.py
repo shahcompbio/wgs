@@ -5,7 +5,6 @@ import pypeliner
 import pypeliner.managed as mgd
 import yaml
 from wgs.utils import helpers
-from wgs.utils import inpututils
 from wgs.workflows import realignment
 
 
@@ -87,7 +86,7 @@ def realign_bam_workflow(args):
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
-            'input_yaml_data': inpututils.load_yaml(args['input_yaml']),
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
             'input_yaml': mgd.OutputFile(input_yaml_blob),
             'metadata': {'type': 'realignment'}
         }
