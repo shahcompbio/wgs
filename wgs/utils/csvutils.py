@@ -420,9 +420,6 @@ def prep_csv_files(filepath, outputfile):
 def finalize_csv(infile, outfile):
     csvinput = CsvInput(infile)
 
-    if csvinput.header:
-        raise CsvInputError("cannot finalize file with header")
-
     csvoutput = CsvOutput(
         outfile, header=True, columns=csvinput.columns,
         sep=csvinput.sep, dtypes=csvinput.dtypes

@@ -4,11 +4,8 @@ Created on Feb 21, 2018
 @author: pwalters
 '''
 import os
-
-import pandas as pd
 import pypeliner
-import vcf
-import wgs.utils.low_mappability_utils as low_mapp_utils
+from wgs.workflows.vcf_annotation.scripts import flag_mappability
 
 scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
@@ -113,34 +110,4 @@ def flag_low_mappability(infile, output, blacklist):
     :param output: output path to vcf with flag
     :param config: config
     '''
-    blacklist = pd.read_csv(blacklist, sep='\t')
-
-    vcf_reader = vcf.Reader(open(infile))
-    chroms = []
-    positions = []
-    for record in vcf_reader:
-        chroms.append(record.CHROM)
-        positions.append(record.POS)
-
-    call_locations = pd.DataFrame({"chromosome": chroms, "positions": positions})
-
-    low_mapp_indexes = low_mapp_utils.is_low_mappability(call_locations, blacklist, "chromosome", "positions")
-
-    low_mapp_anno = low_mapp_utils.generate_low_mappability_annotation(
-        low_mapp_indexes, len(call_locations)
-    )
-
-    vcf_reader = vcf.Reader(open(infile))
-    vcf_writer = vcf.Writer(open(output, "w"), vcf_reader)
-    for i, record in enumerate(vcf_reader):
-        record.INFO["is_low_mappability"] = True #low_mapp_anno[i]
-        vcf_writer.write_record(record)
-    vcf_writer.close()
-
-
-def finalize_vcf(infile, outfile, config):
-    # run  cat infile vcf-sort > temp_sorted
-    # run  bgzip temp_sorted > outfile (infile + '.gz')
-    # run  bcftools index outfile
-    # run tabix -f -p vcf outfile
-    raise NotImplementedError()
+    flag_mappability.main(infile, output, blacklist)

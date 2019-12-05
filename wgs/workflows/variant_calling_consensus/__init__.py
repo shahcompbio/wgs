@@ -44,12 +44,13 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.parse_vcf,
         args=(
-            mgd.InputFile(museq_germline),
-            mgd.OutputFile(germline_calls),
-            mgd.OutputFile(germline_snpeff_annotations),
-            mgd.OutputFile(germline_ma_annotations),
-            mgd.OutputFile(germline_ids_annotations),
+            mgd.InputFile(museq_germline, extensions=['.csi', '.tbi']),
+            mgd.OutputFile(germline_calls, extensions=['.yaml']),
+            mgd.OutputFile(germline_snpeff_annotations, extensions=['.yaml']),
+            mgd.OutputFile(germline_ma_annotations, extensions=['.yaml']),
+            mgd.OutputFile(germline_ids_annotations, extensions=['.yaml']),
             varcall_config["parse_museq"],
+            mgd.TempSpace("tempdir_parse_germlines")
         ),
     )
 
@@ -60,12 +61,13 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.parse_vcf,
         args=(
-            mgd.InputFile(strelka_indel),
-            mgd.OutputFile(indel_calls),
-            mgd.OutputFile(indel_snpeff_annotations),
-            mgd.OutputFile(indel_ma_annotations),
-            mgd.OutputFile(indel_ids_annotations),
+            mgd.InputFile(strelka_indel, extensions=['.csi', '.tbi']),
+            mgd.OutputFile(indel_calls, extensions=['.yaml']),
+            mgd.OutputFile(indel_snpeff_annotations, extensions=['.yaml']),
+            mgd.OutputFile(indel_ma_annotations, extensions=['.yaml']),
+            mgd.OutputFile(indel_ids_annotations, extensions=['.yaml']),
             varcall_config["parse_strelka"],
+            mgd.TempSpace("tempdir_strelka_indel")
         ),
     )
 
@@ -76,12 +78,13 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.parse_vcf,
         args=(
-            mgd.InputFile(museq_snv),
-            mgd.TempOutputFile('museq_snv.csv'),
-            mgd.TempOutputFile('museq_snpeff.csv'),
-            mgd.TempOutputFile('museq_ma.csv'),
-            mgd.TempOutputFile('museq_ids.csv'),
+            mgd.InputFile(museq_snv, extensions=['.csi', '.tbi']),
+            mgd.TempOutputFile('museq_snv.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('museq_snpeff.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('museq_ma.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('museq_ids.csv', extensions=['.yaml']),
             varcall_config["parse_museq"],
+            mgd.TempSpace("tempdir_parse_museq_snv")
         ),
     )
 
@@ -92,12 +95,13 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.parse_vcf,
         args=(
-            mgd.InputFile(strelka_snv),
-            mgd.TempOutputFile('strelka_snv.csv'),
-            mgd.TempOutputFile('strelka_snv_snpeff.csv'),
-            mgd.TempOutputFile('strelka_snv_ma.csv'),
-            mgd.TempOutputFile('strelka_snv_ids.csv'),
+            mgd.InputFile(strelka_snv, extensions=['.csi', '.tbi']),
+            mgd.TempOutputFile('strelka_snv.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('strelka_snv_snpeff.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('strelka_snv_ma.csv', extensions=['.yaml']),
+            mgd.TempOutputFile('strelka_snv_ids.csv', extensions=['.yaml']),
             varcall_config["parse_strelka"],
+            mgd.TempSpace("tempdir_parse_strelka_snv")
         ),
     )
 
@@ -108,9 +112,9 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.merge_overlap,
         args=(
-            [mgd.TempInputFile('strelka_snv.csv'),
-             mgd.TempInputFile('museq_snv.csv')],
-            mgd.OutputFile(somatic_calls),
+            [mgd.TempInputFile('strelka_snv.csv', extensions=['.yaml']),
+             mgd.TempInputFile('museq_snv.csv', extensions=['.yaml'])],
+            mgd.OutputFile(somatic_calls, extensions=['.yaml']),
         ),
     )
 
@@ -121,9 +125,9 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.merge_overlap,
         args=(
-            [mgd.TempInputFile('strelka_snv_snpeff.csv'),
-             mgd.TempInputFile('museq_snpeff.csv')],
-            mgd.OutputFile(somatic_snpeff_annotations),
+            [mgd.TempInputFile('strelka_snv_snpeff.csv', extensions=['.yaml']),
+             mgd.TempInputFile('museq_snpeff.csv', extensions=['.yaml'])],
+            mgd.OutputFile(somatic_snpeff_annotations, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
@@ -135,9 +139,9 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.merge_overlap,
         args=(
-            [mgd.TempInputFile('strelka_snv_ma.csv'),
-             mgd.TempInputFile('museq_ma.csv')],
-            mgd.OutputFile(somatic_ma_annotations),
+            [mgd.TempInputFile('strelka_snv_ma.csv', extensions=['.yaml']),
+             mgd.TempInputFile('museq_ma.csv', extensions=['.yaml'])],
+            mgd.OutputFile(somatic_ma_annotations, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
@@ -149,9 +153,9 @@ def create_consensus_workflow(
             walltime='8:00', ),
         func=tasks.merge_overlap,
         args=(
-            [mgd.TempInputFile('strelka_snv_ids.csv'),
-             mgd.TempInputFile('museq_ids.csv')],
-            mgd.OutputFile(somatic_ids_annotations),
+            [mgd.TempInputFile('strelka_snv_ids.csv', extensions=['.yaml']),
+             mgd.TempInputFile('museq_ids.csv', extensions=['.yaml'])],
+            mgd.OutputFile(somatic_ids_annotations, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )

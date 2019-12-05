@@ -46,19 +46,10 @@ def juno_config(reference, containers):
             },
         },
         'parse_strelka': {
-            'keep_1000gen': True,
-            ## TODO: why is this missing
-            # 'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'filter_low_mappability': True,
         },
         'parse_museq': {
-            'keep_1000gen': True,
-            'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
             'pr_threshold': 0.85,
             'filter_low_mappability': True,

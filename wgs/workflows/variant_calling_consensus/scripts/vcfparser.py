@@ -1,14 +1,13 @@
 import vcf
 from wgs.utils import helpers
-from wgs.utils import vcfutils
 
 VCF_FILE = "museq_single_annotated.vcf.gz"
 
-ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd', '1000gen', 'is_low_mappability']
+ANNOTATIONS = ['ann', 'ma', 'dbsnp', 'cosmic', 'lof', 'nmd', '1000gen', 'low_mappability']
 
 
 class VcfParser(object):
-    def __init__(self, vcf_file, outfile, snpeff_outfile, ma_outfile, ids_outfile, filter_low_mappability=False):
+    def __init__(self, vcf_file, outfile, snpeff_outfile, ma_outfile, ids_outfile, filters):
         '''
         constructor for parser
         note, if filter_low_mappability is true,
@@ -25,7 +24,7 @@ class VcfParser(object):
         self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
         self.cols = None
 
-        self.filter_low_mappability = filter_low_mappability
+        self.filters = filters
 
     def __enter__(self):
         self.outfile = helpers.GetFileHandle(self.outfile, 'wt').handler
@@ -144,98 +143,115 @@ class VcfParser(object):
 
         return data
 
-    def parse_vcf_filter_low_mappability(self):
+    def eval_expr(self, val, operation, threshold):
+        if operation == "gt":
+            if val > threshold:
+                return True
+        elif operation == 'ge':
+            if val >= threshold:
+                return True
+        elif operation == 'lt':
+            if val < threshold:
+                return True
+        elif operation == 'le':
+            if val <= threshold:
+                return True
+        elif operation == 'eq':
+            if val == threshold:
+                return True
+        elif operation == 'ne':
+            if not val == threshold:
+                return True
+        elif operation == 'in':
+            if val in threshold:
+                return True
+        elif operation == 'notin':
+            if not val in threshold:
+                return True
+        else:
+            raise Exception("unknown operator type: {}".format(operation))
 
-        '''
-        parses vcf to csv and removes
-        calls flagged as occuring
-        in low mappability regions
-        '''
+        return False
 
+    def filter_records(self, record, annotations):
+
+        for vcf_filter in self.filters:
+            filter_name, relationship, value = vcf_filter
+
+            if filter_name in record:
+                if self.eval_expr(record[filter_name], relationship, value):
+                    return True
+
+            for annotation in annotations:
+                if filter_name == annotation['type']:
+                    if self.eval_expr(record[filter_name], relationship, value):
+                        return True
+
+    def parse_vcf(self):
         for record in self.reader:
+            data = self.parse_main_cols(record)
             info = record.INFO
 
-            if not info["is_low_mappability"]:
-                data = self.parse_main_cols(record)
+            snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
+            ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
 
-                snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
-                ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+            id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
+            id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
+            ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
+            id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
+            id_annotations += self.parse_flag_annotation(info.get('LOW_MAPPABILITY'), record.CHROM, record.POS,
+                                                         'LOW_MAPPABILITY')
 
-                id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
-                id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
-                ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
-                id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
+            if self.filter_records(data, id_annotations):
+                continue
 
-                yield data, (snpeff_annotations, ma_annotations, id_annotations)
+            yield data, (snpeff_annotations, ma_annotations, id_annotations)
 
+    def write_record(self, record, header, outfile):
+        '''
+        writes a record to outfile
+        :param record: record to write
+        :param header: header containg colnames
+        :param outfile: path to outfile
+        '''
+        outstr = [record[col] for col in header]
+        outstr = ','.join(map(str, outstr)) + '\n'
+        outfile.write(outstr)
 
-def parse_vcf(self):
-    for record in self.reader:
-        data = self.parse_main_cols(record)
-        info = record.INFO
+    def write_header(self, header, outfile):
+        print(header, outfile)
 
-        snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
-        ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+        outstr = ','.join(map(str, header)) + '\n'
+        outfile.write(outstr)
 
-        id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
-        id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
-        ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
-        id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
-
-        yield data, (snpeff_annotations, ma_annotations, id_annotations)
-
-
-def write_record(self, record, header, outfile):
-    '''
-    writes a record to outfile
-    :param record: record to write
-    :param header: header containg colnames
-    :param outfile: path to outfile
-    '''
-    outstr = [record[col] for col in header]
-    chrom = outstr["chrom"]
-    pos = outstr["pos"]
-
-    outstr = ','.join(map(str, outstr)) + '\n'
-    outfile.write(outstr)
-
-
-def write_header(self, header, outfile):
-    outstr = ','.join(map(str, header)) + '\n'
-    outfile.write(outstr)
-
-
-def write(self):
-    '''
-    writes the parser to a csv
-    :param blacklist:
-    '''
-    if self.filter_low_mappability:
-        data = self.parse_vcf_filter_low_mappability()
-    else:
+    def write(self):
+        '''
+        writes the parser to a csv
+        :param blacklist:
+        '''
         data = self.parse_vcf()
 
-    primary_header = None
+        primary_header = None
 
-    for record in data:
-        primary, annotations = record
+        for record in data:
+            primary, annotations = record
 
-        if not primary_header:
-            primary_header = list(primary.keys())
-            self.write_header(primary_header, self.outfile)
-        self.write_record(primary, primary_header, self.outfile)
+            if not primary_header:
+                primary_header = list(primary.keys())
+                self.write_header(primary_header, self.outfile)
+            self.write_record(primary, primary_header, self.outfile)
 
-        snpeff_anns = annotations[0]
-        for snpeff_record in snpeff_anns:
-            self.write_record(snpeff_record, self.snpeff_cols, self.snpeff_outfile)
+            snpeff_anns = annotations[0]
+            for snpeff_record in snpeff_anns:
+                self.write_record(snpeff_record, self.snpeff_cols, self.snpeff_outfile)
 
-        ma_ann = annotations[1]
-        if ma_ann:
-            self.write_record(ma_ann, self.ma_cols, self.ma_outfile)
+            ma_ann = annotations[1]
+            if ma_ann:
+                self.write_record(ma_ann, self.ma_cols, self.ma_outfile)
 
-        id_anns = annotations[2]
-        for id_ann in id_anns:
-            self.write_record(id_ann, self.ids_cols, self.ids_outfile)
+            id_anns = annotations[2]
+            for id_ann in id_anns:
+                self.write_record(id_ann, self.ids_cols, self.ids_outfile)
 
 
 if __name__ == "__main__":

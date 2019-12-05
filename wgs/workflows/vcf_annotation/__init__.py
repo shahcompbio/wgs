@@ -105,7 +105,7 @@ def create_annotation_workflow(
         func=vcf_tasks.finalise_vcf,
         args=(
             mgd.TempInputFile('museq_low_mapp.vcf'),
-            mgd.OutputFile(annotated_vcf),
+            mgd.OutputFile(annotated_vcf, extensions=['.csi', '.tbi']),
         ),
         kwargs={'docker_image': vcftools_docker}
     )
