@@ -121,7 +121,7 @@ and then run the script:
 ```
 
 docker run -w $PWD -v $PWD:$PWD --rm -v /var/run/docker.sock:/var/run/docker.sock \
--v /usr/bin/docker:/usr/bin/docker  wgspipeline/wgs:v0.0.2 bash run.sh
+-v /usr/bin/docker:/usr/bin/docker  wgspipeline/wgs:v0.0.1 bash run.sh
 ```
 
 
