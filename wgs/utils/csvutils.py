@@ -293,10 +293,11 @@ class CsvOutput(object):
 
         self.__write_yaml()
 
-    def write_csv_with_header(self, infile):
+    def write_csv_with_header(self, infile, headerless_input=True):
         with helpers.GetFileHandle(self.filepath, 'wt') as writer:
             with helpers.GetFileHandle(infile) as reader:
-                writer.write(self.header_line)
+                if headerless_input:
+                    writer.write(self.header_line)
                 self.write_csv_data(reader, writer)
 
         self.__write_yaml()
@@ -424,7 +425,10 @@ def finalize_csv(infile, outfile):
         outfile, header=True, columns=csvinput.columns,
         sep=csvinput.sep, dtypes=csvinput.dtypes
     )
-    csvoutput.write_csv_with_header(infile)
+
+    headerless_input = False if csvinput.header else True
+
+    csvoutput.write_csv_with_header(infile, headerless_input=headerless_input)
 
 
 def merge_csv(in_filenames, out_filename, how, on, nan_val='NA', suffixes=None, write_header=True):
