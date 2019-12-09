@@ -1,0 +1,6 @@
+HCC1395:
+  normal: test/cna/HCC1395BL_chr15_snps.bam
+  normal_id: HCC1395BL
+  tumour: test/cna/HCC1395_chr15_snps.bam
+  tumour_id: HCC1395
+  target_list: test/cna/targets.tsv

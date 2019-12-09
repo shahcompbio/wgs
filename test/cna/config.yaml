@@ -1,0 +1,90 @@
+cna_calling:
+  chromosomes:
+  - '15'
+  correction:
+    gc: /home/ubuntu/wgs/ref_data/GRCh37-lite.gc.ws_1000.wig
+  dbsnp_positions: /refdata/databases/common_all_dbSNP138.pos
+  docker:
+    mutationseq: wgspipeline/mutationseq:v0.0.1
+    remixt: wgspipeline/remixt:v0.0.2
+    titan: titan:test
+    vcftools: wgspipeline/vcftools:v0.0.1
+    vizutils: wgspipeline/vizutils:v0.0.1
+    wgs: wgs:test
+    remixt: amcpherson/remixt:v0.5.7
+  min_num_reads: 5
+  museq_params:
+    baseq_threshold: 10
+    buffer_size: 2G
+    coverage: 4
+    indl_threshold: 0.05
+    mapq_threshold: 10
+    normal_variant: 25
+    purity: 70
+    threshold: 0.85
+    tumour_variant: 2
+    verbose: true
+  parse_titan:
+    chromosomes:
+    - '15'
+    genes: null
+    segment_size_threshold: 5000
+    types: null
+  pygenes_gtf: /home/ubuntu/wgs/ref_data/GRCh37-lite.gtf
+  readcounter:
+    q: 0
+    w: 1000
+  reference_genome: /home/ubuntu/wgs/ref_data/Homo_sapiens.GRCh37.70.dna.chromosomes.fa
+  remixt_refdata: /refdata/reference-remixt
+  split_size: 10000000.0
+  threads: 8
+  titan_intervals:
+  - num_clusters: 1
+    ploidy: 2
+  - num_clusters: 2
+    ploidy: 2
+  titan_params:
+    alpha_high: 20000
+    alpha_k: 15000
+    chrom: 'NULL'
+    estimate_ploidy: 'TRUE'
+    genome_type: NCBI
+    map: /home/ubuntu/wgs/ref_data/GRCh37-lite.map.ws_1000.wig
+    max_copynumber: 8
+    max_depth: 1000
+    max_iters: 50
+    myskew: 0
+    normal_estimate_method: map
+    normal_param_nzero: 0.5
+    num_cores: 4
+    pseudo_counts: 1.0e-300
+    symmetric: 'TRUE'
+    txn_exp_len: 1.0e+16
+    txn_z_strength: 1000000.0
+    y_threshold: 20
+containers:
+  docker: &id001
+    bwa: wgs/bwa:v0.0.1
+    destruct: wgs/destruct:v0.0.2
+    lumpy: wgs/lumpy:v0.0.1
+    museqportrait: wgs/museqportrait:v0.0.1
+    mutationseq: wgs/mutationseq:v0.0.1
+    picard: wgs/picard:v0.0.1
+    remixt: wgs/remixt:v0.0.2
+    samtools: wgs/samtools:v0.0.1
+    snpeff: wgs/vcftools:v0.0.1
+    strelka: wgs/strelka:v0.0.1
+    titan: wgs/titan:v0.0.1
+    vcftools: wgs/vcftools:v0.0.1
+    vizutils: wgs/vizutils:v0.0.1
+    wgs: wgs/wgs:v0.0.2
+  singularity: {}
+docker_containers:
+  docker:
+globals:
+  memory:
+    high: 15
+    low: 5
+    med: 10
+  threads: 8
+docker:

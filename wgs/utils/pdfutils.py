@@ -3,8 +3,8 @@ import os
 from fpdf import FPDF
 
 
-def merge_pngs(plots_dir, plot, chromosomes):
-    imagelist = [os.path.join(plots_dir, "cluster_1_chr{}.png".format(chrom))
+def merge_pngs(plots_dir, plot, num_clusters, chromosomes):
+    imagelist = [os.path.join(plots_dir, "cluster_{}_chr{}.png".format(num_clusters, chrom))
                  for chrom in chromosomes]
 
     x, y, w, h = 0, 0, 200, 250

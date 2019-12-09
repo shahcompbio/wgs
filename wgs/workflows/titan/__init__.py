@@ -28,7 +28,7 @@ def create_titan_workflow(
 
     targets = mgd.InputFile(targets) if targets else None
 
-    ctx={'docker_image': config['docker']['wgs']}
+    ctx = {'docker_image': config['docker']['wgs']}
 
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
@@ -79,7 +79,7 @@ def create_titan_workflow(
             name='run_museq',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='8:00', ),
+                walltime='8:00'),
             axes=('interval',),
             func='wgs.utils.museq_utils.run_museq',
             args=(
@@ -206,7 +206,10 @@ def create_titan_workflow(
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy')
         ),
-        kwargs={'docker_image': config['docker']['titan']}
+        kwargs={
+            'chromosomes': config['chromosomes'],
+            'docker_image': config['docker']['titan'],
+        },
     )
 
     workflow.transform(

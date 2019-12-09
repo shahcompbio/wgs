@@ -33,7 +33,7 @@ def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
 
 
-def convert_museq_vcf2counts(infile, outfile, config):
+def convert_museq_vcf2counts(infile, outfile):
     """
     Transform museq vcf file to a text file of counts
 
@@ -75,6 +75,10 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
+    data = pd.read_csv(outfile, sep='\t', converters={'chr': str})
+    if data['logR'].isnull().all():
+        raise ValueError('all none')
+
 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
@@ -101,17 +105,19 @@ def make_tarfile(output_filename, source_dir):
         tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 
-def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, docker_image=None):
+def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None, docker_image=None):
+    if chromosomes is None:
+        chromosomes = map(str, range(1, 23)) + ['X']
+
     script = 'plot_titan.R'
 
-    chrom = 'c(1:22,\'X\')'
-
+    chrom = '"c(' + ','.join(['\'' + c + '\'' for c in chromosomes]) + ')"'
     cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    chromosomes = map(str, range(1, 23)) + ['X']
-    pdfutils.merge_pngs(tempdir, output, chromosomes)
+    cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
+    pdfutils.merge_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
 
 
 def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):

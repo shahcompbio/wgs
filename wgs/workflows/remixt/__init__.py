@@ -19,34 +19,42 @@ def create_remixt_workflow(
         remixt_raw_dir,
         min_num_reads,
         global_config,
+        config,
         single_node=False,
-        docker_containers={}
 ):
+    ctx = {'docker_image': config['docker']['wgs']}
 
-    ctx = {'docker_image': docker_containers.get('remixt')}
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
-
-    if not breakpoints:
-        # just setting a random obj so that we dont return empty workflow
-        workflow.setobj(
-            obj=mgd.OutputChunks('some_random_value'),
-            value='another_random_string')
-        return workflow
 
     remixt_config = {}
 
-    workflow.transform(
-        name='filter_breakpoints',
-        func=tasks.filter_destruct_breakpoints,
-        ctx=helpers.get_default_ctx(
-            memory=4,
-            walltime='2:00'),
-        args=(
-            mgd.InputFile(breakpoints),
-            mgd.TempOutputFile('filtered_breakpoints.csv'),
-            min_num_reads,
+    if breakpoints is None:
+        workflow.setobj(
+            obj=mgd.TempOutputObj('emptybreakpoints'),
+            value=[],
         )
-    )
+
+        workflow.transform(
+            name='write_empty_breakpoints',
+            func=tasks.write_empty_breakpoints,
+            args=(
+                mgd.TempInputObj('emptybreakpoints'),
+                mgd.TempOutputFile('filtered_breakpoints.csv'),
+            ),
+        )
+
+    else:
+        workflow.transform(
+            name='filter_breakpoints',
+            func=tasks.filter_destruct_breakpoints,
+            ctx=helpers.get_default_ctx(
+                memory=4,
+                walltime='2:00'),
+            args=(
+                mgd.InputFile(breakpoints),
+                mgd.TempOutputFile('filtered_breakpoints.csv'),
+            )
+        )
 
     if single_node:
         workflow.transform(
@@ -58,7 +66,7 @@ def create_remixt_workflow(
                 ncpus=global_config['threads']),
             args=(
                 mgd.TempSpace("remixt_temp"),
-                mgd.InputFile(breakpoints),
+                mgd.TempInputFile('filtered_breakpoints.csv'),
                 mgd.InputFile(tumour_path, extensions=['.bai']),
                 mgd.InputFile(normal_path, extensions=['.bai']),
                 sample_id,
@@ -72,8 +80,9 @@ def create_remixt_workflow(
         workflow.subworkflow(
             name='remixt',
             func="remixt.workflow.create_remixt_bam_workflow",
+            ctx={'docker_image': config['docker']['remixt']},
             args=(
-                mgd.InputFile(breakpoints),
+                mgd.TempInputFile('filtered_breakpoints.csv'),
                 {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),
                  sample_id + 'N': mgd.InputFile(normal_path, extensions=['.bai'])},
                 {sample_id: mgd.OutputFile(remixt_results_filename)},
