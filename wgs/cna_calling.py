@@ -6,6 +6,7 @@ from wgs.utils import helpers
 from wgs.workflows import remixt
 from wgs.workflows import titan
 
+
 def cna_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
@@ -58,27 +59,27 @@ def cna_calling_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
-    workflow.subworkflow(
-        name='remixt',
-        func=remixt.create_remixt_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile('tumour_bam', 'sample_id',
-                          fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id',
-                          fnames=normals, extensions=['.bai']),
-            mgd.InputFile('destruct_breakpoints', 'sample_id',
-                          axes_origin=[], fnames=breakpoints),
-            mgd.InputInstance('sample_id'),
-            config['cna_calling']['remixt_refdata'],
-            mgd.OutputFile('remixt_results_filename', 'sample_id',
-                           axes_origin=[], template=remixt_results_filename),
-            mgd.Template(remixt_raw_dir, 'sample_id'),
-            config['cna_calling']['min_num_reads'],
-            config['globals']
-        ),
-        kwargs={'single_node': args['single_node'],
-                'docker_containers': config['docker']}
-    )
+    #workflow.subworkflow(
+    #    name='remixt',
+    #    func=remixt.create_remixt_workflow,
+    #    axes=('sample_id',),
+    #    args=(
+    #        mgd.InputFile('tumour_bam', 'sample_id',
+    #                      fnames=tumours, extensions=['.bai']),
+    #        mgd.InputFile('normal_bam', 'sample_id',
+    #                      fnames=normals, extensions=['.bai']),
+    #        mgd.InputFile('destruct_breakpoints', 'sample_id',
+    #                      axes_origin=[], fnames=breakpoints),
+    #        mgd.InputInstance('sample_id'),
+    #        config['cna_calling']['remixt_refdata'],
+    #        mgd.OutputFile('remixt_results_filename', 'sample_id',
+    #                       axes_origin=[], template=remixt_results_filename),
+    #        mgd.Template(remixt_raw_dir, 'sample_id'),
+    #        config['cna_calling']['min_num_reads'],
+    #        config['globals'],
+    #        config['cna_calling'],
+    #    ),
+    #    kwargs={'single_node': args['single_node']}
+    #)
 
     pyp.run(workflow)
