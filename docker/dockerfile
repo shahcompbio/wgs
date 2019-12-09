@@ -1,0 +1,22 @@
+# build on top of out base image
+FROM wgspipeline/python_wgs:v0.0.1
+
+RUN apt-get update
+RUN apt-get install vim -y
+
+# Install any needed packages specified in requirements.txt
+RUN pip install -e git+https://github.com/shahcompbio/pypeliner.git@master#egg=pypeliner
+RUN pip install -e git+https://bitbucket.org/aroth85/biowrappers.git@singlecell#egg=biowrappers
+RUN pip install -e git+https://github.com/shahcompbio/wgs.git@master#egg=wgs
+RUN pip install fpdf
+RUN pip install pyyaml
+
+# Make port 80 available to the world outside this container
+EXPOSE 80
+
+# Define environment variable
+ENV NAME wgs
+
+# Run app.py when the container launches
+CMD ["wgs"]
+
