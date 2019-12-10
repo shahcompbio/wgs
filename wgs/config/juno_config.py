@@ -1,5 +1,3 @@
-
-
 def juno_config(reference, containers):
     docker_containers = containers['docker']
 
@@ -81,31 +79,21 @@ def juno_config(reference, containers):
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
         'refdata_destruct': '/juno/work/shah/reference/reference-grch37-decoys-destruct',
+        'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table_destruct.txt',
         'parse_lumpy': {
-            'foldback_threshold': None,
-            'mappability_ref': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
-            'normal_id': None,
             'deletion_size_threshold': 0,
             'tumour_read_support_threshold': 0,
-            'project': None,
-            'tumour_id': None,
-            'confidence_interval_size': 500,
         },
         'parse_destruct': {
-            'normal_id': None,
-            'tumour_id': None,
-            'case_id': None,
-            'genes': None,
-            'gene_locations': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
-            'project': None,
-            'types': None,
-            'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table_destruct.txt',
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
-            'breakdistance_threshold': 30,
+            'break_distance_threshold': 30,
+        },
+        'consensus': {
+            'confidence_interval_size': 500,
         },
         'docker': {
             'wgs': docker_containers['wgs'],

@@ -1,6 +1,6 @@
-
-
 def shahlab_config(reference, containers):
+    docker_containers = containers['docker']
+
     if reference == 'grch37':
         reference = "/shahlab/pipelines/reference/GRCh37-lite.fa"
     else:
@@ -31,6 +31,7 @@ def shahlab_config(reference, containers):
             'cosmic_params': {
                 'db': '/shahlab/pipelines/reference/CosmicMutantExport.sorted.vcf.gz'
             },
+            'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
         },
         'plot_params': {
             'threshold': 0.5,
@@ -43,22 +44,13 @@ def shahlab_config(reference, containers):
             },
         },
         'parse_strelka': {
-            'keep_1000gen': True,
-            ## TODO: why is this missing
-            # 'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
+            'filter_low_mappability': True,
         },
         'parse_museq': {
-            'keep_1000gen': True,
-            'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
             'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table.txt',
-            'pr_threshold': 0.85
+            'pr_threshold': 0.85,
+            'filter_low_mappability': True,
         },
         'museq_params': {
             'threshold': 0.5,
@@ -71,6 +63,14 @@ def shahlab_config(reference, containers):
             'normal_variant': 25,
             'tumour_variant': 2,
             'baseq_threshold': 20,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'strelka': docker_containers['strelka'],
+            'vcftools': docker_containers['vcftools'],
+            'mutationseq': docker_containers['mutationseq'],
+            'museqportrait': docker_containers['museqportrait'],
+            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -79,31 +79,28 @@ def shahlab_config(reference, containers):
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
         'refdata_destruct': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/',
+        'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table_destruct.txt',
         'parse_lumpy': {
-            'foldback_threshold': None,
-            'mappability_ref': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
-            'normal_id': None,
             'deletion_size_threshold': 0,
             'tumour_read_support_threshold': 0,
-            'project': None,
-            'tumour_id': None,
-            'confidence_interval_size': 500,
         },
         'parse_destruct': {
-            'normal_id': None,
-            'tumour_id': None,
-            'case_id': None,
-            'genes': None,
-            'gene_locations': None,
             'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
-            'project': None,
-            'types': None,
-            'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table_destruct.txt',
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
             'breakdistance_threshold': 30
+        },
+        'consensus': {
+            'confidence_interval_size': 500,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'destruct': docker_containers['destruct'],
+            'lumpy': docker_containers['lumpy'],
+            'samtools': docker_containers['samtools'],
+            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -195,6 +192,13 @@ def shahlab_config(reference, containers):
             'PU': '{lane_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'bwa': docker_containers['bwa'],
+            'samtools': docker_containers['samtools'],
+            'picard': docker_containers['picard'],
+            'fastqc': docker_containers['fastqc']
         }
     }
 
