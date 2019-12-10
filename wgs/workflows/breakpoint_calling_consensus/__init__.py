@@ -16,6 +16,7 @@ def create_consensus_workflow(
         output,
         global_config,
         svcalling_config,
+        sample_id
 ):
     workflow = pypeliner.workflow.Workflow()
 
@@ -25,7 +26,7 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.parse_lumpy,
+        func=tasks.parse_lumpy_task,
         args=(
             mgd.InputFile(lumpy_vcf),
             mgd.TempOutputFile('lumpy.csv'),
@@ -39,7 +40,7 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.parse_destruct,
+        func=tasks.parse_destruct_task,
         args=(
             mgd.InputFile(destruct_breakpoints),
             mgd.TempOutputFile('destruct.csv'),
@@ -53,11 +54,12 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.consensus,
+        func=tasks.consensus_calls,
         args=(
             mgd.TempInputFile('destruct.csv'),
             mgd.TempInputFile('lumpy.csv'),
             mgd.OutputFile(output),
+            svcalling_config['consensus']
         ),
     )
 

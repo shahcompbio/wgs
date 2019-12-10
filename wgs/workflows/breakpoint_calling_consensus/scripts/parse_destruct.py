@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def load_destruct_calls(infile):
-    return pd.read_csv(infile, sep='\t')
+    return pd.read_csv(infile, sep='\t', dtype={'chromosome_1': str, 'chromosome_2': str})
 
 
 def fix_dgv_ids(df):
@@ -49,7 +49,28 @@ def write(df, outfile):
     df.to_csv(outfile, index=False)
 
 
-def parser(infile, outfile, foldback_threshold=30000):
+def filter_calls(data, filters):
+    if filters['readsupport_threshold']:
+        data = data[data['num_reads'] > filters['readsupport_threshold']]
+
+    if filters['chromosomes']:
+        data = data[data['chromosome_1'].isin(filters['chromosomes'])]
+        data = data[data['chromosome_2'].isin(filters['chromosomes'])]
+
+    if filters['deletion_size_threshold']:
+        data = data[
+            (data['rearrangement_type'] != 'deletion') | (data['break_distance'] >= filters['deletion_size_threshold'])]
+
+        data = data[
+            (data['type'] != 'deletion') | (data['break_distance'] >= filters['deletion_size_threshold'])]
+
+    if filters['break_distance_threshold']:
+        data = data[data['break_distance'] > filters['break_distance_threshold']]
+
+    return data
+
+
+def parser(infile, outfile, filters, foldback_threshold=30000):
     df = load_destruct_calls(infile)
 
     df = fix_dgv_ids(df)
@@ -59,5 +80,7 @@ def parser(infile, outfile, foldback_threshold=30000):
     df = reclassify_inversions(df)
 
     df = classify_foldbacks(df, foldback_threshold)
+
+    df = filter_calls(df, filters)
 
     write(df, outfile)

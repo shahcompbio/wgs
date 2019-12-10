@@ -13,10 +13,10 @@ def build_interval_tree(data):
     for val in data:
         chrom, pos, ci = val
 
-        ci = ci.split(';')
+        ci = ci.split(',')
 
-        start = pos + int(ci[0])
-        end = pos + int(ci[1]) + 1
+        start = pos + float(ci[0])
+        end = pos + float(ci[1]) + 1
 
         itree[chrom].addi(start, end)
 
@@ -36,12 +36,12 @@ def load_data(infile):
 
 def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
     if confidence_interval:
-        confidence_interval = '-{},{}'.format(confidence_interval)
-        data = list(zip(lumpy_df.chrom, lumpy_df.pos, confidence_interval))
-        data += list(zip(lumpy_df.chrom, lumpy_df.END, confidence_interval))
+        confidence_interval = '-{},{}'.format(confidence_interval, confidence_interval)
+        data = list(zip(lumpy_df.chromosome_1, lumpy_df.position_1, [confidence_interval]*len(lumpy_df)))
+        data += list(zip(lumpy_df.chromosome_2, lumpy_df.position_2, [confidence_interval]*len(lumpy_df)))
     else:
-        data = list(zip(lumpy_df.chrom, lumpy_df.pos, lumpy_df['CIPOS']))
-        data += list(zip(lumpy_df.chrom, lumpy_df.END, lumpy_df['CIEND']))
+        data = list(zip(lumpy_df.chromosome_1, lumpy_df.position_1, lumpy_df['CIPOS']))
+        data += list(zip(lumpy_df.chromosome_2, lumpy_df.position_2, lumpy_df['CIEND']))
 
     intervaltree = build_interval_tree(data)
 
@@ -68,4 +68,3 @@ def consensus(destruct_infile, lumpy_infile, consensus, confidence_interval=None
     destruct = filter_destruct_on_lumpy(destruct, lumpy)
 
     write(destruct, consensus)
-
