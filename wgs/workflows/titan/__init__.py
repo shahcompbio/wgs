@@ -2,9 +2,7 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
-
 import tasks
-
 from wgs.utils import helpers
 
 
@@ -15,14 +13,17 @@ def create_titan_workflow(
         intervals, sample_id,
         single_node=None
 ):
-    titan_outdir = os.path.join(titan_raw_dir, 'clusters_{numclusters}', 'ploidy_{ploidy}')
-    igv_template = os.path.join(titan_outdir, '{}_igv_segs.txt'.format(sample_id))
-    outfile_template = os.path.join(titan_outdir, '{}_titan_markers.txt'.format(sample_id))
-    params_template = os.path.join(titan_outdir, '{}_titan_params.txt'.format(sample_id))
-    segs_template = os.path.join(titan_outdir, '{}_titan_segs.txt'.format(sample_id))
-    plots_template = os.path.join(titan_outdir, '{}_titan_plots.pdf'.format(sample_id))
-    parsed_template = os.path.join(titan_outdir, '{}_titan_parsed.csv'.format(sample_id))
     museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))
+
+    # optimal
+    optimal_outfile = os.path.join(titan_raw_dir, '{}_titan_markers.csv.gz'.format(sample_id))
+    optimal_params = os.path.join(titan_raw_dir, '{}_titan_params.csv.gz'.format(sample_id))
+    optimal_segs = os.path.join(titan_raw_dir, '{}_titan_segs.csv.gz'.format(sample_id))
+    optimal_igv_segs = os.path.join(titan_raw_dir, '{}_titan_igv_segs.csv.gz'.format(sample_id))
+    optimal_parsed = os.path.join(titan_raw_dir, '{}_titan_parsed.csv.gz'.format(sample_id))
+    optimal_plots = os.path.join(titan_raw_dir, '{}_titan_plots.pdf'.format(sample_id))
+
+    tar_outputs = os.path.join(titan_raw_dir, 'data_all_parameters.tar.gz')
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
@@ -181,9 +182,9 @@ def create_titan_workflow(
         args=(
             mgd.TempInputFile('museq_postprocess.txt'),
             mgd.TempInputFile('correct_reads.txt'),
-            mgd.OutputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
+            mgd.TempOutputFile('titan_outfile', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan.Rdata', 'numclusters', 'ploidy'),
-            mgd.OutputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
+            mgd.TempOutputFile('titan_params', 'numclusters', 'ploidy'),
             config['titan_params'],
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy'),
@@ -197,11 +198,11 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='8:00',),
+            walltime='8:00', ),
         func='wgs.workflows.titan.tasks.plot_titan',
         args=(
             mgd.TempInputFile('titan.Rdata', 'numclusters', 'ploidy'),
-            mgd.OutputFile('titan_plots', 'numclusters', 'ploidy', template=plots_template),
+            mgd.TempOutputFile('titan_plots', 'numclusters', 'ploidy'),
             mgd.TempSpace("titan_plots_tempdir", 'numclusters', 'ploidy'),
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy')
@@ -217,11 +218,11 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='4:00',),
+            walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_cnsegments_titan',
         args=(
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile('titan_igv', 'numclusters', 'ploidy', template=igv_template),
+            mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
+            mgd.TempOutputFile('titan_igv', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
         ),
         kwargs={'docker_image': config['docker']['titan']}
@@ -232,11 +233,11 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='4:00',),
+            walltime='4:00', ),
         func='wgs.workflows.titan.tasks.annot_pygenes',
         args=(
             mgd.TempInputFile('segs.csv', 'numclusters', 'ploidy'),
-            mgd.OutputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
+            mgd.TempOutputFile('titan_segs.csv', 'numclusters', 'ploidy'),
             config,
         ),
     )
@@ -246,54 +247,58 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='4:00',),
+            walltime='4:00', ),
         func='wgs.workflows.titan.tasks.parse_titan_data',
         args=(
-            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile('titan_parsed.csv', 'numclusters', 'ploidy', template=parsed_template),
+            mgd.TempInputFile('titan_segs.csv', 'numclusters', 'ploidy'),
+            mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
+            mgd.TempOutputFile('titan_parsed.csv', 'numclusters', 'ploidy'),
             config['parse_titan'],
         ),
     )
 
+    # select optimal solution
     workflow.transform(
-        name='segments_h5',
+        name="select_optimal_solution",
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='4:00',),
-        func='wgs.workflows.titan.tasks.merge_to_h5',
+            walltime='4:00', ),
+        func="wgs.workflows.titan.tasks.select_optimal_solution",
         args=(
-            mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            mgd.OutputFile(segments),
-            intervals
-        ),
+            chunks,
+            mgd.TempInputFile('titan_params', 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile('titan_igv', 'numclusters', 'ploidy'),
+            mgd.TempInputFile("titan_outfile", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_plots", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.OutputFile(optimal_segs, extensions=['.yaml']),
+            mgd.OutputFile(optimal_igv_segs, extensions=['.yaml']),
+            mgd.OutputFile(optimal_params, extensions=['.yaml']),
+            mgd.OutputFile(optimal_outfile, extensions=['.yaml']),
+            mgd.OutputFile(optimal_parsed, extensions=['.yaml']),
+            mgd.OutputFile(optimal_plots),
+        )
     )
 
     workflow.transform(
-        name='params_h5',
+        name='tar_all_data',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='4:00',),
-        func='wgs.workflows.titan.tasks.merge_to_h5',
+            walltime='4:00', ),
+        func="wgs.workflows.titan.tasks.tar_all_data",
         args=(
-            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
-            mgd.OutputFile(params),
-            intervals
-        ),
+            mgd.TempInputFile('titan_params', 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile('titan_igv', 'numclusters', 'ploidy'),
+            mgd.TempInputFile("titan_outfile", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_plots", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.OutputFile(tar_outputs),
+            mgd.TempSpace("titan_all_parameters_data"),
+            chunks
+        )
     )
 
-    workflow.transform(
-        name='markers_h5',
-        ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
-            walltime='4:00',),
-        func='wgs.workflows.titan.tasks.merge_to_h5',
-        args=(
-            mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
-            mgd.OutputFile(markers),
-            intervals
-        ),
-        kwargs={'dtype': {'Chr': str}}
-    )
 
     return workflow

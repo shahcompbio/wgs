@@ -1,16 +1,20 @@
+import itertools
 import os
+import shutil
 import tarfile
 
+import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
-from wgs.utils import pdfutils
-from wgs.utils import vcfutils
-
 from scripts import PygeneAnnotation
 from scripts import ReadCounter
 from scripts import TransformVcfCounts
 from scripts import parse_titan
+from wgs.utils import helpers
+from wgs.utils import pdfutils
+from wgs.utils import vcfutils
+from wgs.utils import csvutils
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -172,4 +176,130 @@ def parse_titan_data(infile, titan_file, output, config):
     :param output: path to the output TSV file
     """
 
-    parse_titan.parser(titan_file, infile,output)
+    parse_titan.parser(titan_file, infile, output)
+
+
+def get_param_file_vals(params_file):
+    '''
+    exracts the values from a titan params
+    file and returns them as a dict.
+
+    :param params_file: titan params file
+    '''
+    params_file_vals = {}
+
+    with open(params_file, 'r') as f:
+        for line in f:
+            k, v = line.split(":")
+            params_file_vals[k] = np.array(v.split()).astype(float)
+
+    return params_file_vals
+
+
+def select_optimal_solution(
+        chunks,
+        params_files,
+        segments,
+        igv_segs,
+        markers,
+        parsed_files,
+        plots,
+        optimal_segment,
+        optimal_igv_segs,
+        optimal_param,
+        optimal_marker,
+        optimal_parsed,
+        optimal_plot,
+):
+    '''
+    selects the optimal cluster and ploidy
+    combination from an input set of cluster/ploidy-
+    resolved params and writes the corresponding
+    set of optimal output files to an 'optimal'
+    output directory.
+
+    :params nclusts: number of clusters / sample
+    :params nploidy: ploidy options/cluster/sample
+    :params params_files: set of paramater files
+        per ploidy/cluster
+    :params segments: input set of output segments
+        files per ploidy/cluster
+    :params params: input set of output params
+        files per ploidy/cluster
+    :params markers: input set of output markers
+        files per ploidy/cluster
+    :params parsed_files: input set of parsed
+        files per ploidy/cluster
+    :params plots: input set of plots
+        files per ploidy/cluster
+    :params optimal_segment: output path
+        for the optimal segment file
+    :params optimal_param: output path
+        for the optimal param file
+    :params optimal_marker: output path
+        for optimal marker file
+    :params optimal_parsed: output path
+        for optimal parsed file
+    :params optimal_plots: output path
+        for optimal plots file
+    '''
+
+
+    model_select_idxs = []
+
+    # find optimal cluster/ploidy
+    for chunk in chunks:
+        params = params_files[chunk]
+        parsed_params = get_param_file_vals(params)
+        dbw_index = parsed_params['S_Dbw validity index (Both)'][0]
+        model_select_idxs.append((chunk, dbw_index))
+
+    best_model = min(model_select_idxs, key=lambda t: t[1])
+    best_model = best_model[0]
+
+
+    # copy the file at the optimal cluster/ploidy to the
+    # optimal file output path
+    csvutils.finalize_csv(segments[best_model], optimal_segment)
+    csvutils.finalize_csv(igv_segs[best_model], optimal_igv_segs)
+    csvutils.finalize_csv(params_files[best_model], optimal_param)
+    csvutils.finalize_csv(markers[best_model], optimal_marker)
+    csvutils.finalize_csv(parsed_files[best_model], optimal_parsed)
+    shutil.copyfile(plots[best_model], optimal_plot)
+
+
+def tar_all_data(params, segs, igv_segs, markers, parsed, plots, tar_output, tempdir, chunks):
+    helpers.makedirs(tempdir)
+
+    for chunk in chunks:
+        num_cluster, ploidy = chunk
+
+        num_cluster = str(num_cluster)
+        ploidy = str(ploidy)
+
+        outdir = os.path.join(tempdir, 'numcluster_'+num_cluster, 'ploidy_'+ploidy)
+
+        helpers.makedirs(outdir)
+
+        params_outfile = os.path.join(outdir, 'params.csv')
+        shutil.copyfile(params[chunk], params_outfile)
+
+        segs_outfile = os.path.join(outdir, 'segs.csv')
+        shutil.copyfile(segs[chunk], segs_outfile)
+
+        igv_segs_outfile = os.path.join(outdir, 'igv_segs.csv')
+        shutil.copyfile(igv_segs[chunk], igv_segs_outfile)
+
+        markers_outfile = os.path.join(outdir, 'titan_markers.csv')
+        shutil.copyfile(markers[chunk], markers_outfile)
+
+        parsed_outfile = os.path.join(outdir, 'parsed.csv')
+        shutil.copyfile(parsed[chunk], parsed_outfile)
+
+        plots_outfile = os.path.join(outdir, 'plots.pdf')
+        shutil.copyfile(plots[chunk], plots_outfile)
+
+    helpers.make_tarfile(tar_output, tempdir)
+
+
+
