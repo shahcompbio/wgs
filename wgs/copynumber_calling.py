@@ -4,7 +4,6 @@ import sys
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.workflows import remixt
 from wgs.workflows import titan
 
 
@@ -24,12 +23,9 @@ def copynumber_calling_workflow(args):
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
     targets = helpers.get_values_from_input(inputs, 'target_list')
-    breakpoints = helpers.get_values_from_input(inputs, 'breakpoints')
     samples = tumours.keys()
 
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
-    remixt_results_filename = os.path.join(cna_outdir, 'remixt', 'results.h5')
-    remixt_raw_dir = os.path.join(cna_outdir, 'remixt', 'raw_data')
 
     titan_raw_dir = os.path.join(cna_outdir, 'titan')
     titan_segments_filename = os.path.join(titan_raw_dir, 'segments.h5')
@@ -70,29 +66,6 @@ def copynumber_calling_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
-    workflow.subworkflow(
-        name='remixt',
-        func=remixt.create_remixt_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile('tumour_bam', 'sample_id',
-                          fnames=tumours, extensions=['.bai']),
-            mgd.InputFile('normal_bam', 'sample_id',
-                          fnames=normals, extensions=['.bai']),
-            mgd.InputFile('destruct_breakpoints', 'sample_id',
-                          axes_origin=[], fnames=breakpoints),
-            mgd.InputInstance('sample_id'),
-            config['remixt_refdata'],
-            mgd.OutputFile('remixt_results_filename', 'sample_id',
-                           axes_origin=[], template=remixt_results_filename),
-            mgd.Template(remixt_raw_dir, 'sample_id'),
-            config['min_num_reads'],
-            global_config
-        ),
-        kwargs={'single_node': args['single_node'],
-                'docker_containers': config['docker']}
-    )
-
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
@@ -100,7 +73,7 @@ def copynumber_calling_workflow(args):
             sys.argv[0:],
             args["out_dir"],
             [titan_segments_filename, titan_params_filename,
-             titan_markers_filename, remixt_results_filename],
+             titan_markers_filename],
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

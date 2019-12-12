@@ -33,7 +33,7 @@ def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
 
 
-def convert_museq_vcf2counts(infile, outfile):
+def convert_museq_vcf2counts(infile, outfile, config):
     """
     Transform museq vcf file to a text file of counts
 

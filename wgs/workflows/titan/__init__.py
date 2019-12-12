@@ -247,16 +247,13 @@ def create_titan_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
             walltime='4:00',),
-        func='wgs.workflows.titan.tasks.parse_titan',
+        func='wgs.workflows.titan.tasks.parse_titan_data',
         args=(
             mgd.InputFile('titan_segs.csv', 'numclusters', 'ploidy', template=segs_template),
-            mgd.InputFile('titan_params', 'numclusters', 'ploidy', template=params_template),
             mgd.InputFile('titan_outfile', 'numclusters', 'ploidy', template=outfile_template),
             mgd.OutputFile('titan_parsed.csv', 'numclusters', 'ploidy', template=parsed_template),
             config['parse_titan'],
-            sample_id,
         ),
-        kwargs={'docker_image': config['docker']['vizutils']}
     )
 
     workflow.transform(

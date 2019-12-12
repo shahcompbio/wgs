@@ -2,7 +2,8 @@ def azure_config(reference, containers):
     docker_containers = containers['docker']
 
     if reference == 'grch37':
-        reference = "/refdata/GRCh37-lite/GRCh37-lite.fa"
+        reference = "/refdata/human/GRCh37-lite.fa"
+        reference = "/refdata/cna/Homo_sapiens.GRCh37.70.dna.chromosomes.fa"
     else:
         reference = None
 

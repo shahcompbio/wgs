@@ -3,6 +3,7 @@ def juno_config(reference, containers):
 
     if reference == 'grch37':
         reference = "/juno/work/shah/reference/genomes/gr37_decoys/gr37.fasta"
+        reference = '/juno/work/shah/reference/genomes/GRCh37-lite/GRCh37-lite.fa'
     else:
         reference = None
 
