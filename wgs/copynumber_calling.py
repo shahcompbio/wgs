@@ -66,14 +66,19 @@ def copynumber_calling_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
+    filenames = [titan_segments_filename, 
+            titan_params_filename, 
+            titan_markers_filename]
+   
+    outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
+ 
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
             args["out_dir"],
-            [titan_segments_filename, titan_params_filename,
-             titan_markers_filename],
+            outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

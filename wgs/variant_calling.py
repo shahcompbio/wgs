@@ -312,15 +312,19 @@ def variant_calling_workflow(args):
             kwargs={'single_node': args['single_node']}
         )
 
+        filenames = [somatic_csv, indel_csv, germline_csv, museq_vcf,
+            museq_ss_vcf, strelka_snv_vcf, strelka_indel_vcf,
+            museq_paired_pdf, museq_single_pdf]
+
+        outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
+
         workflow.transform(
             name='generate_meta_files_results',
             func='wgs.utils.helpers.generate_and_upload_metadata',
             args=(
                 sys.argv[0:],
                 args['out_dir'],
-                [somatic_csv, indel_csv, germline_csv, museq_vcf,
-                 museq_ss_vcf, strelka_snv_vcf, strelka_indel_vcf,
-                 museq_paired_pdf, museq_single_pdf],
+                outputted_filenames,
                 mgd.OutputFile(meta_yaml)
             ),
             kwargs={

@@ -9,7 +9,7 @@ import pypeliner
 import pypeliner.managed as mgd
 import tasks
 from wgs.utils import helpers
-
+from wgs.workflows.alignment.dtypes import dtypes
 import biowrappers
 
 
@@ -95,6 +95,10 @@ def collect_bam_metrics(
             mgd.OutputFile(metrics),
             sample_id
         ),
+        kwargs= {
+            'main_dtypes':dtypes()['metrics'],
+            'insert_dtypes': dtypes()['insert_metrics']
+        }
     )
 
     return workflow
@@ -206,7 +210,7 @@ def align_samples(
 
     metrics_outdir = os.path.join(outdir, '{sample_id}', 'metrics')
     markdups_outputs = os.path.join(metrics_outdir, 'markdups_metrics.txt')
-    metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.txt')
+    metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
 
     workflow.transform(
         name='markdups',

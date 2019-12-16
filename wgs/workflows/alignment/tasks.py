@@ -328,9 +328,9 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
 
 
 def bam_collect_all_metrics(
-        flagstat, insert, wgs, markdups_metrics, output, sample_id
+        flagstat, insert, wgs, markdups_metrics, output, sample_id, main_dtypes = None, insert_dtypes = None
 ):
     collmet = collect_metrics.CollectMetrics(
-        wgs, insert, flagstat, markdups_metrics, output, sample_id
+        wgs, insert, flagstat, markdups_metrics, output, sample_id, main_dtypes, insert_dtypes
     )
     collmet.main()

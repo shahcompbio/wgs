@@ -38,17 +38,19 @@ def alignment_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
+    outputted_filenames = helpers.expand_list(outputs, samples, 'sample_id')
+
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
             outdir,
-            outputs,
+            outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
-            'input_yaml_data': helpers.load_yaml(inputs),
+            'input_yaml_data': inputs,
             'input_yaml': mgd.OutputFile(input_yaml_blob),
             'metadata': {'type': 'alignment'}
         }

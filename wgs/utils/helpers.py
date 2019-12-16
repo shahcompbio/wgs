@@ -316,6 +316,7 @@ def run_cmd(cmd, output=None):
 
 
 def load_yaml(path):
+    print path
     try:
         with open(path) as infile:
             data = yaml.safe_load(infile)
@@ -501,6 +502,29 @@ def generate_meta_yaml_file(
 
     write_to_yaml(metadata_file, metadata)
 
+def expand_list(list, expanders, to_replace):
+    '''
+    for each str in list,
+    creates expander items,
+    each marked with expander
+    if {to_replace} in list,
+    to_replace is replaced
+    with expander items
+
+    :param list: list of strs
+    :param expanders: list of markers for list
+    :param to_replace: item to replace in each of
+    the items in list
+    '''
+    outlist = []
+    replace_list = {to_replace:''}
+    for item in list:
+        if to_replace in item:
+            for expander in expanders:
+                replace_list[to_replace] = expander
+                final_name = item.format(**replace_list)
+                outlist.append(final_name)
+    return outlist
 
 def get_version():
     '''
@@ -525,7 +549,7 @@ def generate_and_upload_metadata(
 
     metadata['command'] = ' '.join(command)
     metadata['version'] = get_version()
-
+#
     if type:
         metadata['type'] = type
 

@@ -76,13 +76,15 @@ def realign_bam_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
+    outputted_filenames = helpers.expand_list(output_bams, samples, 'sample_id')
+
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
             args["out_dir"],
-            output_bams,
+            outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

@@ -7,16 +7,19 @@ from __future__ import division
 import os
 
 import pandas as pd
-
+from wgs.utils import csvutils
+from wgs.workflows.alignment.dtypes import dtypes
 
 class CollectMetrics(object):
-    def __init__(self, wgs_metrics, insert_metrics, flagstat_metrics, markdups_metrics, output, sample_id):
+    def __init__(self, wgs_metrics, insert_metrics, flagstat_metrics, markdups_metrics, output, sample_id, main_dtypes, insert_metrics_dtypes):
         self.wgs_metrics = wgs_metrics
         self.flagstat_metrics = flagstat_metrics
         self.insert_metrics = insert_metrics
         self.markdups_metrics = markdups_metrics
         self.output = output
         self.sample_id = sample_id
+        self.main_dtypes = main_dtypes
+        self.insert_metrics_dtypes = insert_metrics_dtypes
 
     def extract_wgs_metrics(self):
         """
@@ -183,18 +186,19 @@ class CollectMetrics(object):
 
         return median_ins_size, mean_ins_size, std_dev_ins_size
 
-    def write_data(self, header, data):
+    def write_data(self, header, data, dtypes):
         """
         write to the output
         """
         assert len(header) == len(data)
         # replace empty vals with NA
-        data = [v if v != '' else 'NA' for v in data]
-
-        writer = open(self.output, 'w')
-        writer.write(','.join(header) + '\n')
-        writer.write(','.join([str(v) for v in data]))
-        writer.close()
+        df = pd.DataFrame(dict(zip(header, data)), index = [0])
+        csv_out = csvutils.CsvOutput(self.output, header = header, dtypes = dtypes)
+        csv_out.write_df(df)
+        #writer = open(self.output, 'w')
+        #writer.write(','.join(header) + '\n')
+        #writer.write(','.join([str(v) for v in data]))
+        #writer.close()
 
     # =========================================================================
     # Run script
@@ -205,6 +209,7 @@ class CollectMetrics(object):
         duplication_metrics = self.extract_duplication_metrics()
         flagstat_metrics = self.extract_flagstat_metrics()
         wgs_metrics = self.extract_wgs_metrics()
+        dtypes = self.main_dtypes
 
         header = [
             'cell_id', 'unpaired_mapped_reads',
@@ -223,5 +228,8 @@ class CollectMetrics(object):
             header += ['median_insert_size',
                        'mean_insert_size',
                        'standard_deviation_insert_size']
+            dtypes.update(self.insert_metrics_dtypes)
 
-        self.write_data(header, output)
+        #print output
+        #raise Exception
+        self.write_data(header, output, dtypes)

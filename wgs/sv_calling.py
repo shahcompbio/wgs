@@ -98,6 +98,11 @@ def sv_calling_workflow(args):
             mgd.InputInstance('sample_id')
         ),
     )
+    
+    filenames = [destruct_breakpoints, destruct_library, destruct_raw_breakpoints,
+        destruct_reads, lumpy_vcf, parsed_csv]
+
+    outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
     workflow.transform(
         name='generate_meta_files_results',
@@ -105,8 +110,7 @@ def sv_calling_workflow(args):
         args=(
             sys.argv[0:],
             args["out_dir"],
-            [destruct_breakpoints, destruct_library, destruct_raw_breakpoints,
-             destruct_reads, lumpy_vcf, parsed_csv],
+            outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
