@@ -5,9 +5,7 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-import tasks
 from wgs.utils import helpers
-from wgs.utils import vcf_tasks
 
 
 def create_annotation_workflow(
@@ -18,7 +16,6 @@ def create_annotation_workflow(
         vcftools_docker=None,
         snpeff_docker=None
 ):
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -26,7 +23,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.run_snpeff,
+        func='wgs.workflows.vcf_annotation.tasks.run_snpeff',
         args=(
             mgd.InputFile(input_vcf),
             mgd.TempOutputFile('museq_annotSnpEff.vcf'),
@@ -40,7 +37,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
             walltime='8:00', ),
-        func=tasks.run_mutation_assessor,
+        func='wgs.workflows.vcf_annotation.tasks.run_mutation_assessor',
         args=(
             mgd.TempInputFile('museq_annotSnpEff.vcf'),
             mgd.TempOutputFile('museq_annotMA.vcf'),
@@ -53,7 +50,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.run_DBSNP,
+        func='wgs.workflows.vcf_annotation.tasks.run_DBSNP',
         args=(
             mgd.TempInputFile('museq_annotMA.vcf'),
             mgd.TempOutputFile('museq_flagDBsnp.vcf'),
@@ -66,7 +63,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.run_1000gen,
+        func='wgs.workflows.vcf_annotation.tasks.run_1000gen',
         args=(
             mgd.TempInputFile('museq_flagDBsnp.vcf'),
             mgd.TempOutputFile('museq_flag1000gen.vcf'),
@@ -79,7 +76,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=tasks.run_cosmic,
+        func='wgs.workflows.vcf_annotation.tasks.run_cosmic',
         args=(
             mgd.TempInputFile('museq_flag1000gen.vcf'),
             mgd.TempOutputFile('museq_cosmic.vcf'),
@@ -89,7 +86,7 @@ def create_annotation_workflow(
 
     workflow.transform(
         name='low_mappability_flag',
-        func=tasks.flag_low_mappability,
+        func='wgs.workflows.vcf_annotation.tasks.flag_low_mappability',
         args=(
             mgd.TempInputFile('museq_cosmic.vcf'),
             mgd.TempOutputFile('museq_low_mapp.vcf'),
@@ -102,7 +99,7 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='8:00', ),
-        func=vcf_tasks.finalise_vcf,
+        func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
             mgd.TempInputFile('museq_low_mapp.vcf'),
             mgd.OutputFile(annotated_vcf, extensions=['.csi', '.tbi']),

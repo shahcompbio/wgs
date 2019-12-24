@@ -1,7 +1,6 @@
 import pypeliner
 import pypeliner.managed as mgd
 
-import tasks
 from wgs.utils import helpers
 
 def lumpy_preprocess_workflow(
@@ -18,7 +17,7 @@ def lumpy_preprocess_workflow(
                 walltime='48:00',
                 disk=300
             ),
-            func=tasks.run_lumpy_preprocess,
+            func='wgs.workflows.lumpy.tasks.run_lumpy_preprocess',
             args=(
                 mgd.InputFile(bamfile),
                 mgd.OutputFile(discordants_sorted_bam),
@@ -38,7 +37,7 @@ def lumpy_preprocess_workflow(
                 memory=global_config['memory']['med'],
                 walltime='24:00',
             ),
-            func=tasks.run_samtools_view,
+            func='wgs.workflows.lumpy.tasks.run_samtools_view',
             args=(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.discordants.unsorted.bam'),
@@ -52,7 +51,7 @@ def lumpy_preprocess_workflow(
                 memory=global_config['memory']['med'],
                 walltime='24:00',
             ),
-            func=tasks.run_lumpy_extract_split_reads_bwamem,
+            func='wgs.workflows.lumpy.tasks.run_lumpy_extract_split_reads_bwamem',
             args=(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
@@ -67,7 +66,7 @@ def lumpy_preprocess_workflow(
                 memory=global_config['memory']['med'],
                 walltime='24:00',
             ),
-            func=tasks.run_samtools_sort,
+            func='wgs.workflows.lumpy.tasks.run_samtools_sort',
             args=(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
                 mgd.OutputFile(discordants_sorted_bam),
@@ -81,7 +80,7 @@ def lumpy_preprocess_workflow(
                 memory=global_config['memory']['med'],
                 walltime='24:00',
             ),
-            func=tasks.run_samtools_sort,
+            func='wgs.workflows.lumpy.tasks.run_samtools_sort',
             args=(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
                 mgd.OutputFile(splitters_sorted_bam),
@@ -148,7 +147,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
             memory=global_config['memory']['med'],
             disk=500
         ),
-        func=tasks.run_lumpyexpress,
+        func='wgs.workflows.lumpy.tasks.run_lumpyexpress',
         args=(
             mgd.OutputFile(lumpy_vcf),
             sv_config,

@@ -6,7 +6,6 @@ Created on Feb 21, 2018
 import pypeliner
 import pypeliner.managed as mgd
 
-import tasks
 from wgs.utils import helpers
 
 def create_remixt_workflow(
@@ -36,7 +35,7 @@ def create_remixt_workflow(
 
         workflow.transform(
             name='write_empty_breakpoints',
-            func=tasks.write_empty_breakpoints,
+            func='wgs.workflows.remixt.tasks.write_empty_breakpoints',
             args=(
                 mgd.TempInputObj('emptybreakpoints'),
                 mgd.TempOutputFile('filtered_breakpoints.csv'),
@@ -46,7 +45,7 @@ def create_remixt_workflow(
     else:
         workflow.transform(
             name='filter_breakpoints',
-            func=tasks.filter_destruct_breakpoints,
+            func='wgs.workflows.remixt.tasks.filter_destruct_breakpoints',
             ctx=helpers.get_default_ctx(
                 memory=4,
                 walltime='2:00'),
@@ -59,7 +58,7 @@ def create_remixt_workflow(
     if single_node:
         workflow.transform(
             name='remixt',
-            func=tasks.run_remixt_local,
+            func='wgs.workflows.remixt.tasks.run_remixt_local',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
                 walltime='72:00',

@@ -1,16 +1,9 @@
 import os
 
-import biowrappers.components
-import biowrappers.components.io
-import biowrappers.components.io.bam.tasks
-import biowrappers.components.io.fastq.tasks
-import biowrappers.pipelines.realignment.tasks
 import pypeliner
 import pypeliner.managed as mgd
-import tasks
 from wgs.utils import helpers
 from wgs.workflows.alignment.dtypes import dtypes
-import biowrappers
 
 
 def collect_bam_metrics(
@@ -43,7 +36,7 @@ def collect_bam_metrics(
 
     workflow.transform(
         name="calc_picard_insert_metrics",
-        func=tasks.bam_collect_insert_metrics,
+        func='wgs.workflows.alignment.tasks.bam_collect_insert_metrics',
         args=(
             mgd.InputFile(bam),
             mgd.OutputFile(flagstat_metrics),
@@ -59,7 +52,7 @@ def collect_bam_metrics(
 
     workflow.transform(
         name="calc_picard_gc_metrics",
-        func=tasks.bam_collect_gc_metrics,
+        func='wgs.workflows.alignment.tasks.bam_collect_gc_metrics',
         args=(
             mgd.InputFile(bam),
             config["ref_genome"]['file'],
@@ -73,7 +66,7 @@ def collect_bam_metrics(
 
     workflow.transform(
         name="calc_picard_wgs_metrics",
-        func=tasks.bam_collect_wgs_metrics,
+        func='wgs.workflows.alignment.tasks.bam_collect_wgs_metrics',
         args=(
             mgd.InputFile(bam),
             config['ref_genome']['file'],
@@ -86,7 +79,7 @@ def collect_bam_metrics(
 
     workflow.transform(
         name='collect_metrics',
-        func=tasks.bam_collect_all_metrics,
+        func='wgs.workflows.alignment.tasks.bam_collect_all_metrics',
         args=(
             mgd.InputFile(flagstat_metrics),
             mgd.InputFile(picard_insert_metrics),
@@ -112,7 +105,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
 
     workflow.transform(
         name="fastqc_r1",
-        func=tasks.run_fastqc,
+        func='wgs.workflows.alignment.tasks.run_fastqc',
         args=(
             mgd.InputFile(fastq_r1),
             mgd.OutputFile(report_r1),
@@ -125,7 +118,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
 
     workflow.transform(
         name="fastqc_r2",
-        func=tasks.run_fastqc,
+        func='wgs.workflows.alignment.tasks.run_fastqc',
         args=(
             mgd.InputFile(fastq_r2),
             mgd.OutputFile(report_r2),
@@ -220,7 +213,7 @@ def align_samples(
             ncpus=1,
             disk=300
         ),
-        func=tasks.markdups,
+        func='wgs.workflows.alignment.tasks.markdups',
         axes=('sample_id',),
         args=(
             mgd.TempInputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
@@ -268,7 +261,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ncpus=config['threads'],
             disk=300
         ),
-        func=tasks.align_bwa_mem,
+        func='wgs.workflows.alignment.tasks.align_bwa_mem',
         args=(
             pypeliner.managed.InputFile(fastq_1),
             pypeliner.managed.InputFile(fastq_2),
@@ -307,7 +300,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
 
     workflow.transform(
         name='index_and_flagstat',
-        func=tasks.index_and_flagstat,
+        func='wgs.workflows.alignment.tasks.index_and_flagstat',
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='24:00',
@@ -346,7 +339,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             memory=4,
             walltime='12:00',
         ),
-        func=biowrappers.components.io.fastq.tasks.split_fastq,
+        func='biowrappers.components.io.fastq.tasks.split_fastq',
         args=(
             pypeliner.managed.InputFile(fastq_1),
             pypeliner.managed.TempOutputFile('read_1', 'split'),
@@ -360,7 +353,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             memory=4,
             walltime='12:00',
         ),
-        func=biowrappers.components.io.fastq.tasks.split_fastq,
+        func='biowrappers.components.io.fastq.tasks.split_fastq',
         args=(
             pypeliner.managed.InputFile(fastq_2),
             pypeliner.managed.TempOutputFile('read_2', 'split', axes_origin=[]),
@@ -376,7 +369,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             walltime='8:00',
             ncpus=config['threads'],
         ),
-        func=tasks.align_bwa_mem,
+        func='wgs.workflows.alignment.tasks.align_bwa_mem',
         args=(
             pypeliner.managed.TempInputFile('read_1', 'split'),
             pypeliner.managed.TempInputFile('read_2', 'split'),

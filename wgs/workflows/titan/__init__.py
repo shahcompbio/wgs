@@ -2,7 +2,6 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
-import tasks
 from wgs.utils import helpers
 
 
@@ -40,7 +39,7 @@ def create_titan_workflow(
 
     workflow.transform(
         name='generate_intervals',
-        func=tasks.generate_intervals,
+        func='wgs.workflows.titan.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
             walltime='2:00', ),

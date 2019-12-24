@@ -5,8 +5,6 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-
-import tasks
 from wgs.utils import helpers
 
 
@@ -26,7 +24,7 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.parse_lumpy_task,
+        func='wgs.workflows.breakpoint_calling_consensus.tasks.parse_lumpy_task',
         args=(
             mgd.InputFile(lumpy_vcf),
             mgd.TempOutputFile('lumpy.csv'),
@@ -40,7 +38,7 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.parse_destruct_task,
+        func='wgs.workflows.breakpoint_calling_consensus.tasks.parse_destruct_task',
         args=(
             mgd.InputFile(destruct_breakpoints),
             mgd.TempOutputFile('destruct.csv'),
@@ -54,7 +52,7 @@ def create_consensus_workflow(
             memory=global_config['memory']['high'],
             walltime='8:00',
         ),
-        func=tasks.consensus_calls,
+        func='wgs.workflows.breakpoint_calling_consensus.tasks.consensus_calls',
         args=(
             mgd.TempInputFile('destruct.csv'),
             mgd.TempInputFile('lumpy.csv'),

@@ -19,6 +19,45 @@ from wgs.utils import vcfutils
 
 import vcf_tasks
 
+
+
+def get_chromosomes(bam_file, chromosomes=None):
+    chromosomes = _get_chromosomes(bam_file, chromosomes)
+
+    return dict(zip(chromosomes, chromosomes))
+
+
+def _get_chromosomes(bam_file, chromosomes=None):
+    bam = pysam.Samfile(bam_file, 'rb')
+
+    if chromosomes is None:
+        chromosomes = bam.references
+
+    else:
+        chromosomes = chromosomes
+
+    return [str(x) for x in chromosomes]
+
+
+def get_coords(bam_file, chrom, split_size):
+    coords = {}
+
+    bam = pysam.Samfile(bam_file, 'rb')
+
+    chrom_lengths = dict(zip(bam.references, bam.lengths))
+
+    length = chrom_lengths[chrom]
+
+    lside_interval = range(1, length + 1, split_size)
+
+    rside_interval = range(split_size, length + split_size, split_size)
+
+    for coord_index, (beg, end) in enumerate(zip(lside_interval, rside_interval)):
+        coords[coord_index] = (beg, end)
+
+    return coords
+
+
 FILTER_ID_BASE = 'BCNoise'
 FILTER_ID_DEPTH = 'DP'
 FILTER_ID_INDEL_HPOL = 'iHpol'
