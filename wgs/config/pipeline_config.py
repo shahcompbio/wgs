@@ -33,7 +33,6 @@ def containers():
         'remixt': 'wgspipeline/remixt:v{}'.format(version),
         'destruct': 'wgspipeline/destruct:v{}'.format(version),
         'lumpy': 'wgspipeline/lumpy:v0.0.1',
-        'museqportrait': 'wgspipeline/museqportrait:v0.0.1',
         'vizutils': 'wgspipeline/vizutils:v0.0.1',
         'fastqc': 'wgspipeline/fastqc:v0.0.1',
     }

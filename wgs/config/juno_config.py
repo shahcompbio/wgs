@@ -70,7 +70,6 @@ def juno_config(reference, containers):
             'strelka': docker_containers['strelka'],
             'vcftools': docker_containers['vcftools'],
             'mutationseq': docker_containers['mutationseq'],
-            'museqportrait': docker_containers['museqportrait'],
             'vizutils': docker_containers['vizutils'],
         }
     }

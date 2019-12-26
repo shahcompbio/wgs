@@ -132,7 +132,7 @@ def create_museq_workflow(
             single,
             varcall_config['plot_params'],
         ),
-        kwargs={'docker_image': varcall_config['docker']['museqportrait']}
+        kwargs={'docker_image': varcall_config['docker']['mutationseq']}
     )
 
     return workflow
