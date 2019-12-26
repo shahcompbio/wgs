@@ -158,6 +158,7 @@ def create_strelka_workflow(
                 mgd.TempOutputFile('somatic.indels.filtered.vcf.gz'),
                 mgd.TempSpace('merge_indels_tempdir')
             ),
+            kwargs={'docker_image': docker_config['vcftools']}
         )
 
         workflow.transform(
@@ -171,6 +172,7 @@ def create_strelka_workflow(
                 mgd.TempOutputFile('somatic.snvs.filtered.vcf.gz'),
                 mgd.TempSpace('merge_snvs_tempdir')
             ),
+            kwargs={'docker_image': docker_config['vcftools']}
         )
 
     workflow.transform(
@@ -183,6 +185,7 @@ def create_strelka_workflow(
             mgd.TempInputFile('somatic.indels.filtered.vcf.gz'),
             mgd.TempOutputFile('somatic.indels.passed.vcf'),
         ),
+
     )
 
     workflow.transform(
