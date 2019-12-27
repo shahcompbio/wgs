@@ -16,7 +16,7 @@ def create_destruct_wgs_workflow(
 ):
     destruct_config = {}
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': sv_config['docker']['destruct']})
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': sv_config['docker']['wgs']})
 
     if single_node:
         workflow.transform(

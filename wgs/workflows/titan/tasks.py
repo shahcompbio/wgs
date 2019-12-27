@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
-from scripts import PygeneAnnotation
 from scripts import ReadCounter
 from scripts import TransformVcfCounts
 from scripts import parse_titan
@@ -15,6 +14,7 @@ from wgs.utils import helpers
 from wgs.utils import pdfutils
 from wgs.utils import vcfutils
 from wgs.utils import csvutils
+from scripts import PygeneAnnotation
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
