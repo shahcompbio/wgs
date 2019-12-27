@@ -181,7 +181,6 @@ def azure_config(reference, containers):
             'vizutils': docker_containers['vizutils'],
             'mutationseq': docker_containers['mutationseq'],
             'vcftools': docker_containers['vcftools'],
-            'remixt': docker_containers['remixt']
         }
     }
 
