@@ -145,6 +145,7 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
             'bwa', 'mem', '-M',
             '-t', numthreads,
             reference, fastq1, fastq2,
+            '|', 'samtools', 'view', '-bSh', '-',
             '>', output,
             **kwargs)
     else:
@@ -154,6 +155,7 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
                 'bwa', 'mem', '-M', '-R', readgroup_literal,
                 '-t', numthreads,
                 reference, fastq1, fastq2,
+                '|', 'samtools', 'view', '-bSh', '-',
                 '>', output,
                 **kwargs)
         except pypeliner.commandline.CommandLineException:
@@ -161,6 +163,7 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
                 'bwa', 'mem', '-M', '-R', readgroup,
                 '-t', numthreads,
                 reference, fastq1, fastq2,
+                '|', 'samtools', 'view', '-bSh', '-',
                 '>', output,
                 **kwargs)
 
@@ -196,24 +199,16 @@ def samtools_sam_to_bam(samfile, bamfile,
 
 
 def align_bwa_mem(
-        read_1, read_2, ref_genome, aligned_bam, threads, tempdir,
+        read_1, read_2, ref_genome, aligned_bam, threads,
         sample_id=None, lane_id=None, read_group_info=None,
         docker_config=None
 ):
     readgroup = get_readgroup(read_group_info, sample_id, lane_id)
 
-    helpers.makedirs(tempdir)
-
-    bwa_mem_output = os.path.join(tempdir, "bwa_mem.sam")
     bwa_mem_paired_end(
-        read_1, read_2, bwa_mem_output, ref_genome,
+        read_1, read_2, aligned_bam, ref_genome,
         readgroup, threads, docker_image=docker_config['bwa']
     )
-
-    samtools_sam_to_bam(
-        bwa_mem_output, aligned_bam, docker_image=docker_config['samtools']
-    )
-
 
 def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_image=None):
     pypeliner.commandline.execute(

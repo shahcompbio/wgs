@@ -268,7 +268,6 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam'),
             config['threads'],
-            mgd.TempSpace("temp_align")
         ),
         kwargs={
             'sample_id': ids[0],
@@ -376,7 +375,6 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam', 'split'),
             config['threads'],
-            mgd.TempSpace("temp_align_split", 'split')
         ),
         kwargs={
             'sample_id': ids[0],
