@@ -20,7 +20,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            start = str(int(i * size))
+            start = str(int(i * size)+1)
             end = str(int((i + 1) * size))
             intervals.append(name + "_" + start + "_" + end)
 
