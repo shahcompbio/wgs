@@ -3,7 +3,6 @@ def azure_config(reference, containers):
 
     if reference == 'grch37':
         reference = "/refdata/human/GRCh37-lite.fa"
-        reference = "/refdata/cna/Homo_sapiens.GRCh37.70.dna.chromosomes.fa"
     else:
         reference = None
 
