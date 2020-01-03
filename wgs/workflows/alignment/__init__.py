@@ -99,7 +99,12 @@ def collect_bam_metrics(
 
 def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
     report_r1 = os.path.join(outdir, 'R1_fastqc_report')
+    r1_html = os.path.join(report_r1, 'R1_fastqc.html')
+    r1_plot = os.path.join(report_r1, 'R1_fastqc.pdf')
+
     report_r2 = os.path.join(outdir, 'R2_fastqc_report')
+    r2_html = os.path.join(report_r2, 'R2_fastqc.html')
+    r2_plot = os.path.join(report_r2, 'R2_fastqc.pdf')
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -108,7 +113,8 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
         func='wgs.workflows.alignment.tasks.run_fastqc',
         args=(
             mgd.InputFile(fastq_r1),
-            mgd.OutputFile(report_r1),
+            mgd.OutputFile(r1_html),
+            mgd.OutputFile(r1_plot),
             mgd.TempSpace('fastqc_R1'),
         ),
         kwargs={
@@ -121,7 +127,8 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
         func='wgs.workflows.alignment.tasks.run_fastqc',
         args=(
             mgd.InputFile(fastq_r2),
-            mgd.OutputFile(report_r2),
+            mgd.OutputFile(r2_html),
+            mgd.OutputFile(r2_plot),
             mgd.TempSpace('fastqc_R2'),
         ),
         kwargs={
