@@ -11,7 +11,7 @@ class VcfParser(object):
         '''
         constructor for parser
         note, if filter_low_mappability is true,
-        will look for a "blacklist" in the parser config
+        will look for a "fxblacklist" in the parser config
         '''
         self.vcf_file = vcf_file
         self.outfile = outfile
@@ -21,7 +21,7 @@ class VcfParser(object):
 
         self.reader = self.get_reader(self.vcf_file)
 
-        self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
+        #self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
         self.cols = None
 
         self.filters = filters
@@ -56,10 +56,13 @@ class VcfParser(object):
 
     def get_cols_from_header(self, reader, key):
         info = reader.infos[key]
-
+        
         desc = info.desc
-
-        desc = desc.split("'")[1]
+        
+        desc = desc.split("'")
+        if len(desc) == 1:
+            desc = desc[0].split("(")[1]
+        else: desc = desc[1]
 
         desc = desc.split('|')
 
@@ -84,7 +87,6 @@ class VcfParser(object):
     def parse_mutation_assessor(self, cols, record, chrom, pos):
         if not record:
             return
-
         record = record.strip().split('|')
 
         record = dict(zip(cols, record))
@@ -189,25 +191,32 @@ class VcfParser(object):
                     if self.eval_expr(record[filter_name], relationship, value):
                         return True
 
+
+    def parse_record(self, record):
+        data = self.parse_main_cols(record)
+        info = record.INFO
+
+        snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
+       # ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+
+        id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
+        id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
+        ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
+        id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
+        id_annotations += self.parse_flag_annotation(info.get('LOW_MAPPABILITY'), record.CHROM, record.POS,
+                                                        'LOW_MAPPABILITY')  
+        return data, snpeff_annotations, id_annotations#ma_annotations, id_annotations
+
     def parse_vcf(self):
         for record in self.reader:
-            data = self.parse_main_cols(record)
-            info = record.INFO
 
-            snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
-            ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
-
-            id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
-            id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
-            ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
-            id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
-            id_annotations += self.parse_flag_annotation(info.get('LOW_MAPPABILITY'), record.CHROM, record.POS,
-                                                         'LOW_MAPPABILITY')
-
+            data, snpeff_annotations, ma_annotations, id_annotations = parse_record(record)
+            
             if self.filter_records(data, id_annotations):
                 continue
 
-            yield data, (snpeff_annotations, ma_annotations, id_annotations)
+            #yield data, (snpeff_annotations, ma_annotations, id_annotations)
+            yield data, (snpeff_annotations, id_annotations)
 
     def write_record(self, record, header, outfile):
         '''
@@ -221,7 +230,6 @@ class VcfParser(object):
         outfile.write(outstr)
 
     def write_header(self, header, outfile):
-        print(header, outfile)
 
         outstr = ','.join(map(str, header)) + '\n'
         outfile.write(outstr)
