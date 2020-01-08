@@ -7,7 +7,7 @@ from wgs.workflows.alignment.dtypes import dtypes
 
 
 def collect_bam_metrics(
-        config, bam, markdups_metrics, outdir, metrics, sample_id
+        config, config_globals, bam, markdups_metrics, outdir, metrics, sample_id
 ):
     '''
     calculates bam metrics in bams
@@ -36,6 +36,11 @@ def collect_bam_metrics(
 
     workflow.transform(
         name="calc_picard_insert_metrics",
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='72:00',
+            disk=400
+        ),
         func='wgs.workflows.alignment.tasks.bam_collect_insert_metrics',
         args=(
             mgd.InputFile(bam),
@@ -53,6 +58,11 @@ def collect_bam_metrics(
     workflow.transform(
         name="calc_picard_gc_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_gc_metrics',
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='72:00',
+            disk=400
+        ),
         args=(
             mgd.InputFile(bam),
             config["ref_genome"]['file'],
@@ -67,6 +77,11 @@ def collect_bam_metrics(
     workflow.transform(
         name="calc_picard_wgs_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_wgs_metrics',
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='72:00',
+            disk=400
+        ),
         args=(
             mgd.InputFile(bam),
             config['ref_genome']['file'],
@@ -80,6 +95,11 @@ def collect_bam_metrics(
     workflow.transform(
         name='collect_metrics',
         func='wgs.workflows.alignment.tasks.bam_collect_all_metrics',
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='4:00',
+            disk=400
+        ),
         args=(
             mgd.InputFile(flagstat_metrics),
             mgd.InputFile(picard_insert_metrics),
@@ -97,7 +117,7 @@ def collect_bam_metrics(
     return workflow
 
 
-def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
+def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
     report_r1 = os.path.join(outdir, 'R1_fastqc_report')
     r1_html = os.path.join(report_r1, 'R1_fastqc.html')
     r1_plot = os.path.join(report_r1, 'R1_fastqc.pdf')
@@ -110,6 +130,11 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
 
     workflow.transform(
         name="fastqc_r1",
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='48:00',
+            disk=400
+        ),
         func='wgs.workflows.alignment.tasks.run_fastqc',
         args=(
             mgd.InputFile(fastq_r1),
@@ -125,6 +150,11 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config):
     workflow.transform(
         name="fastqc_r2",
         func='wgs.workflows.alignment.tasks.run_fastqc',
+        ctx=helpers.get_default_ctx(
+            memory=config_globals['memory']['med'],
+            walltime='48:00',
+            disk=400
+        ),
         args=(
             mgd.InputFile(fastq_r2),
             mgd.OutputFile(r2_html),
@@ -170,7 +200,8 @@ def align_samples(
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.Template('fastqc', 'sample_id', 'lane_id', template=lane_metrics_template),
-            config
+            config,
+            config_globals
         )
     )
 
@@ -240,6 +271,7 @@ def align_samples(
         axes=('sample_id',),
         args=(
             config,
+            config_globals,
             mgd.InputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
             mgd.InputFile('markdups_metrics', 'sample_id', template=markdups_outputs),
             mgd.Template('metrics_outdir', 'sample_id', template=metrics_outdir),
@@ -264,7 +296,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='align_bwa_mem',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00',
+            walltime='48:00',
             ncpus=config['threads'],
             disk=300
         ),
@@ -288,7 +320,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='sort',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00',
+            walltime='48:00',
             ncpus=config['threads'],
             disk=300
         ),
@@ -300,7 +332,6 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         kwargs={
             'docker_image': config['docker']['samtools'],
             'threads': config['threads'],
-            # 'mem': '8G',
         }
     )
 
@@ -343,7 +374,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='split_fastq_1',
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='12:00',
+            walltime='24:00',
         ),
         func='biowrappers.components.io.fastq.tasks.split_fastq',
         args=(
@@ -357,7 +388,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='split_fastq_2',
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='12:00',
+            walltime='24:00',
         ),
         func='biowrappers.components.io.fastq.tasks.split_fastq',
         args=(
@@ -372,7 +403,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         axes=('split',),
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00',
+            walltime='16:00',
             ncpus=config['threads'],
         ),
         func='wgs.workflows.alignment.tasks.align_bwa_mem',
@@ -396,7 +427,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         axes=('split',),
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='8:00',
+            walltime='16:00',
         ),
         func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
@@ -412,7 +443,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='merge',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='24:00',
+            walltime='72:00',
         ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         args=(
@@ -429,7 +460,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='index',
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='8:00',
+            walltime='16:00',
             docker_image=config['docker']['samtools']
         ),
         args=(
@@ -444,7 +475,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
         name='flagstat',
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='8:00',
+            walltime='16:00',
             docker_image=config['docker']['samtools']
         ),
         args=(

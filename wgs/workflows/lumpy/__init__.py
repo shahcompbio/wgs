@@ -14,7 +14,7 @@ def lumpy_preprocess_workflow(
             name='run_lumpy_preprocess',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='48:00',
+                walltime='96:00',
                 disk=300
             ),
             func='wgs.workflows.lumpy.tasks.run_lumpy_preprocess',
@@ -145,7 +145,8 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
         name=lumpy_job_name,
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            disk=500
+            disk=500,
+            walltime='72:00'
         ),
         func='wgs.workflows.lumpy.tasks.run_lumpyexpress',
         args=(

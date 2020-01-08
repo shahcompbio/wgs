@@ -22,7 +22,7 @@ def create_destruct_wgs_workflow(
         workflow.transform(
             name='destruct_local',
             ctx=helpers.get_default_ctx(
-                walltime='72:00',
+                walltime='120:00',
                 disk=800
             ),
             func='wgs.workflows.destruct_wgs.tasks.run_destruct_local',
@@ -44,6 +44,7 @@ def create_destruct_wgs_workflow(
             name='destruct_parallel',
             ctx=helpers.get_default_ctx(
                 docker_image=sv_config['docker']['destruct'],
+                walltime="48:00",
             ),
             # refers to seperate destruct package
             func='destruct.workflow.create_destruct_workflow',
@@ -60,7 +61,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='filter_annotate_breakpoints',
-        ctx=helpers.get_default_ctx(memory=4),
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='8:00'
+        ),
         func='wgs.workflows.destruct_wgs.filter_annotate.filter_annotate_breakpoints',
         args=(
             mgd.TempInputFile("raw_breakpoints"),
@@ -73,7 +77,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='mappability_annotate_breakpoints',
-        ctx=helpers.get_default_ctx(memory=4),
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func='wgs.workflows.destruct_wgs.flag_mappability.main',
         args=(
             mgd.TempInputFile("filter_annotate_breakpoints_output"),
@@ -84,7 +91,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='prep_raw_breakpoints',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.prep_csv_files",
         args=(
             mgd.TempInputFile("raw_breakpoints"),
@@ -94,7 +104,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='finalize_raw_breakpoints',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
             mgd.TempInputFile("raw_breakpoints.csv.gz", extensions=['.yaml']),
@@ -104,7 +117,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='prep_raw_library',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.prep_csv_files",
         args=(
             mgd.TempInputFile("raw_library"),
@@ -114,7 +130,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='finalize_raw_library',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
             mgd.TempInputFile("raw_library.csv.gz", extensions=['.yaml']),
@@ -124,7 +143,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='prep_reads',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.prep_csv_files",
         args=(
             mgd.TempInputFile("reads"),
@@ -134,7 +156,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='finalize_reads',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
             mgd.TempInputFile("reads.csv.gz", extensions=['.yaml']),
@@ -144,7 +169,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='prep_breakpoints',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.prep_csv_files",
         args=(
             mgd.TempInputFile("breakpoints"),
@@ -154,7 +182,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='finalize_breakpoints',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
             mgd.TempInputFile("breakpoints.csv.gz", extensions=['.yaml']),
@@ -164,7 +195,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='prep_library',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.prep_csv_files",
         args=(
             mgd.TempInputFile("library"),
@@ -174,7 +208,10 @@ def create_destruct_wgs_workflow(
 
     workflow.transform(
         name='finalize_library',
-        ctx={'mem': 8, 'ncpus': 1},
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
             mgd.TempInputFile("library.csv.gz", extensions=['.yaml']),

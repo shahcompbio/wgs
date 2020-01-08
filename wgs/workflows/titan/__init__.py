@@ -56,7 +56,7 @@ def create_titan_workflow(
             name='run_museq',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='48:00',
+                walltime='96:00',
                 ncpus=global_config['threads']),
             func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
@@ -79,7 +79,7 @@ def create_titan_workflow(
             name='run_museq',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='8:00'),
+                walltime='24:00'),
             axes=('interval',),
             func='wgs.utils.museq_utils.run_museq',
             args=(
@@ -101,7 +101,7 @@ def create_titan_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='2:00', ),
+                walltime='4:00', ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
                 mgd.TempInputFile('museq.vcf', 'interval'),
@@ -115,7 +115,7 @@ def create_titan_workflow(
         name='convert_museq_vcf2counts',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='4:00', ),
         func='wgs.workflows.titan.tasks.convert_museq_vcf2counts',
         args=(
             mgd.InputFile(museq_vcf),
@@ -128,7 +128,7 @@ def create_titan_workflow(
         name='run_readcounter_tumour',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00',
+            walltime='16:00',
             disk=200
         ),
         func='wgs.workflows.titan.tasks.run_readcounter',
@@ -143,7 +143,7 @@ def create_titan_workflow(
         name='run_readcounter_normal',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00',
+            walltime='16:00',
             disk=200
         ),
         func='wgs.workflows.titan.tasks.run_readcounter',
@@ -158,7 +158,7 @@ def create_titan_workflow(
         name='calc_correctreads_wig',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_correctreads_wig',
         args=(
             mgd.TempInputFile('tumour.wig'),
@@ -175,7 +175,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
-            walltime='24:00',
+            walltime='72:00',
             ncpus=config['ncpus']),
         func='wgs.workflows.titan.tasks.run_titan',
         args=(
@@ -197,7 +197,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='8:00', ),
+            walltime='16:00', ),
         func='wgs.workflows.titan.tasks.plot_titan',
         args=(
             mgd.TempInputFile('titan.Rdata', 'numclusters', 'ploidy'),

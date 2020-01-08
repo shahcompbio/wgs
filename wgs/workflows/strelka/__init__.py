@@ -26,7 +26,7 @@ def create_strelka_workflow(
         func='wgs.workflows.strelka.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='2:00'),
+            walltime='4:00'),
         ret=mgd.OutputChunks('interval'),
         args=(
             varcall_config['reference'],
@@ -42,8 +42,10 @@ def create_strelka_workflow(
 
     workflow.transform(
         name='count_fasta_bases',
-        ctx={'mem': global_config['memory']['low'],
-             'ncpus': 1, 'walltime': '01:00'},
+        ctx={
+            'mem': global_config['memory']['low'],
+            'walltime': '4:00'
+        },
         func='wgs.workflows.strelka.tasks.count_fasta_bases',
         args=(
             ref_genome_fasta_file,
@@ -56,7 +58,7 @@ def create_strelka_workflow(
         name='get_chrom_sizes',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['low'],
-            walltime='2:00'),
+            walltime='4:00'),
         func='wgs.workflows.strelka.tasks.get_known_chromosome_sizes',
         ret=mgd.TempOutputObj('known_sizes'),
         args=(
@@ -69,7 +71,7 @@ def create_strelka_workflow(
             name='call_somatic_variants',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='48:00',
+                walltime='96:00',
                 ncpus=global_config['threads']),
             func='wgs.workflows.strelka.tasks.call_somatic_variants_one_job',
             args=(
@@ -93,7 +95,7 @@ def create_strelka_workflow(
             name='call_somatic_variants',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='8:00', ),
+                walltime='16:00', ),
             axes=('interval',),
             func='wgs.workflows.strelka.tasks.call_somatic_variants',
             args=(
@@ -115,7 +117,7 @@ def create_strelka_workflow(
             axes=('chrom',),
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='2:00', ),
+                walltime='8:00', ),
             func='wgs.workflows.strelka.tasks.filter_indel_file_list',
             args=(
                 mgd.TempInputFile('somatic.indels.unfiltered.vcf', 'interval', axes_origin=[]),
@@ -134,7 +136,7 @@ def create_strelka_workflow(
             axes=('chrom',),
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='2:00', ),
+                walltime='8:00', ),
             func='wgs.workflows.strelka.tasks.filter_snv_file_list',
             args=(
                 mgd.TempInputFile('somatic.snvs.unfiltered.vcf', 'interval', axes_origin=[]),
@@ -151,7 +153,7 @@ def create_strelka_workflow(
             name='merge_indels',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='2:00', ),
+                walltime='8:00', ),
             func='wgs.workflows.strelka.vcf_tasks.concatenate_vcf',
             args=(
                 mgd.TempInputFile('somatic.indels.filtered.vcf', 'chrom'),
@@ -165,7 +167,7 @@ def create_strelka_workflow(
             name='merge_snvs',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['med'],
-                walltime='2:00', ),
+                walltime='8:00', ),
             func='wgs.workflows.strelka.vcf_tasks.concatenate_vcf',
             args=(
                 mgd.TempInputFile('somatic.snvs.filtered.vcf', 'chrom'),
@@ -179,7 +181,7 @@ def create_strelka_workflow(
         name='filter_indels',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='8:00', ),
         func='wgs.workflows.strelka.vcf_tasks.filter_vcf',
         args=(
             mgd.TempInputFile('somatic.indels.filtered.vcf.gz'),
@@ -192,7 +194,7 @@ def create_strelka_workflow(
         name='filter_snvs',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='8:00', ),
         func='wgs.workflows.strelka.vcf_tasks.filter_vcf',
         args=(
             mgd.TempInputFile('somatic.snvs.filtered.vcf.gz'),
@@ -204,7 +206,7 @@ def create_strelka_workflow(
         name='finalise_indels',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='8:00', ),
         func='wgs.workflows.strelka.vcf_tasks.finalise_vcf',
         args=(
             mgd.TempInputFile('somatic.indels.passed.vcf'),
@@ -217,7 +219,7 @@ def create_strelka_workflow(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['med'],
-            walltime='2:00', ),
+            walltime='8:00', ),
         func='wgs.workflows.strelka.vcf_tasks.finalise_vcf',
         args=(
             mgd.TempInputFile('somatic.snvs.passed.vcf'),

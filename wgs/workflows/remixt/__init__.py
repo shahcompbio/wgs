@@ -48,7 +48,7 @@ def create_remixt_workflow(
             func='wgs.workflows.remixt.tasks.filter_destruct_breakpoints',
             ctx=helpers.get_default_ctx(
                 memory=4,
-                walltime='2:00'),
+                walltime='4:00'),
             args=(
                 mgd.InputFile(breakpoints),
                 mgd.TempOutputFile('filtered_breakpoints.csv'),
@@ -61,7 +61,7 @@ def create_remixt_workflow(
             func='wgs.workflows.remixt.tasks.run_remixt_local',
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='72:00',
+                walltime='120:00',
                 ncpus=global_config['threads']),
             args=(
                 mgd.TempSpace("remixt_temp"),
@@ -79,7 +79,8 @@ def create_remixt_workflow(
         workflow.subworkflow(
             name='remixt',
             func="remixt.workflow.create_remixt_bam_workflow",
-            ctx={'docker_image': config['docker']['remixt']},
+            ctx={'docker_image': config['docker']['remixt'],
+                 'walltime': '48:00'},
             args=(
                 mgd.TempInputFile('filtered_breakpoints.csv'),
                 {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),

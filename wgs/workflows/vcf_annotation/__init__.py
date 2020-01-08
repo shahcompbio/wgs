@@ -87,6 +87,9 @@ def create_annotation_workflow(
     workflow.transform(
         name='low_mappability_flag',
         func='wgs.workflows.vcf_annotation.tasks.flag_low_mappability',
+        ctx=helpers.get_default_ctx(
+            memory=global_config['memory']['high'],
+            walltime='8:00', ),
         args=(
             mgd.TempInputFile('museq_cosmic.vcf'),
             mgd.TempOutputFile('museq_low_mapp.vcf'),

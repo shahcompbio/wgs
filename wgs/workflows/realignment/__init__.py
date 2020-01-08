@@ -10,7 +10,7 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
     workflow.transform(
         name='bam_to_fastq',
         ctx=helpers.get_default_ctx(
-            walltime='24:00',
+            walltime='72:00',
             disk=500
         ),
         func="wgs.workflows.realignment.tasks.split_by_rg",
@@ -39,6 +39,8 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
     workflow.transform(
         name='merge_tumour_lanes',
         ctx=helpers.get_default_ctx(
+            walltime='96:00',
+            disk=500
         ),
         func="wgs.workflows.alignment.tasks.merge_bams",
         args=(

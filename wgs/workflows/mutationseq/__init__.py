@@ -47,7 +47,7 @@ def create_museq_workflow(
             name=name,
             ctx=helpers.get_default_ctx(
                 memory=global_config['memory']['high'],
-                walltime='24:00',
+                walltime='48:00',
                 ncpus=global_config['threads'],
                 disk=600
         ),
@@ -107,7 +107,7 @@ def create_museq_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
-            walltime='1:00',
+            walltime='8:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
