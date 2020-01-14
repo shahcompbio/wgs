@@ -49,4 +49,4 @@ class PygeneAnnotation(object):
                     gene_name = self.gene_models.get_gene(gene_id).name
 
                     pygenes_addition += "%s,%s;" % (gene_id, gene_name)
-                    writer.write("%s\t%s\n" % (row, pygenes_addition))
+                writer.write("%s\t%s\n" % (row, pygenes_addition))
