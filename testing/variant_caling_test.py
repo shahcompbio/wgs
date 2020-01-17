@@ -102,11 +102,10 @@ def main(variants1, variants2):
     
     v1 = open(variants1)
     v2 = open(variants2)
-    print ('Parsing data')
+
     pos_set1 = get_chroms_and_pos(v1, filt, v1_reader)
     pos_set2 = get_chroms_and_pos(v2, filt, v2_reader)
-    print (pos_set1)
-    print ('Checking call positions')
+
 
     if "Y" in pos_set1.keys():
         del pos_set1["Y"]
