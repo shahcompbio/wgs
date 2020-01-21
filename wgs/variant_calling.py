@@ -251,16 +251,16 @@ def variant_calling_workflow(args):
     samples = tumours.keys()
 
     var_dir = os.path.join(args['out_dir'], 'variants')
-    museq_vcf = os.path.join(var_dir, '{sample_id}', 'museq_paired_annotated.vcf.gz')
-    museq_ss_vcf = os.path.join(var_dir, '{sample_id}', 'museq_single_annotated.vcf.gz')
-    strelka_snv_vcf = os.path.join(var_dir, '{sample_id}', 'strelka_snv_annotated.vcf.gz')
-    strelka_indel_vcf = os.path.join(var_dir, '{sample_id}', 'strelka_indel_annotated.vcf.gz')
-    museq_paired_pdf = os.path.join(var_dir, '{sample_id}', 'paired_museqportrait.pdf')
-    museq_single_pdf = os.path.join(var_dir, '{sample_id}', 'single_museqportrait.pdf')
+    museq_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.vcf.gz')
+    museq_ss_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_single_annotated.vcf.gz')
+    strelka_snv_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_strelka_snv_annotated.vcf.gz')
+    strelka_indel_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_strelka_indel_annotated.vcf.gz')
+    museq_paired_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_paired_museqportrait.pdf')
+    museq_single_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_single_museqportrait.pdf')
 
-    somatic_csv = os.path.join(var_dir, '{sample_id}', 'somatic.csv')
-    indel_csv = os.path.join(var_dir, '{sample_id}', 'indel.csv')
-    germline_csv = os.path.join(var_dir, '{sample_id}', 'germline.csv')
+    somatic_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_somatic.csv.gz')
+    indel_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel.csv.gz')
+    germline_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline.csv.gz')
 
     pyp = pypeliner.app.Pypeline(config=args)
 
