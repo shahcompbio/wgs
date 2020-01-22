@@ -121,6 +121,8 @@ class VcfParser(object):
             'qual': record.QUAL,
         }
 
+        data['alt'] = ';'.join(map(str, data['alt']))
+
         info = record.INFO
 
         for k, v in info.items():
