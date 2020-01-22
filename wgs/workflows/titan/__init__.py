@@ -22,7 +22,7 @@ def create_titan_workflow(
     optimal_parsed = os.path.join(titan_raw_dir, '{}_titan_parsed.csv.gz'.format(sample_id))
     optimal_plots = os.path.join(titan_raw_dir, '{}_titan_plots.pdf'.format(sample_id))
 
-    tar_outputs = os.path.join(titan_raw_dir, 'data_all_parameters.tar.gz')
+    tar_outputs = os.path.join(titan_raw_dir, '{}_data_all_parameters.tar.gz'.format(sample_id))
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
