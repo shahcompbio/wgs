@@ -59,19 +59,24 @@ def create_destruct_wgs_workflow(
             )
         )
 
-    workflow.transform(
+    workflow.commandline(
         name='filter_annotate_breakpoints',
         ctx=helpers.get_default_ctx(
             docker_image=sv_config['docker']['destruct'],
             memory=4,
             walltime='8:00'
         ),
-        func='wgs.workflows.destruct_wgs.filter_annotate.filter_annotate_breakpoints',
         args=(
+            'filter_annotate_breakpoints.py',
+            '--breakpoints',
             mgd.TempInputFile("raw_breakpoints"),
+            '--library',
             mgd.TempInputFile("raw_library"),
-            [sample_id + 'N'],
+            '--control_ids',
+            sample_id + 'N',
+            '--out_breakpoints',
             mgd.TempOutputFile("filter_annotate_breakpoints_output"),
+            '--out_library',
             mgd.TempOutputFile("library"),
         )
     )

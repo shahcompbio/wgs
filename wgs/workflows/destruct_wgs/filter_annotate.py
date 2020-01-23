@@ -48,7 +48,8 @@ def filter_annotate_breakpoints(
         control_ids,
         output_breakpoint_filename,
         output_breakpoint_library_filename,
-        patient_libraries=None):
+        patient_libraries=None
+):
     """ Filter and annotate breakpoints.
 
     Args:
