@@ -316,7 +316,6 @@ def run_cmd(cmd, output=None):
 
 
 def load_yaml(path):
-    print path
     try:
         with open(path) as infile:
             data = yaml.safe_load(infile)

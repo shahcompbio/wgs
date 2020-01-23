@@ -62,6 +62,7 @@ def create_destruct_wgs_workflow(
     workflow.transform(
         name='filter_annotate_breakpoints',
         ctx=helpers.get_default_ctx(
+            docker_image=sv_config['docker']['destruct'],
             memory=4,
             walltime='8:00'
         ),
