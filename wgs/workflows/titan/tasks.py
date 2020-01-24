@@ -267,6 +267,10 @@ def select_optimal_solution(
     csvutils.finalize_csv(parsed_files[best_model], optimal_parsed)
     shutil.copyfile(plots[best_model], optimal_plot)
 
+    with helpers.GetFileHandle(optimal_param, 'at') as params_output:
+        ploidy, num_clusters = best_model
+        params_output.write('ploidy: {}\n'.format(ploidy))
+        params_output.write('num_clusters: {}\n'.format(num_clusters))
 
 def tar_all_data(params, segs, igv_segs, markers, parsed, plots, tar_output, tempdir, chunks):
     helpers.makedirs(tempdir)
