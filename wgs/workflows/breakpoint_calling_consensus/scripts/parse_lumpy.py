@@ -27,15 +27,14 @@ def parse_vcf(vcf_file):
                 v = ';'.join(map(str, v))
             data[k] = v
 
-        assert len(record.samples) == 1
-
-        sample = record.samples[0]
-        sample_data = sample.data
-
-        for k, v in sample_data._asdict().items():
-            if isinstance(v, list):
-                v = ';'.join([str(val) for val in v])
-            data[k] = v
+        for sample in record.samples:
+            sample_name = sample.sample
+            sample_data = sample.data
+            for k, v in sample_data._asdict().items():
+                if isinstance(v, list):
+                    v = ';'.join([str(val) for val in v])
+                k = '{}_{}'.format(sample_name, k)
+                data[k] = v
 
         yield data
 
