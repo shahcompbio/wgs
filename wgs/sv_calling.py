@@ -23,13 +23,13 @@ def sv_calling_workflow(args):
     samples = tumours.keys()
 
     sv_outdir = os.path.join(args['out_dir'], 'breakpoints', '{sample_id}')
-    destruct_breakpoints = os.path.join(sv_outdir, 'destruct_breakpoints.csv')
-    destruct_library = os.path.join(sv_outdir, 'destruct_library.csv')
-    destruct_raw_breakpoints = os.path.join(sv_outdir, 'destruct_raw_breakpoints.csv')
-    destruct_raw_library = os.path.join(sv_outdir, 'destruct_raw_library.csv')
-    destruct_reads = os.path.join(sv_outdir, 'destruct_reads.csv')
+    destruct_breakpoints = os.path.join(sv_outdir, 'destruct_breakpoints.csv.gz')
+    destruct_library = os.path.join(sv_outdir, 'destruct_library.csv.gz')
+    destruct_raw_breakpoints = os.path.join(sv_outdir, 'destruct_raw_breakpoints.csv.gz')
+    destruct_raw_library = os.path.join(sv_outdir, 'destruct_raw_library.csv.gz')
+    destruct_reads = os.path.join(sv_outdir, 'destruct_reads.csv.gz')
     lumpy_vcf = os.path.join(sv_outdir, 'lumpy.vcf')
-    parsed_csv = os.path.join(sv_outdir, 'filtered_consensus_calls.csv')
+    parsed_csv = os.path.join(sv_outdir, 'filtered_consensus_calls.csv.gz')
 
     single_node = args['single_node']
 

@@ -33,7 +33,7 @@ def create_destruct_wgs_workflow(
                 sample_id,
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
-                mgd.TempOutputFile("reads"),
+                mgd.OutputFile(reads),
                 destruct_config,
                 sv_config['refdata_destruct'],
             ),
@@ -53,7 +53,7 @@ def create_destruct_wgs_workflow(
                  sample_id + 'N': mgd.InputFile(normal_bam)},
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
-                mgd.TempOutputFile("reads"),
+                mgd.OutputFile(reads),
                 destruct_config,
                 sv_config['refdata_destruct']
             )
@@ -96,19 +96,6 @@ def create_destruct_wgs_workflow(
     )
 
     workflow.transform(
-        name='prep_raw_breakpoints',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.prep_csv_files",
-        args=(
-            mgd.TempInputFile("raw_breakpoints"),
-            mgd.TempOutputFile("raw_breakpoints.csv.gz", extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
         name='finalize_raw_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=8,
@@ -116,21 +103,8 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("raw_breakpoints.csv.gz", extensions=['.yaml']),
+            mgd.TempInputFile("raw_breakpoints"),
             mgd.OutputFile(raw_breakpoints, extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
-        name='prep_raw_library',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.prep_csv_files",
-        args=(
-            mgd.TempInputFile("raw_library"),
-            mgd.TempOutputFile("raw_library.csv.gz", extensions=['.yaml']),
         ),
     )
 
@@ -142,47 +116,8 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("raw_library.csv.gz", extensions=['.yaml']),
+            mgd.TempInputFile("raw_library"),
             mgd.OutputFile(raw_library, extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
-        name='prep_reads',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.prep_csv_files",
-        args=(
-            mgd.TempInputFile("reads"),
-            mgd.TempOutputFile("reads.csv.gz", extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
-        name='finalize_reads',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.finalize_csv",
-        args=(
-            mgd.TempInputFile("reads.csv.gz", extensions=['.yaml']),
-            mgd.OutputFile(reads, extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
-        name='prep_breakpoints',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.prep_csv_files",
-        args=(
-            mgd.TempInputFile("breakpoints"),
-            mgd.TempOutputFile("breakpoints.csv.gz", extensions=['.yaml']),
         ),
     )
 
@@ -194,21 +129,8 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("breakpoints.csv.gz", extensions=['.yaml']),
+            mgd.TempInputFile("breakpoints"),
             mgd.OutputFile(breakpoints, extensions=['.yaml']),
-        ),
-    )
-
-    workflow.transform(
-        name='prep_library',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func="wgs.utils.csvutils.prep_csv_files",
-        args=(
-            mgd.TempInputFile("library"),
-            mgd.TempOutputFile("library.csv.gz", extensions=['.yaml']),
         ),
     )
 
@@ -220,7 +142,7 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("library.csv.gz", extensions=['.yaml']),
+            mgd.TempInputFile("library"),
             mgd.OutputFile(library, extensions=['.yaml']),
         )
     )
