@@ -68,7 +68,6 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=No
         'walltime_retry_increment': '24:00',
         'ncpus': ncpus,
         'disk': disk,
-        'singularity_image': 'wgs/wgs.simg'
     }
 
     if docker_image:
