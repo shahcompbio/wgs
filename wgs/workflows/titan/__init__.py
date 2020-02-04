@@ -266,7 +266,7 @@ def create_titan_workflow(
         args=(
             chunks,
             mgd.TempInputFile('titan_params', 'numclusters', 'ploidy', axes_origin=[]),
-            mgd.TempInputFile("segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile('titan_igv', 'numclusters', 'ploidy'),
             mgd.TempInputFile("titan_outfile", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
@@ -288,7 +288,7 @@ def create_titan_workflow(
         func="wgs.workflows.titan.tasks.tar_all_data",
         args=(
             mgd.TempInputFile('titan_params', 'numclusters', 'ploidy', axes_origin=[]),
-            mgd.TempInputFile("segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
+            mgd.TempInputFile("titan_segs.csv", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile('titan_igv', 'numclusters', 'ploidy'),
             mgd.TempInputFile("titan_outfile", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
