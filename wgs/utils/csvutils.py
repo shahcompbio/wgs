@@ -42,7 +42,7 @@ def get_dtypes_from_df(df, na_rep='NA'):
 
 
 class CsvInput(object):
-    def __init__(self, filepath, na_rep='NA'):
+    def __init__(self, filepath, na_rep='NA', sep=None):
         """
         csv file and all related metadata
         :param filepath: path to csv
@@ -54,10 +54,13 @@ class CsvInput(object):
         self.compression = self.__get_compression_type_pandas()
         self.na_rep = na_rep
 
+        self.sep = sep
+
         if os.path.exists(self.yaml_file):
             metadata = self.__parse_metadata()
         else:
             metadata = self.generate_metadata()
+
 
         self.header, self.sep, self.dtypes, self.columns = metadata
 
@@ -73,6 +76,9 @@ class CsvInput(object):
         :return: separator
         :rtype: str
         """
+        if self.sep:
+            return self.sep
+
         if '\t' in header and ',' in header:
             raise CsvParseError("Unable to detect separator from {}".format(header))
 
@@ -418,8 +424,8 @@ def prep_csv_files(filepath, outputfile):
     csvoutput.write_headerless_csv(filepath)
 
 
-def finalize_csv(infile, outfile):
-    csvinput = CsvInput(infile)
+def finalize_csv(infile, outfile, sep=None):
+    csvinput = CsvInput(infile, sep=sep)
 
     csvoutput = CsvOutput(
         outfile, header=True, columns=csvinput.columns,

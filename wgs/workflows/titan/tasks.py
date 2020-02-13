@@ -260,11 +260,11 @@ def select_optimal_solution(
 
     # copy the file at the optimal cluster/ploidy to the
     # optimal file output path
-    csvutils.finalize_csv(segments[best_model], optimal_segment)
-    csvutils.finalize_csv(igv_segs[best_model], optimal_igv_segs)
-    csvutils.finalize_csv(params_files[best_model], optimal_param)
-    csvutils.finalize_csv(markers[best_model], optimal_marker)
-    csvutils.finalize_csv(parsed_files[best_model], optimal_parsed)
+    csvutils.finalize_csv(segments[best_model], optimal_segment, sep='\t')
+    csvutils.finalize_csv(igv_segs[best_model], optimal_igv_segs, sep='\t')
+    csvutils.finalize_csv(params_files[best_model], optimal_param, sep='\t')
+    csvutils.finalize_csv(markers[best_model], optimal_marker, sep='\t')
+    csvutils.finalize_csv(parsed_files[best_model], optimal_parsed, sep='\t')
     shutil.copyfile(plots[best_model], optimal_plot)
 
     with helpers.GetFileHandle(optimal_param, 'at') as params_output:
