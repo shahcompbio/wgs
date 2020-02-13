@@ -69,6 +69,7 @@ def juno_config(reference, containers):
             'wgs': docker_containers['wgs'],
             'strelka': docker_containers['strelka'],
             'vcftools': docker_containers['vcftools'],
+            'samtools': docker_containers['samtools'],
             'mutationseq': docker_containers['mutationseq'],
             'vizutils': docker_containers['vizutils'],
         }
@@ -114,6 +115,8 @@ def juno_config(reference, containers):
         'readcounter': {'w': 1000, 'q': 0},
         'correction': {
             'gc': '/juno/work/shah/reference/hmmcopy/GRCh37-lite.gc.ws_1000.wig',
+            'map': '/juno/work/shah/reference/hmmcopy/GRCh37-lite.map.ws_1000.wig',
+            'map_cutoff': 0.9
         },
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
@@ -161,6 +164,21 @@ def juno_config(reference, containers):
             'chrom': 'NULL',
             'max_depth': 1000,
         },
+        'hmmcopy_params': {
+            'normal_copy': None,
+            'normal_table': None,
+            'normal_table_out': None,
+            'm': None,
+            'mu': None,
+            'kappa': None,
+            'e': None,
+            'S': None,
+            'strength': None,
+            'lambda': None,
+            'nu': None,
+            'eta': None,
+            'gamma': None,
+        },
         'parse_titan': {
             'segment_size_threshold': 5000,
             'chromosomes': map(str, range(1, 23) + ['X']),
@@ -170,6 +188,7 @@ def juno_config(reference, containers):
         'docker': {
             'wgs': docker_containers['wgs'],
             'titan': docker_containers['titan'],
+            'hmmcopy': docker_containers['hmmcopy'],
             'vizutils': docker_containers['vizutils'],
             'mutationseq': docker_containers['mutationseq'],
             'vcftools': docker_containers['vcftools'],

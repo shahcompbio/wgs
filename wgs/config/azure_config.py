@@ -121,6 +121,8 @@ def azure_config(reference, containers):
         'readcounter': {'w': 1000, 'q': 0},
         'correction': {
             'gc': '/refdata/hmmcopy/GRCh37-lite.gc.ws_1000.wig',
+            'map': '/refdata/hmmcopy/GRCh37-lite.map.ws_1000.wig',
+            'map_cutoff': 0.85
         },
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
@@ -147,6 +149,21 @@ def azure_config(reference, containers):
             'normal_variant': 25,
             'tumour_variant': 2,
             'baseq_threshold': 10,
+        },
+        'hmmcopy_params': {
+            'normal_copy': None,
+            'normal_table': None,
+            'normal_table_out': None,
+            'm': None,
+            'mu': None,
+            'kappa': None,
+            'e': None,
+            'S': None,
+            'strength': None,
+            'lambda': None,
+            'nu': None,
+            'eta': None,
+            'gamma': None,
         },
         'titan_params': {
             'y_threshold': 20,
@@ -177,6 +194,7 @@ def azure_config(reference, containers):
         'docker': {
             'wgs': docker_containers['wgs'],
             'titan': docker_containers['titan'],
+            'hmmcopy': docker_containers['hmmcopy'],
             'vizutils': docker_containers['vizutils'],
             'mutationseq': docker_containers['mutationseq'],
             'vcftools': docker_containers['vcftools'],

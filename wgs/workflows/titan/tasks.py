@@ -121,7 +121,7 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
     cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
-    pdfutils.merge_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
+    pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
 
 
 def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):

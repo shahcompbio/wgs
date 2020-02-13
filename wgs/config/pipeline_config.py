@@ -34,6 +34,7 @@ def containers():
         'lumpy': 'wgspipeline/lumpy:v0.0.1',
         'vizutils': 'wgspipeline/vizutils:v0.0.1',
         'fastqc': 'wgspipeline/fastqc:v0.0.1',
+        'hmmcopy': 'wgspipeline/hmmcopy:v0.0.1',
     }
 
     singularity = {}
