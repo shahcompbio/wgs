@@ -44,31 +44,25 @@ def copynumber_calling_workflow(args):
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
-    # workflow.subworkflow(
-    #     name='titan',
-    #     func=titan.create_titan_workflow,
-    #     axes=('sample_id',),
-    #     args=(
-    #         mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-    #                       extensions=['.bai'], axes_origin=[]),
-    #         mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-    #                       extensions=['.bai'], axes_origin=[]),
-    #         mgd.InputFile("target_list", 'sample_id', fnames=targets,
-    #                       axes_origin=[]),
-    #         mgd.Template(titan_raw_dir, 'sample_id'),
-    #         mgd.OutputFile('titan_segments_filename', 'sample_id',
-    #                        axes_origin=[], template=titan_segments_filename),
-    #         mgd.OutputFile('titan_params_filename', 'sample_id',
-    #                        axes_origin=[], template=titan_params_filename),
-    #         mgd.OutputFile('titan_markers_filename', 'sample_id',
-    #                        axes_origin=[], template=titan_markers_filename),
-    #         global_config,
-    #         config,
-    #         config['titan_intervals'],
-    #         mgd.InputInstance('sample_id'),
-    #     ),
-    #     kwargs={'single_node': args['single_node']}
-    # )
+    workflow.subworkflow(
+        name='titan',
+        func=titan.create_titan_workflow,
+        axes=('sample_id',),
+        args=(
+            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                          extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                          extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile("target_list", 'sample_id', fnames=targets,
+                          axes_origin=[]),
+            mgd.Template(titan_raw_dir, 'sample_id'),
+            global_config,
+            config,
+            config['titan_intervals'],
+            mgd.InputInstance('sample_id'),
+        ),
+        kwargs={'single_node': args['single_node']}
+    )
 
     workflow.subworkflow(
         name='hmmcopy_normal',

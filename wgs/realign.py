@@ -8,7 +8,7 @@ from wgs.utils import helpers
 from wgs.workflows import realignment
 
 
-def realign_bams(samples, inputs, outputs, out_dir, config, single_node=False):
+def realign_bams(samples, inputs, outputs, out_dir, config, config_globals,single_node=False):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
     inputs = dict([(sampid, inputs[sampid])
@@ -24,13 +24,14 @@ def realign_bams(samples, inputs, outputs, out_dir, config, single_node=False):
 
     workflow.subworkflow(
         name='realign_bam_file',
-        func=realignment.realign_bam_file,
-        axes=('sample_id',),
+        func=realignment.realign_bam_files,
         args=(
-            mgd.InputFile("input.bam", "sample_id", fnames=inputs),
-            mgd.OutputFile("output.bam", "sample_id", fnames=outputs),
+            mgd.InputFile("input.bam", "sample_id", axes_origin=[], fnames=inputs),
+            mgd.OutputFile("output.bam", "sample_id", axes_origin=[], fnames=outputs),
             out_dir,
-            config
+            config,
+            config_globals,
+            samples
         ),
         kwargs={'single_node': single_node}
     )
@@ -39,8 +40,12 @@ def realign_bams(samples, inputs, outputs, out_dir, config, single_node=False):
 
 
 def realign_bam_workflow(args):
+    config = helpers.load_yaml(args['config_file'])
+    config_globals = config['globals']
+    config = config['alignment']
+
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow()
+    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs']))
 
     outdir = args['out_dir']
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
@@ -71,7 +76,8 @@ def realign_bam_workflow(args):
             mgd.OutputFile("realigned.bam", 'sample_id', fnames=output_bams,
                            extensions=['.bai'], axes_origin=[]),
             args["out_dir"],
-            config
+            config,
+            config_globals
         ),
         kwargs={'single_node': args['single_node']}
     )

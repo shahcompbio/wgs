@@ -14,9 +14,22 @@ def create_destruct_wgs_workflow(
         sample_id, global_config, sv_config,
         single_node=False
 ):
-    destruct_config = {}
 
     workflow = pypeliner.workflow.Workflow(ctx={'docker_image': sv_config['docker']['wgs']})
+
+    workflow.transform(
+        name="get_destruct_config",
+        func="destruct.defaultconfig.get_config",
+        ctx=helpers.get_default_ctx(
+            docker_image=sv_config['docker']['destruct'],
+            walltime="48:00",
+        ),
+        ret=mgd.TempOutputObj("destruct_config"),
+        args=(
+            sv_config['refdata_destruct'],
+            sv_config['destruct_config']
+        )
+    )
 
     if single_node:
         workflow.transform(
@@ -34,7 +47,7 @@ def create_destruct_wgs_workflow(
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
                 mgd.OutputFile(reads),
-                destruct_config,
+                mgd.TempInputObj("destruct_config"),
                 sv_config['refdata_destruct'],
             ),
             kwargs={'ncpus': None, 'docker_image': sv_config['docker']['destruct']}
@@ -54,7 +67,7 @@ def create_destruct_wgs_workflow(
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
                 mgd.OutputFile(reads),
-                destruct_config,
+                mgd.TempInputObj("destruct_config"),
                 sv_config['refdata_destruct']
             )
         )

@@ -7,7 +7,6 @@ from wgs.utils import helpers
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, titan_raw_dir,
-        segments, params, markers,
         global_config, config,
         intervals, sample_id,
         single_node=None
@@ -18,7 +17,7 @@ def create_titan_workflow(
     optimal_outfile = os.path.join(titan_raw_dir, '{}_titan_markers.csv.gz'.format(sample_id))
     optimal_params = os.path.join(titan_raw_dir, '{}_titan_params.csv.gz'.format(sample_id))
     optimal_segs = os.path.join(titan_raw_dir, '{}_titan_segs.csv.gz'.format(sample_id))
-    optimal_igv_segs = os.path.join(titan_raw_dir, '{}_titan_igv_segs.csv.gz'.format(sample_id))
+    optimal_igv_segs = os.path.join(titan_raw_dir, '{}_titan_igv_segs.seg'.format(sample_id))
     optimal_parsed = os.path.join(titan_raw_dir, '{}_titan_parsed.csv.gz'.format(sample_id))
     optimal_plots = os.path.join(titan_raw_dir, '{}_titan_plots.pdf'.format(sample_id))
 
@@ -223,6 +222,7 @@ def create_titan_workflow(
             mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_igv', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
+            sample_id,
         ),
         kwargs={'docker_image': config['docker']['titan']}
     )

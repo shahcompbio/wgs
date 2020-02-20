@@ -21,20 +21,20 @@ def get_version():
 def containers():
     version = get_version()
     docker_images = {
-        'bwa': 'wgspipeline/bwa:v0.0.1',
-        'samtools': 'wgspipeline/samtools:v0.0.1',
-        'picard': 'wgspipeline/picard:v0.0.1',
-        'wgs': 'wgspipeline/wgs:v{}'.format(version),
-        'strelka': 'wgspipeline/strelka:v0.0.1',
-        'mutationseq': 'wgspipeline/mutationseq:v0.0.1',
-        'vcftools': 'wgspipeline/vcftools:v0.0.1',
-        'snpeff': 'wgspipeline/vcftools:v0.0.1',
-        'titan': 'wgspipeline/titan:v0.0.1',
-        'destruct': 'wgspipeline/destruct:v0.0.1',
-        'lumpy': 'wgspipeline/lumpy:v0.0.1',
-        'vizutils': 'wgspipeline/vizutils:v0.0.1',
-        'fastqc': 'wgspipeline/fastqc:v0.0.1',
-        'hmmcopy': 'wgspipeline/hmmcopy:v0.0.1',
+        'bwa': 'bwa:v0.0.1',
+        'samtools': 'samtools:v0.0.1',
+        'picard': 'picard:v0.0.1',
+        'wgs': 'wgs:v{}'.format(version),
+        'strelka': 'strelka:v0.0.1',
+        'mutationseq': 'mutationseq:v0.0.1',
+        'vcftools': 'vcftools:v0.0.1',
+        'snpeff': 'vcftools:v0.0.1',
+        'titan': 'titan:v0.0.1',
+        'destruct': 'destruct:v0.0.1',
+        'lumpy': 'lumpy:v0.0.1',
+        'vizutils': 'vizutils:v0.0.1',
+        'fastqc': 'fastqc:v0.0.1',
+        'hmmcopy': 'hmmcopy:v0.0.1',
     }
 
     singularity = {}

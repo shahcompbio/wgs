@@ -85,7 +85,12 @@ def azure_config(reference, containers):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/refdata/reference-destruct/',
+        'refdata_destruct': '/refdata/human/',
+        'destruct_config': {
+            'genome_fasta': '/refdata/human/GRCh37-lite.fa',
+            'genome_fai': '/refdata/human/GRCh37-lite.fa.fai',
+            'gtf_filename': '/refdata/human/GRCh37-lite.gtf',
+        },
         'mappability_ref': '/refdata/wgs_pipeline/mask_regions_blacklist_crg_align36_table_destruct.txt',
         'parse_lumpy': {
             'chromosomes': map(str, range(1, 23) + ['X']),

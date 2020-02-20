@@ -28,7 +28,9 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            intervals.append(name + "_" + str(int(i * size)) + "_" + str(int((i + 1) * size)))
+            start = str(int(i * size)+1)
+            end = str(int((i + 1) * size))
+            intervals.append(name + "_" + start + "_" + end)
 
     return intervals
 
@@ -124,10 +126,9 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None
     pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
 
 
-def calc_cnsegments_titan(infile, outigv, outfile, docker_image=None):
+def calc_cnsegments_titan(infile, outigv, outfile, sample_id, docker_image=None):
     script = 'createTITANsegmentfiles.pl'
 
-    sample_id = os.path.basename(infile).split('_')[0]
     symmetric = '1'
 
     cmd = [script, '-id=' + sample_id, '-infile=' + infile,

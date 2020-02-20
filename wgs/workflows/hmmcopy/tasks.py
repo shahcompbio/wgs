@@ -104,11 +104,15 @@ def plot_hmm(
 
     correction_pdfs = [os.path.join(correction_plots_dir, f)
                        for f in os.listdir(correction_plots_dir) if f.endswith('.pdf')]
-    hmmcopy_pdfs = [os.path.join(hmmcopy_plots_dir, f)
-                    for f in os.listdir(hmmcopy_plots_dir) if f.endswith('.pdf')]
-
     pdfutils.merge_pdfs(correction_pdfs, correction_pdf)
-    pdfutils.merge_pdfs(hmmcopy_pdfs, hmmcopy_pdf)
+
+    all_hmmcopy_pdfs = set([os.path.join(hmmcopy_plots_dir, pdf)
+                            for pdf in os.listdir(hmmcopy_plots_dir)])
+    # just some sorting
+    human_pdfs = set([os.path.join(hmmcopy_plots_dir, 'chr_{}.pdf'.format(chrom))
+                      for chrom in map(str, range(23)) + ['X', 'Y']])
+    human_pdfs = list(all_hmmcopy_pdfs.intersection(human_pdfs)) + list(all_hmmcopy_pdfs - human_pdfs)
+    pdfutils.merge_pdfs(human_pdfs, hmmcopy_pdf)
 
 
 def annot_hmm(input_segments, output_file, config):

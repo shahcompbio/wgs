@@ -79,8 +79,13 @@ def juno_config(reference, containers):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/juno/work/shah/reference/reference-grch37-decoys-destruct',
         'mappability_ref': '/juno/work/shah/reference/wgs_pipeline/mask_regions_blacklist_crg_align36_table_destruct.txt',
+        'refdata_destruct': '/juno/work/shah/reference/reference-grch37-decoys-destruct',
+        'destruct_config': {
+            'genome_fasta': '/juno/work/shah/reference/reference-grch37-decoys-destruct/Homo_sapiens.GRCh37.70.dna.chromosomes.fa',
+            'genome_fai': '/juno/work/shah/reference/reference-grch37-decoys-destruct/Homo_sapiens.GRCh37.70.dna.chromosomes.fa.fai',
+            'gtf_filename': '/juno/work/shah/reference/reference-grch37-decoys-destruct/Homo_sapiens.GRCh37.70.gtf',
+        },
         'parse_lumpy': {
             'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 0,

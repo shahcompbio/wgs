@@ -7,7 +7,7 @@ import os
 import warnings
 
 import pypeliner
-
+from wgs.utils import helpers
 
 def _get_header(infile):
     '''
@@ -43,7 +43,7 @@ def concatenate_vcf(infiles, outfile):
         keys = sorted(keys)
         infiles = [infiles[val] for val in keys]
 
-    with open(outfile, 'w') as ofile:
+    with helpers.GetFileHandle(outfile, 'w') as ofile:
         header = None
 
         for ifile in infiles:
@@ -52,7 +52,7 @@ def concatenate_vcf(infiles, outfile):
                 warnings.warn('input file {} is empty'.format(ifile))
                 continue
 
-            with open(ifile) as f:
+            with helpers.GetFileHandle(ifile) as f:
 
                 if not header:
                     header = _get_header(f)

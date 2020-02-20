@@ -4,8 +4,15 @@ from wgs.utils import helpers
 from wgs.workflows import alignment
 
 
-def realign_bam_file(input, output, outdir, config, single_node=False):
+def realign_bam_files(inputs, outputs, outdir, config, config_globals, samples, single_node=False):
+    inputs = dict([(sample, inputs[sample]) for sample in samples])
+    outputs = dict([(sample, outputs[sample]) for sample in samples])
+
     workflow = pypeliner.workflow.Workflow()
+
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_id'),
+        value=samples)
 
     workflow.transform(
         name='bam_to_fastq',
@@ -14,43 +21,28 @@ def realign_bam_file(input, output, outdir, config, single_node=False):
             disk=500
         ),
         func="wgs.workflows.realignment.tasks.split_by_rg",
+        axes=('sample_id',),
         args=(
-            mgd.InputFile(input),
-            mgd.TempOutputFile("inputdata_read1.fastq", "readgroup"),
-            mgd.TempOutputFile("inputdata_read2.fastq", "readgroup", axes_origin=[]),
-            mgd.TempSpace("bamtofastq")
+            mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
+            mgd.TempOutputFile("inputdata_read1.fastq.gz", 'sample_id', "readgroup"),
+            mgd.TempOutputFile("inputdata_read2.fastq.gz", 'sample_id', "readgroup", axes_origin=[]),
+            mgd.InputInstance('sample_id'),
+            mgd.TempSpace("bamtofastq", 'sample_id')
         )
     )
+
     workflow.subworkflow(
         name='align_samples',
-        func=alignment.align_sample,
-        axes=('readgroup',),
+        func=alignment.align_samples,
         args=(
             config,
-            mgd.TempInputFile("inputdata_read1.fastq", "readgroup"),
-            mgd.TempInputFile("inputdata_read2.fastq", "readgroup"),
-            mgd.TempOutputFile('aligned_lanes.bam', 'readgroup'),
+            config_globals,
+            mgd.TempInputFile("inputdata_read1.fastq.gz", "sample_id", "readgroup", axes_origin=[]),
+            mgd.TempInputFile("inputdata_read2.fastq.gz", "sample_id", "readgroup", axes_origin=[]),
+            mgd.OutputFile('output.bam', 'sample_id', fnames=outputs, extensions=['.bai'], axes_origin=[]),
             outdir,
-            mgd.InputInstance("readgroup"),
         ),
         kwargs={'single_node': single_node}
-    )
-
-    workflow.transform(
-        name='merge_tumour_lanes',
-        ctx=helpers.get_default_ctx(
-            walltime='96:00',
-            disk=500
-        ),
-        func="wgs.workflows.alignment.tasks.merge_bams",
-        args=(
-            mgd.TempInputFile('aligned_lanes.bam', 'readgroup'),
-            mgd.OutputFile(output, extensions=['.bai']),
-        ),
-        kwargs={
-            'picard_docker_image': config['docker']['picard'],
-            'samtools_docker_image': config['docker']['samtools']
-        }
     )
 
     return workflow

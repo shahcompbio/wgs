@@ -63,7 +63,7 @@ def create_samtools_germline_workflow(
             axes=('interval',),
             func='wgs.workflows.samtools_germline.tasks.run_samtools_germline',
             args=(
-                mgd.TempOutputFile('germline.vcf', 'interval'),
+                mgd.TempOutputFile('germline.vcf.gz', 'interval'),
                 varcall_config['reference'],
                 mgd.InputInstance('interval'),
                 mgd.InputFile(bam_file)
@@ -81,7 +81,7 @@ def create_samtools_germline_workflow(
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
-                mgd.TempInputFile('germline.vcf', 'interval'),
+                mgd.TempInputFile('germline.vcf.gz', 'interval'),
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),

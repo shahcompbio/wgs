@@ -77,8 +77,13 @@ def shahlab_config(reference, containers):
         'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
         'samtools': 'samtools',
         'lumpyexpress': 'lumpyexpress',
-        'refdata_destruct': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/',
         'mappability_ref': '/shahlab/pipelines/reference/mask_regions_blacklist_crg_align36_table_destruct.txt',
+        'refdata_destruct': '/shahlab/pipelines/reference/refdir_destruct_GRCh37',
+        'destruct_config': {
+            'genome_fasta': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/Homo_sapiens.GRCh37.70.dna.chromosomes.fa',
+            'genome_fai': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/Homo_sapiens.GRCh37.70.dna.chromosomes.fa.fai',
+            'gtf_filename': '/shahlab/pipelines/reference/refdir_destruct_GRCh37/Homo_sapiens.GRCh37.70.gtf',
+        },
         'parse_lumpy': {
             'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 0,
