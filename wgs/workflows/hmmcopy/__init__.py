@@ -6,12 +6,11 @@ from  wgs.workflows.hmmcopy import tasks
 from wgs.utils import helpers
 
 
-def create_hmmcopy_workflow(bam_file, out_dir, global_config, config, sample_id):
-    bias_plots_pdf = os.path.join(out_dir, 'plots', '{}_bias.pdf'.format(sample_id))
-    correction_plots_pdf = os.path.join(out_dir, 'plots', '{}_correction.pdf'.format(sample_id))
-    hmmcopy_plots_pdf = os.path.join(out_dir, 'plots', '{}_hmmcopy.pdf'.format(sample_id))
-    tumour_table_out = os.path.join(out_dir, '{}_tumour_correctreads_with_state.txt'.format(sample_id))
-    pygene_outfile = os.path.join(out_dir, '{}_hmmcopy.seg.pygenes'.format(sample_id))
+def create_hmmcopy_workflow(
+        bam_file, out_dir, global_config, config,
+        sample_id, bias_pdf, correction_pdf, hmmcopy_pdf,
+        hmmcopy_table, pygenes_table
+):
 
     workflow = pypeliner.workflow.Workflow()
 

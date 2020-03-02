@@ -7,21 +7,11 @@ from wgs.utils import helpers
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, titan_raw_dir,
-        global_config, config,
-        intervals, sample_id,
+        global_config, config, outfile, params, segs, igv_segs,
+        parsed, plots, tar_outputs, intervals, sample_id,
         single_node=None
 ):
     museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))
-
-    # optimal
-    optimal_outfile = os.path.join(titan_raw_dir, '{}_titan_markers.csv.gz'.format(sample_id))
-    optimal_params = os.path.join(titan_raw_dir, '{}_titan_params.csv.gz'.format(sample_id))
-    optimal_segs = os.path.join(titan_raw_dir, '{}_titan_segs.csv.gz'.format(sample_id))
-    optimal_igv_segs = os.path.join(titan_raw_dir, '{}_titan_igv_segs.seg'.format(sample_id))
-    optimal_parsed = os.path.join(titan_raw_dir, '{}_titan_parsed.csv.gz'.format(sample_id))
-    optimal_plots = os.path.join(titan_raw_dir, '{}_titan_plots.pdf'.format(sample_id))
-
-    tar_outputs = os.path.join(titan_raw_dir, '{}_data_all_parameters.tar.gz'.format(sample_id))
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
 
@@ -271,12 +261,12 @@ def create_titan_workflow(
             mgd.TempInputFile("titan_outfile", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile("titan_plots", 'numclusters', 'ploidy', axes_origin=[]),
-            mgd.OutputFile(optimal_segs, extensions=['.yaml']),
-            mgd.OutputFile(optimal_igv_segs, extensions=['.yaml']),
-            mgd.OutputFile(optimal_params, extensions=['.yaml']),
-            mgd.OutputFile(optimal_outfile, extensions=['.yaml']),
-            mgd.OutputFile(optimal_parsed, extensions=['.yaml']),
-            mgd.OutputFile(optimal_plots),
+            mgd.OutputFile(segs, extensions=['.yaml']),
+            mgd.OutputFile(igv_segs, extensions=['.yaml']),
+            mgd.OutputFile(params, extensions=['.yaml']),
+            mgd.OutputFile(outfile, extensions=['.yaml']),
+            mgd.OutputFile(parsed, extensions=['.yaml']),
+            mgd.OutputFile(plots),
         )
     )
 

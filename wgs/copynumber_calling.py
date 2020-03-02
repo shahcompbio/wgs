@@ -29,12 +29,28 @@ def copynumber_calling_workflow(args):
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
 
     titan_raw_dir = os.path.join(cna_outdir, 'titan')
-    titan_segments_filename = os.path.join(titan_raw_dir, 'segments.h5')
-    titan_markers_filename = os.path.join(titan_raw_dir, 'markers.h5')
-    titan_params_filename = os.path.join(titan_raw_dir, 'params.h5')
+
+    titan_outfile = os.path.join(titan_raw_dir, '{sample_id}_titan_markers.csv.gz')
+    titan_params = os.path.join(titan_raw_dir, '{sample_id}_titan_params.csv.gz')
+    titan_segs = os.path.join(titan_raw_dir, '{sample_id}_titan_segs.csv.gz')
+    titan_igv_segs = os.path.join(titan_raw_dir, '{sample_id}_titan_igv_segs.seg')
+    titan_parsed = os.path.join(titan_raw_dir, '{sample_id}_titan_parsed.csv.gz')
+    titan_plots = os.path.join(titan_raw_dir, '{sample_id}_titan_plots.pdf')
+    titan_tar_outputs = os.path.join(titan_raw_dir, '{sample_id}_data_all_parameters.tar.gz')
 
     hmmcopy_normal_raw_dir = os.path.join(cna_outdir, 'hmmcopy_normal')
+    normal_bias_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_bias.pdf')
+    normal_correction_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_correction.pdf')
+    normal_hmmcopy_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
+    normal_correction_table = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_correctreads_with_state.txt')
+    normal_pygenes = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
+
     hmmcopy_tumour_raw_dir = os.path.join(cna_outdir, 'hmmcopy_tumour')
+    tumour_bias_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_bias.pdf')
+    tumour_correction_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_correction.pdf')
+    tumour_hmmcopy_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
+    tumour_correction_table = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_correctreads_with_state.txt')
+    tumour_pygenes = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
     workflow = pypeliner.workflow.Workflow(
         ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
@@ -55,6 +71,13 @@ def copynumber_calling_workflow(args):
                           extensions=['.bai'], axes_origin=[]),
             mgd.InputFile("target_list", 'sample_id', fnames=targets,
                           axes_origin=[]),
+            mgd.OutputFile('outfile', 'sample_id', template=titan_outfile),
+            mgd.OutputFile('params', 'sample_id', template=titan_params),
+            mgd.OutputFile('segs', 'sample_id', template=titan_segs),
+            mgd.OutputFile('igv_segs', 'sample_id', template=titan_igv_segs),
+            mgd.OutputFile('parsed', 'sample_id', template=titan_parsed),
+            mgd.OutputFile('plots', 'sample_id', template=titan_plots),
+            mgd.OutputFile('tar_outputs', 'sample_id', template=titan_tar_outputs),
             mgd.Template(titan_raw_dir, 'sample_id'),
             global_config,
             config,
@@ -75,9 +98,13 @@ def copynumber_calling_workflow(args):
             global_config,
             config,
             mgd.InputInstance('sample_id'),
+            mgd.OutputFile('normal_bias', 'sample_id', template=normal_bias_pdf),
+            mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
+            mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
+            mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
+            mgd.OutputFile('normal_bias', 'sample_id', template=normal_pygenes),
         ),
     )
-
 
     workflow.subworkflow(
         name='hmmcopy_tumour',
@@ -90,12 +117,23 @@ def copynumber_calling_workflow(args):
             global_config,
             config,
             mgd.InputInstance('sample_id'),
+            mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_bias_pdf),
+            mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
+            mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
+            mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
+            mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_pygenes),
         ),
     )
 
-    filenames = [titan_segments_filename,
-                 titan_params_filename,
-                 titan_markers_filename]
+    filenames = [
+        titan_outfile,
+        titan_params,
+        titan_segs,
+        titan_igv_segs,
+        titan_parsed,
+        titan_plots,
+        titan_tar_outputs,
+    ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
