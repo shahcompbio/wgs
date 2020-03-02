@@ -69,7 +69,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
     :param config: dictionary of parameters for the run
     '''
 
-    script = 'correctReads.R'
+    script = 'correct_reads.R'
     gc = config['correction']['gc']
     map_wig = config['titan_params']['map']
     if not target_list:

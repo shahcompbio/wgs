@@ -29,7 +29,7 @@ def containers():
         'mutationseq': 'mutationseq:v0.0.1',
         'vcftools': 'vcftools:v0.0.1',
         'snpeff': 'vcftools:v0.0.1',
-        'titan': 'titan:v0.0.1',
+        'titan': 'titan:v0.0.2',
         'destruct': 'destruct:v0.0.1',
         'lumpy': 'lumpy:v0.0.1',
         'vizutils': 'vizutils:v0.0.1',

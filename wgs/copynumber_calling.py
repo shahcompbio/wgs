@@ -46,11 +46,11 @@ def copynumber_calling_workflow(args):
     normal_pygenes = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
     hmmcopy_tumour_raw_dir = os.path.join(cna_outdir, 'hmmcopy_tumour')
-    tumour_bias_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_bias.pdf')
-    tumour_correction_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_correction.pdf')
-    tumour_hmmcopy_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
-    tumour_correction_table = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_correctreads_with_state.txt')
-    tumour_pygenes = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
+    tumour_bias_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_bias.pdf')
+    tumour_correction_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_correction.pdf')
+    tumour_hmmcopy_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
+    tumour_correction_table = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_correctreads_with_state.txt')
+    tumour_pygenes = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
     workflow = pypeliner.workflow.Workflow(
         ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
@@ -66,11 +66,10 @@ def copynumber_calling_workflow(args):
         axes=('sample_id',),
         args=(
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai'], axes_origin=[]),
+                          extensions=['.bai']),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("target_list", 'sample_id', fnames=targets,
-                          axes_origin=[]),
+                          extensions=['.bai']),
+            mgd.InputFile("target_list", 'sample_id', fnames=targets),
             mgd.OutputFile('outfile', 'sample_id', template=titan_outfile),
             mgd.OutputFile('params', 'sample_id', template=titan_params),
             mgd.OutputFile('segs', 'sample_id', template=titan_segs),
@@ -93,7 +92,7 @@ def copynumber_calling_workflow(args):
         axes=('sample_id',),
         args=(
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[]),
+                          extensions=['.bai']),
             mgd.Template(hmmcopy_normal_raw_dir, 'sample_id'),
             global_config,
             config,
@@ -102,7 +101,7 @@ def copynumber_calling_workflow(args):
             mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
             mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
             mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
-            mgd.OutputFile('normal_bias', 'sample_id', template=normal_pygenes),
+            mgd.OutputFile('normal_pygenes', 'sample_id', template=normal_pygenes),
         ),
     )
 
@@ -112,7 +111,7 @@ def copynumber_calling_workflow(args):
         axes=('sample_id',),
         args=(
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai'], axes_origin=[]),
+                          extensions=['.bai']),
             mgd.Template(hmmcopy_tumour_raw_dir, 'sample_id'),
             global_config,
             config,
@@ -121,7 +120,7 @@ def copynumber_calling_workflow(args):
             mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
             mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
             mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
-            mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_pygenes),
+            mgd.OutputFile('tumour_pygenes', 'sample_id', template=tumour_pygenes),
         ),
     )
 

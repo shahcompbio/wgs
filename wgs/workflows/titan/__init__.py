@@ -6,9 +6,9 @@ from wgs.utils import helpers
 
 
 def create_titan_workflow(
-        tumour_bam, normal_bam, targets, titan_raw_dir,
-        global_config, config, outfile, params, segs, igv_segs,
-        parsed, plots, tar_outputs, intervals, sample_id,
+        tumour_bam, normal_bam, targets, outfile, params, segs, igv_segs,
+        parsed, plots, tar_outputs,  titan_raw_dir,
+        global_config, config, intervals, sample_id,
         single_node=None
 ):
     museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))

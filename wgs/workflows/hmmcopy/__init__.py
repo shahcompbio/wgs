@@ -48,7 +48,7 @@ def create_hmmcopy_workflow(
             mgd.TempInputFile('infile_copy.txt'),
             mgd.TempOutputFile('hmmcopy_res.obj'),
             mgd.TempOutputFile('hmmcopy_segments.txt'),
-            mgd.OutputFile(tumour_table_out),
+            mgd.OutputFile(hmmcopy_table),
             sample_id,
             config,
         ),
@@ -63,9 +63,9 @@ def create_hmmcopy_workflow(
             mgd.TempInputFile('hmmcopy_res.obj'),
             mgd.TempSpace('correction_plots_dir'),
             mgd.TempSpace('hmmcopy_plots_dir'),
-            mgd.OutputFile(bias_plots_pdf),
-            mgd.OutputFile(correction_plots_pdf),
-            mgd.OutputFile(hmmcopy_plots_pdf),
+            mgd.OutputFile(bias_pdf),
+            mgd.OutputFile(correction_pdf),
+            mgd.OutputFile(hmmcopy_pdf),
         ),
         kwargs={'docker_image': config['docker']['hmmcopy']}
     )
@@ -75,7 +75,7 @@ def create_hmmcopy_workflow(
         func=tasks.annot_hmm,
         args=(
             mgd.TempInputFile('hmmcopy_segments.txt'),
-            mgd.OutputFile(pygene_outfile),
+            mgd.OutputFile(pygenes_table),
             config,
         )
     )
