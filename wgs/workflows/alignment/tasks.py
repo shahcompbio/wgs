@@ -163,25 +163,19 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
                 **kwargs)
 
 
-def get_readgroup(read_group_info, sample_id, lane_id, library_id):
-    if read_group_info:
-        rg_id = read_group_info['ID'].format(sample_id=sample_id, lane_id=lane_id)
-        read_group = ['@RG', 'ID:{0}'.format(rg_id)]
-        for key, value in sorted(read_group_info.items()):
-            if key == 'ID':
-                continue
-            value = value.format(sample_id=sample_id, lane_id=lane_id, library_id=library_id)
+def get_readgroup(sample_info, sample_id, lane_id):
+    if not sample_id or not lane_id:
+        raise Exception('sample and lane ids are required')
+
+    id_str = sample_info.pop('ID') if sample_info else 'ID:{0}_{1}'
+    read_group = ['@RG', 'ID:'+id_str.format(sample_id = sample_id, lane_id=lane_id)]
+
+    if sample_info:
+        for key, value in sorted(sample_info.items()):
+            value = value.format(sample_id=sample_id, lane_id=lane_id)
             read_group.append(':'.join((key, value)))
-        read_group = '\\t'.join(read_group)
-    elif sample_id or lane_id or library_id:
-        sample_id = sample_id if sample_id else ''
-        lane_id = lane_id if lane_id else ''
-        library_id = library_id if library_id else ''
-        ids = '-'.join([sample_id, lane_id, library_id])
-        read_group = ['@RG', 'ID:{0}'.format(ids)]
-        read_group = '\\t'.join(read_group)
-    else:
-        read_group = None
+
+    read_group = '\\t'.join(read_group)
 
     return read_group
 
@@ -195,16 +189,16 @@ def samtools_sam_to_bam(samfile, bamfile,
 
 
 def align_bwa_mem(
-        read_1, read_2, ref_genome, aligned_bam, threads,
-        sample_id=None, lane_id=None, library_id=None, read_group_info=None,
-        docker_config=None
+        read_1, read_2, ref_genome, aligned_bam, threads, sample_info,
+        sample_id=None, lane_id=None, docker_config=None
 ):
-    readgroup = get_readgroup(read_group_info, sample_id, lane_id, library_id)
+    readgroup = get_readgroup(sample_info, sample_id, lane_id)
 
     bwa_mem_paired_end(
         read_1, read_2, aligned_bam, ref_genome,
         readgroup, threads, docker_image=docker_config['bwa']
     )
+
 
 def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_image=None):
     pypeliner.commandline.execute(
@@ -319,7 +313,7 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
 
 
 def bam_collect_all_metrics(
-        flagstat, insert, wgs, markdups_metrics, output, sample_id, main_dtypes = None, insert_dtypes = None
+        flagstat, insert, wgs, markdups_metrics, output, sample_id, main_dtypes=None, insert_dtypes=None
 ):
     collmet = collect_metrics.CollectMetrics(
         wgs, insert, flagstat, markdups_metrics, output, sample_id, main_dtypes, insert_dtypes

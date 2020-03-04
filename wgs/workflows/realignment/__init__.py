@@ -31,6 +31,16 @@ def realign_bam_files(inputs, outputs, outdir, config, config_globals, samples, 
         )
     )
 
+    workflow.transform(
+        name='get_sample_info',
+        func="wgs.workflows.realignment.tasks.get_read_group",
+        axes=('sample_id',),
+        ret=mgd.TempOutputObj('sample_info', 'sample_id'),
+        args=(
+            mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
+        )
+    )
+
     workflow.subworkflow(
         name='align_samples',
         func=alignment.align_samples,
@@ -41,6 +51,7 @@ def realign_bam_files(inputs, outputs, outdir, config, config_globals, samples, 
             mgd.TempInputFile("inputdata_read2.fastq.gz", "sample_id", "readgroup", axes_origin=[]),
             mgd.OutputFile('output.bam', 'sample_id', fnames=outputs, extensions=['.bai'], axes_origin=[]),
             outdir,
+            mgd.TempInputObj('sample_info', 'sample_id', axes_origin=[])
         ),
         kwargs={'single_node': single_node}
     )

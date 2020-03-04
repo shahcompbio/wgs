@@ -10,6 +10,8 @@ import pypeliner
 
 from wgs.utils import helpers
 
+import pysam
+
 
 def split_bam_by_readgroups(infile, readgroups, r1_fastq_output, r2_fastq_output):
     for readgroup in readgroups:
@@ -43,3 +45,10 @@ def split_by_rg(infile, read1_output, read2_output, sample_id, tempdir):
             os.path.join(tempdir, readgroup, 'R2.fastq.gz'),
             read2_output[lane]
         )
+
+
+def get_read_group(infile):
+    bam = pysam.AlignmentFile(infile, mode='rb', check_sq=False)
+    header = bam.header['RG']
+    assert len(header) == 1
+    return header[0]

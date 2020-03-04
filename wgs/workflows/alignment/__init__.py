@@ -108,8 +108,8 @@ def collect_bam_metrics(
             mgd.OutputFile(metrics),
             sample_id
         ),
-        kwargs= {
-            'main_dtypes':dtypes()['metrics'],
+        kwargs={
+            'main_dtypes': dtypes()['metrics'],
             'insert_dtypes': dtypes()['insert_metrics']
         }
     )
@@ -193,13 +193,13 @@ def align_samples(
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
-        obj=mgd.OutputChunks('sample_id', 'lane_id'),
-        value=fastqs_r1.keys(),
+        obj=mgd.TempOutputObj('sampleinfo', 'sample_id', axes_origin=[]),
+        value=sample_info
     )
 
     workflow.setobj(
-        obj=mgd.TempOutputObj('sample_info', 'sample_id', axes_origin=[]),
-        value=sample_info
+        obj=mgd.OutputChunks('sample_id', 'lane_id'),
+        value=fastqs_r1.keys(),
     )
 
     workflow.subworkflow(
@@ -227,7 +227,7 @@ def align_samples(
             mgd.Template(lane_metrics_template, 'sample_id', 'lane_id'),
             mgd.InputInstance("sample_id"),
             mgd.InputInstance("lane_id"),
-            mgd.TempInputObj('sample_info', 'sample_id')
+            mgd.TempInputObj('sampleinfo', 'sample_id')
         )
     )
 
@@ -323,7 +323,6 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'read_group_info': config['read_group_info'],
             'docker_config': config['docker']
         }
     )
@@ -430,7 +429,6 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'read_group_info': config['read_group_info'],
             'docker_config': config['docker']
         }
     )

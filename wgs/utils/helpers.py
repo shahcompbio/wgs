@@ -94,17 +94,9 @@ def get_fastqs(inputs, samples, sample_type):
 
 def get_sample_info(inputs):
     sample_info = {}
-
     for sample in inputs:
         assert sample not in sample_info
-        sample_info[sample] = {}
-
-        for k,v in sample.items():
-            if k in ['fastqs', 'output']:
-                continue
-
-        sample_info[sample][k] = v
-
+        sample_info[sample] = inputs[sample]['readgroup_info']
     return sample_info
 
 
@@ -410,27 +402,6 @@ def get_center_info(fastqs_file):
             seqinfo[(cell, lane)] = paths["sequencing_center"]
 
     return seqinfo
-
-
-def get_sample_info(fastqs_file):
-    """
-    load yaml and remove some extra info to reduce size
-    """
-
-    data = load_yaml(fastqs_file)
-
-    cells = data.keys()
-
-    for cell in cells:
-        data[cell]["cell_call"] = data[cell]["pick_met"]
-        data[cell]["experimental_condition"] = data[cell]["condition"]
-        del data[cell]["fastqs"]
-        del data[cell]["bam"]
-        del data[cell]["pick_met"]
-        del data[cell]["condition"]
-
-    return data
-
 
 def get_samples(fastqs_file):
     data = load_yaml(fastqs_file)

@@ -190,14 +190,6 @@ def shahlab_config(reference, containers):
         'threads': 8,
         'aligner': 'bwa-mem',
         'split_size': 1e7,
-        'read_group_info': {
-            'ID': '{sample_id}_{lane_id}',
-            'SM': '{sample_id}',
-            'PU': '{lane_id}',
-            'LB': '{library_id}',
-            'CN': 'IGO_MSKCC',
-            'PL': 'ILLUMINA',
-        },
         'docker': {
             'wgs': docker_containers['wgs'],
             'bwa': docker_containers['bwa'],
