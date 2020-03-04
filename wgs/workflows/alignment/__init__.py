@@ -176,6 +176,7 @@ def align_samples(
         fastqs_r2,
         bam_outputs,
         outdir,
+        sample_info,
         single_node=False
 ):
     lane_metrics_template = os.path.join(outdir, '{sample_id}', 'metrics', 'lane_metrics', '{lane_id}')
@@ -194,6 +195,11 @@ def align_samples(
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
         value=fastqs_r1.keys(),
+    )
+
+    workflow.setobj(
+        obj=mgd.TempOutputObj('sample_info', 'sample_id', axes_origin=[]),
+        value=sample_info
     )
 
     workflow.subworkflow(
@@ -219,8 +225,9 @@ def align_samples(
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             mgd.Template(lane_metrics_template, 'sample_id', 'lane_id'),
-            [mgd.InputInstance("sample_id"),
-             mgd.InputInstance("lane_id")]
+            mgd.InputInstance("sample_id"),
+            mgd.InputInstance("lane_id"),
+            mgd.TempInputObj('sample_info', 'sample_id')
         )
     )
 
@@ -287,7 +294,7 @@ def align_samples(
     return workflow
 
 
-def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
+def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
     ref_genome = config['ref_genome']['file']
 
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
@@ -311,10 +318,11 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam'),
             config['threads'],
+            sample_info,
         ),
         kwargs={
-            'sample_id': ids[0],
-            'lane_id': ids[1],
+            'sample_id': sample_id,
+            'lane_id': lane_id,
             'read_group_info': config['read_group_info'],
             'docker_config': config['docker']
         }
@@ -358,7 +366,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, ids):
     return workflow
 
 
-def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
+def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
     ref_genome = config['ref_genome']['file']
 
     read_group_config = config.get('read_group', {})
@@ -417,10 +425,11 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, ids):
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam', 'split'),
             config['threads'],
+            sample_info,
         ),
         kwargs={
-            'sample_id': ids[0],
-            'lane_id': ids[1],
+            'sample_id': sample_id,
+            'lane_id': lane_id,
             'read_group_info': config['read_group_info'],
             'docker_config': config['docker']
         }

@@ -92,6 +92,22 @@ def get_fastqs(inputs, samples, sample_type):
     return fq1, fq2
 
 
+def get_sample_info(inputs):
+    sample_info = {}
+
+    for sample in inputs:
+        assert sample not in sample_info
+        sample_info[sample] = {}
+
+        for k,v in sample.items():
+            if k in ['fastqs', 'output']:
+                continue
+
+        sample_info[sample][k] = v
+
+    return sample_info
+
+
 def build_shell_script(command, tag, tempdir):
     outfile = os.path.join(tempdir, "{}.sh".format(tag))
     with open(outfile, 'w') as scriptfile:

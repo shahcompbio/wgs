@@ -18,6 +18,8 @@ def alignment_workflow(args):
     samples = outputs.keys()
     fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
 
+    sample_info = helpers.get_sample_info(inputs)
+
     config_globals = config['globals']
     config = config['alignment']
 
@@ -34,6 +36,7 @@ def alignment_workflow(args):
             fastqs_r2,
             outputs,
             outdir,
+            sample_info,
         ),
         kwargs={'single_node': args['single_node']}
     )

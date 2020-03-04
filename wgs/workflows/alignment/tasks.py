@@ -163,20 +163,21 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
                 **kwargs)
 
 
-def get_readgroup(read_group_info, sample_id, lane_id):
+def get_readgroup(read_group_info, sample_id, lane_id, library_id):
     if read_group_info:
         rg_id = read_group_info['ID'].format(sample_id=sample_id, lane_id=lane_id)
         read_group = ['@RG', 'ID:{0}'.format(rg_id)]
         for key, value in sorted(read_group_info.items()):
             if key == 'ID':
                 continue
-            value = value.format(sample_id=sample_id, lane_id=lane_id)
+            value = value.format(sample_id=sample_id, lane_id=lane_id, library_id=library_id)
             read_group.append(':'.join((key, value)))
         read_group = '\\t'.join(read_group)
-    elif sample_id or lane_id:
+    elif sample_id or lane_id or library_id:
         sample_id = sample_id if sample_id else ''
         lane_id = lane_id if lane_id else ''
-        ids = '-'.join([sample_id, lane_id])
+        library_id = library_id if library_id else ''
+        ids = '-'.join([sample_id, lane_id, library_id])
         read_group = ['@RG', 'ID:{0}'.format(ids)]
         read_group = '\\t'.join(read_group)
     else:
@@ -195,10 +196,10 @@ def samtools_sam_to_bam(samfile, bamfile,
 
 def align_bwa_mem(
         read_1, read_2, ref_genome, aligned_bam, threads,
-        sample_id=None, lane_id=None, read_group_info=None,
+        sample_id=None, lane_id=None, library_id=None, read_group_info=None,
         docker_config=None
 ):
-    readgroup = get_readgroup(read_group_info, sample_id, lane_id)
+    readgroup = get_readgroup(read_group_info, sample_id, lane_id, library_id)
 
     bwa_mem_paired_end(
         read_1, read_2, aligned_bam, ref_genome,

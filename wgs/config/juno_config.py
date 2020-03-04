@@ -221,6 +221,7 @@ def juno_config(reference, containers):
             'ID': '{sample_id}_{lane_id}',
             'SM': '{sample_id}',
             'PU': '{lane_id}',
+            'LB': '{library_id}',
             'CN': 'IGO_MSKCC',
             'PL': 'ILLUMINA',
         },
