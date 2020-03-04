@@ -191,7 +191,7 @@ def call_variants(
         ),
         kwargs={
             'single_node': single_node,
-            'use_depth_thresholds': config['strelka_depth_threhold']
+            'use_depth_thresholds': config['strelka_depth_threshold']
         },
 
     )
