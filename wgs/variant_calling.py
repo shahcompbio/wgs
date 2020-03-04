@@ -189,7 +189,11 @@ def call_variants(
             global_config,
             config,
         ),
-        kwargs={'single_node': single_node},
+        kwargs={
+            'single_node': single_node,
+            'use_depth_thresholds': config['strelka_depth_threhold']
+        },
+
     )
 
     workflow.subworkflow(

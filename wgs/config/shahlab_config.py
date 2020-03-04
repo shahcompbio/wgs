@@ -13,6 +13,7 @@ def shahlab_config(reference, containers):
 
     variant_calling = {
         'split_size': 1e7,
+        'strelka_depth_threshold': True,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
         'annotation_params': {

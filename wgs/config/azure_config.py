@@ -15,6 +15,7 @@ def azure_config(reference, containers):
         'split_size': 1e7,
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': reference,
+        'strelka_depth_threshold': True,
         'annotation_params': {
             'snpeff_params': {
                 'snpeff_config': '/refdata/wgs_pipeline/snpEff.config'
