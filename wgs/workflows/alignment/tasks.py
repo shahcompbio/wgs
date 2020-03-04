@@ -192,6 +192,10 @@ def align_bwa_mem(
         read_1, read_2, ref_genome, aligned_bam, threads, sample_info,
         sample_id=None, lane_id=None, docker_config=None
 ):
+
+    if lane_id in sample_info:
+        sample_info = sample_info[lane_id]
+
     readgroup = get_readgroup(sample_info, sample_id, lane_id)
 
     bwa_mem_paired_end(

@@ -31,24 +31,18 @@ def split_by_rg(infile, read1_output, read2_output, sample_id, tempdir):
 
     for readgroup in readgroups:
 
-        if readgroup.count('_') == 1 and readgroup.split('_')[0] == sample_id:
-            lane = readgroup.split('_')[1]
-        else:
-            lane = readgroup
-
         os.rename(
             os.path.join(tempdir, readgroup, 'R1.fastq.gz'),
-            read1_output[lane]
+            read1_output[readgroup]
         )
 
         os.rename(
             os.path.join(tempdir, readgroup, 'R2.fastq.gz'),
-            read2_output[lane]
+            read2_output[readgroup]
         )
 
 
 def get_read_group(infile):
     bam = pysam.AlignmentFile(infile, mode='rb', check_sq=False)
     header = bam.header['RG']
-    assert len(header) == 1
-    return header[0]
+    return {rg['ID']: rg for rg in header}
