@@ -26,7 +26,6 @@ def realign_bam_files(inputs, outputs, outdir, config, config_globals, samples, 
             mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
             mgd.TempOutputFile("inputdata_read1.fastq.gz", 'sample_id', "readgroup"),
             mgd.TempOutputFile("inputdata_read2.fastq.gz", 'sample_id', "readgroup", axes_origin=[]),
-            mgd.InputInstance('sample_id'),
             mgd.TempSpace("bamtofastq", 'sample_id')
         )
     )

@@ -20,7 +20,7 @@ def split_bam_by_readgroups(infile, readgroups, r1_fastq_output, r2_fastq_output
         pypeliner.commandline.execute(*cmd)
 
 
-def split_by_rg(infile, read1_output, read2_output, sample_id, tempdir):
+def split_by_rg(infile, read1_output, read2_output, tempdir):
 
     helpers.makedirs(tempdir)
 
