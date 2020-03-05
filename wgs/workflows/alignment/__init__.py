@@ -273,6 +273,7 @@ def align_samples(
         kwargs={
             'picard_docker': config['docker']['picard'],
             'samtools_docker': config['docker']['samtools'],
+            'mem': '5G'
         }
     )
 
