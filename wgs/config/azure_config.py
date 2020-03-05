@@ -77,6 +77,7 @@ def azure_config(reference, containers):
             'wgs': docker_containers['wgs'],
             'strelka': docker_containers['strelka'],
             'vcftools': docker_containers['vcftools'],
+            'samtools': docker_containers['samtools'],
             'mutationseq': docker_containers['mutationseq'],
             'vizutils': docker_containers['vizutils'],
         }
