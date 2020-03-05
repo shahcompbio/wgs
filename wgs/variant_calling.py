@@ -302,7 +302,7 @@ def variant_calling_workflow(args):
     museq_paired_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_paired_museqportrait.pdf')
     museq_single_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_single_museqportrait.pdf')
 
-    somatic_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_somatic.csv.gz')
+    somatic_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus_somatic.csv.gz')
     indel_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel.csv.gz')
     germline_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline.csv.gz')
 
