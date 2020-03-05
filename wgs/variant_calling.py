@@ -274,6 +274,7 @@ def call_variants(
             mgd.OutputFile('indel_csv', 'sample_id', fnames=indel_calls),
             mgd.OutputFile('germline_csv', 'sample_id', fnames=germline_calls),
             mgd.Template('template_outdir', 'sample_id', template=outdir),
+            mgd.InputInstance('sample_id'),
             global_config,
             config,
         ),

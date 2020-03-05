@@ -19,20 +19,39 @@ def create_consensus_workflow(
         indel_calls,
         germline_calls,
         outdir,
+        sample_id,
         global_config,
         varcall_config
 ):
-    germline_snpeff_annotations = os.path.join(outdir, 'germline_snpeff_annotations.csv.gz')
-    indel_snpeff_annotations = os.path.join(outdir, 'indel_snpeff_annotations.csv.gz')
-    somatic_snpeff_annotations = os.path.join(outdir, 'somatic_snpeff_annotations.csv.gz')
+    germline_snpeff_annotations = os.path.join(
+        outdir, '{}_germline_snpeff_annotations.csv.gz'.format(sample_id)
+    )
+    indel_snpeff_annotations = os.path.join(
+        outdir, '{}_indel_snpeff_annotations.csv.gz'.format(sample_id)
+    )
+    somatic_snpeff_annotations = os.path.join(
+        outdir, '{}_somatic_snpeff_annotations.csv.gz'.format(sample_id)
+    )
 
-    germline_ma_annotations = os.path.join(outdir, 'germline_ma_annotations.csv.gz')
-    indel_ma_annotations = os.path.join(outdir, 'indel_ma_annotations.csv.gz')
-    somatic_ma_annotations = os.path.join(outdir, 'somatic_ma_annotations.csv.gz')
+    germline_ma_annotations = os.path.join(
+        outdir, '{}_germline_ma_annotations.csv.gz'.format(sample_id)
+    )
+    indel_ma_annotations = os.path.join(
+        outdir, '{}_indel_ma_annotations.csv.gz'.format(sample_id)
+    )
+    somatic_ma_annotations = os.path.join(
+        outdir, '{}_somatic_ma_annotations.csv.gz'.format(sample_id)
+    )
 
-    germline_ids_annotations = os.path.join(outdir, 'germline_ids_annotations.csv.gz')
-    indel_ids_annotations = os.path.join(outdir, 'indel_ids_annotations.csv.gz')
-    somatic_ids_annotations = os.path.join(outdir, 'somatic_ids_annotations.csv.gz')
+    germline_ids_annotations = os.path.join(
+        outdir, '{}_germline_ids_annotations.csv.gz'.format(sample_id)
+    )
+    indel_ids_annotations = os.path.join(
+        outdir, '{}_indel_ids_annotations.csv.gz'.format(sample_id)
+    )
+    somatic_ids_annotations = os.path.join(
+        outdir, '{}_somatic_ids_annotations.csv.gz'.format(sample_id)
+    )
 
     workflow = pypeliner.workflow.Workflow()
 
