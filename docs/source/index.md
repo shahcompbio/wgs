@@ -1,199 +1,126 @@
 # Whole Genome Pipelines
 
 
+Welcome to the home page for the whole genome sequencing pipelines documentation.
 
 
-### setup and Installation:
+## Quick Setup
 
-Set up conda with the required packages.
-
-
-
-### From Source
-Add channels:
+### Test Data
+Test datasets for each of the five wgs subpipelines can be downloaded from azure storage. 
+Just copy and paste the below commands for the subpipeline you which to run.
+#### Alignment
 ```
-conda config --add channels shahcompbio
-conda config --add channels dranew
-conda config --add channels aroth85
-conda config --add channels componc
-conda config --add channels bioconda
-//added 10/10 by Douglas
-channels also needed for juno:
-conda config --add channels r
-conda config --add channels conda-forge
-packages removed:
-  - openjdk==8.0.121=1
-  - matplotlib==2.1.1=py27_0
-  - libssh2==1.8.0=2
-  - r-pillar==1.2.2=r341h6115d3f_1
-  - qt==5.6.2=6
+wget https://wgstestsets.blob.core.windows.net/testsets/alignment.tar && tar -xvf alignment.tar 
+rm alignment.tar && cd alignment
+```
+#### Realignment
+```
+wget https://wgstestsets.blob.core.windows.net/testsets/realignment.tar && tar -xvf realignment.tar 
+rm realignment.tar && cd realignment
+```
+#### Variant Calling
+```
+wget https://wgstestsets.blob.core.windows.net/testsets/variant_calling.tar && tar -xvf variant_calling.tar 
+rm variant_calling.tar && cd variant_calling
+```
+#### SV Calling
+```
+wget https://wgstestsets.blob.core.windows.net/testsets/sv_calling.tar && tar -xvf sv_calling.tar 
+rm sv_calling.tar && cd sv_calling
+```
+#### Copy Number Calling
+```
+wget https://wgstestsets.blob.core.windows.net/testsets/cna.tar && tar -xvf cna.tar
+rm cna.tar && cd cna
+```
+At this point, you should be in a new working directory with all the testdata you need to run the pipeline.
+In addition, you will have three `yaml` files: `input.yaml`, `config.yaml` and `context.yaml`. 
+<br/><br/>`input.yaml`: specifies the testdata files you are using.
+<br/><br/>`config.yaml`: specifies subpipeline specific parameters.
+<br/><br/>`context.yaml`: specifies information used by the pipeline to run locally in docker.
 
+You will also have one or two python files: `make.py` and `make_ref.py`. If the tar you downloaded 
+does not include `make_ref.py`, it just means all the reference data you need is included in your download.
+
+### Customizing the yamls with local paths
+
+`make.py` simply customizes the yaml files to use your working directory. Simply execute 
+```
+python make.py
+```
+If you do `make_ref.py` is included in the tar you downloaded, it means additional reference data is needed to 
+run the subpipeline. This data was not included in the tar because of its large size. Go to __TODO: GET REF DATA PAGE___
+To download the reference data to run the given subpipeline. Then, execute
+```
+python make_ref.py {directory with downloaded reference data}
+```
+Once you've run these two python files, your ready to make the pipeline run command.
+
+### Running a Subpipeline with Testdata locally
+
+To run the pipeline locally, you'll need to construct two files that combine the `yaml` inputs with subpipeline-specific commands.
+The first file is called `final_run.sh`, and it defines the docker image you are using to run the pipeline along with docker-speficic parameters. The second file, `run_pipeline.sh`, contains the command that will run the pipeline and is passed into `final_run.sh`. 
+
+#### `final_run.sh`:
+Create a file named `final_run.sh` and copy the following into it.
+By default, use the `wgspipeline/wgs:v0.0.4` docker image to run a subpipeline. 
+```
+docker run -v $PWD:$PWD -w $PWD -v /var/run/docker.sock:/var/run/docker.sock \
+  -v `which docker`:`which docker` wgspipeline/wgs:v0.0.4 sh run_pipeline.sh
+```
+You'll notice that this command uses `run_pipeline.sh`.
+
+Note: If you want to test out the docker image before running the pipeline, simply run
+```
+docker run -it -v $PWD:$PWD -w $PWD -v /var/run/docker.sock:/var/run/docker.sock \
+  -v `which docker`:`which docker` wgspipeline/wgs:v0.0.4 bash
+which wgs
+```
+#### `run_pipeline.sh`:
+
+`run_pipeline.sh` contains the actual command that runs the wgs pipeline, so it is different for every subpipeline. 
+
+For the given subpipeline you want to run, copy and paste below into `run_pipeline.sh`.
+
+#### Alignment
+```
+  wgs alignment --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local --config_file config.yaml \
+  --context_config context.yaml
+```
+#### Realignment
+```
+  wgs realignment --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local --config_file config.yaml \
+  --context_config context.yaml
+```
+#### Variant Calling
+```
+  wgs variant_calling --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local --config_file config.yaml \
+  --context_config context.yaml
+```
+#### Breakpoint Calling
+```
+  wgs breakpoint_calling --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local --config_file config.yaml \
+  --context_config context.yaml
+```
+#### Copy Number Calling
+```
+  wgs copynumber_calling --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local --config_file config.yaml \
+  --context_config context.yaml
 ```
 
-Then create an environment with the required packages:
-
+Once both `final_run.sh` and `run_pipeline.sh` are made, simply run 
 ```
-conda create --name wgspipeline --file conda_packages.txt
+sh final_run.sh
 ```
-
-Activate the environment:
-
-```
-source activate wgspipeline
-```
-
-Install pacakges from source:
-
-```
-pip install git+https://bitbucket.org/aroth85/biowrappers.git@singlecell
-pip install git+https://github.com/shahcompbio/pypeliner.git@master
-pip install git+https://github.com/shahcompbio/wgs.git@master
-pip install git+https://dgrewal@svn.bcgsc.ca/bitbucket/scm/~dgrewal/vizutils.git
-pip install pip install git+https://svn.bcgsc.ca/bitbucket/scm/museq/museqportrait.git@version_0.99.13
-
-```
-
-#### Input File format
-
-```
-SAMPLE_ID:
-  fastqs:
-    normal:
-      NORMAL_SAMPLE_LANE_1_ID:
-        fastq1: /path/to/fastq_r1.fastq.gz
-        fastq2: /path/to/fastq_r2.fastq.gz
-      NORMAL_SAMPLE_LANE_2_ID:
-        fastq1: /path/to/fastq_r1.fastq.gz
-        fastq2: /path/to/fastq_r2.fastq.gz
-    tumour:
-      TUMOUR_SAMPLE_LANE_1_ID:
-        fastq1: /path/to/fastq_r1.fastq.gz
-        fastq2: /path/to/fastq_r2.fastq.gz
-      TUMOUR_SAMPLE_LANE_2_ID:
-        fastq1: /path/to/fastq_r1.fastq.gz
-        fastq2: /path/to/fastq_r2.fastq.gz
-      TUMOUR_SAMPLE_LANE_3_ID:
-        fastq1: /path/to/fastq_r1.fastq.gz
-        fastq2: /path/to/fastq_r2.fastq.gz
-  normal: /path/to/output/aligned/normal.bam
-  normal_id: NORMAL_SAMPLE_ID
-  tumour: /path/to/output/aligned/tumour.bam
-  tumour_id: TUMOUR_SAMPLE_ID
-  breakpoints: /path/to/destruct/breakpoints.csv
-```
-
-The fastqs section is only required for the alignment workflow and the full workflow (if the alignment flag is set).
-The breakpoints section is only required for the copynumber workflow if you need remixt results. 
-
-#### Launch Full workflow
-
-```
-wgs all --input_yaml input.yaml --out_dir results --tmpdir tmp --pipelinedir pipeline --submit lsf --maxjobs 1000 --nocleanup --loglevel DEBUG --nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'  --config_override '{"cluster":"juno"}' --context_config context.yaml --alignment --sentinal_only --rerun
-```
-
-#### Launch Alignment workflow
-
-```
-wgs alignment --input_yaml input.yaml --out_dir results --tmpdir tmp --pipelinedir pipeline --submit lsf --maxjobs 1000 --nocleanup --loglevel DEBUG --nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'  --config_override '{"cluster":"juno"}' --context_config context.yaml --alignment --sentinal_only --rerun
-```
-
-#### Launch variant calling workflow
-
-```
-wgs variant_calling --input_yaml input.yaml --out_dir results --tmpdir tmp --pipelinedir pipeline --submit lsf --maxjobs 1000 --nocleanup --loglevel DEBUG --nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'  --config_override '{"cluster":"juno"}' --context_config context.yaml --alignment --sentinal_only --rerun
-```
-
-
-
-#### Launch copynumber calling workflow
-
-```
-wgs copynumber_calling --input_yaml input.yaml --out_dir results --tmpdir tmp --pipelinedir pipeline --submit lsf --maxjobs 1000 --nocleanup --loglevel DEBUG --nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'  --config_override '{"cluster":"juno"}' --context_config context.yaml --alignment --sentinal_only --rerun
-```
-
-#### Launch breakpoint calling workflow
-
-```
-wgs breakpoint_calling --input_yaml input.yaml --out_dir results --tmpdir tmp --pipelinedir pipeline --submit lsf --maxjobs 1000 --nocleanup --loglevel DEBUG --nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'  --config_override '{"cluster":"juno"}' --context_config context.yaml --alignment --sentinal_only --rerun
-```
-
-
-#### Common Options:
-
-
-##### Submit
-
-`--submit lsf` to run on LSF clusters
-`--submit local` to run locally
-`--submit asyncqsub` to run on SGE based cluster
-
-##### nativespec
-
-use `--nativespec` to specify the cluster job submission format. You can use the following keywords as place holder and pipeline will automatically decide the best values for the jobs.
-
-we support the following:
-`{mem}` will be replaced with the optimal memory usage for each job
-`{ncpus}` will be replaced with the optimal number of cpus for each job
-`{walltime}` will be replaced with the optimal walltime for each job
-
-These parameters will be passed to the job scheduler when running the pipeline.
-
-For instance on a LSF based cluster, the nativespec might look like the following:
-
-`--nativespec ' -n {ncpus} -W {walltime} -R "rusage[mem={mem}]span[ptile={ncpus}]select[type==CentOS7]"'`
-
-##### sentinel only:
-The pipeline looks at the files in the filesystem on reruns to track completed jobs. On some filesystems this might cause slowdowns. To replace this with a database please specify `--sentinel_only`
-
-
-##### config options
-The pipeline defaults to preset values for most configuration parameters. You can change these parameters by:
-
-###### custom config file:
-1. generate a new config file with
-
-```
-wgs generate_config --pipeline_config config.yaml
-```
-2. open the generated config yaml file, make changes where necessary and save it.
-3. launch the pipeline with the `--config_file /path/to/config` parameter.
-
-###### config override
-You can also override certain values in the config file with the `--config_override` parameter. The config_override and config_file are mutually exclusive options.
-
-The config override option accepts a json object. this json will override values in the internal config file. please generate a new config file for reference.
-
-The pipeline also comes with some presets for config override. For instance:
-1. if you're running this pipeline on MSKCC's juno cluster, please specify `--config_override '{"cluster":"juno"}'`.
-2. If you're running the pipeline on BCCRC's shahlab cluster, please specify `--config_override '{"cluster":"shahlab"}'`
-
-##### rerun
-`--rerun` will run all jobs again, even if they've been run before.
-
-##### context config
-
-you can also specify a context config file to override the job execution parameters for certain job types. 
-For instance:
-
-`--context_config context.yaml` 
-where context.yaml is
-```
-context:
-  alljobs:
-    name_match: '*'
-    ctx:
-      walltime: '04:00'
-      walltime_num_retry: 5
-      walltime_retry_increment: '48:00'
-```
-will update all jobs to 4 hrs of walltime and the pipeline will retry each job up to 5 times on failure and increment walltime by 2 days on each retry.
-
-##### maxjobs
-specifies the maximum number of jobs that pipeline will run in parallel.
-
-##### nocleanup
-do not clean up intermediates
-
-##### loglevel
-logging level. 
-
+To launch the pipeline.
