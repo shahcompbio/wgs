@@ -11,7 +11,7 @@ import pypeliner
 from wgs.utils import helpers
 
 import pysam
-
+import time
 
 def split_bam_by_readgroups(infile, readgroups, r1_fastq_output, r2_fastq_output):
     for readgroup in readgroups:
@@ -27,7 +27,11 @@ def split_by_rg(infile, read1_output, read2_output, tempdir):
     cmd = ['wgs_bamtofastq', infile, tempdir]
     pypeliner.commandline.execute(*cmd)
 
-    readgroups = os.listdir(tempdir)
+    try:
+        readgroups = os.listdir(tempdir)
+    except OSError:
+        time.sleep(60)
+        readgroups = os.listdir(tempdir)
 
     for readgroup in readgroups:
 
