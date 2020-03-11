@@ -21,7 +21,8 @@ class VcfParser(object):
 
         self.reader = self.get_reader(self.vcf_file)
 
-        #self.snpeff_cols, self.ma_cols, self.ids_cols = self.init_headers()
+        self.snpeff_cols, self.ma_cols, self.ids_cols, self.primary_cols = self.init_headers()
+
         self.cols = None
 
         self.filters = filters
@@ -41,28 +42,47 @@ class VcfParser(object):
         self.ids_outfile.close()
 
     def init_headers(self):
+
         snpeff_cols = self.get_cols_from_header(self.reader, 'ANN') + ['chrom', 'pos']
+
         ma_cols = self.get_cols_from_header(self.reader, 'MA') + ['chrom', 'pos']
+
+        primary_cols = self.get_primary_cols_from_header(self.reader)
+
         ids_cols = ['chrom', 'pos', 'value', 'type']
-        return snpeff_cols, ma_cols, ids_cols
+
+        return snpeff_cols, ma_cols, ids_cols, primary_cols
 
     def write_headers(self):
         self.write_header(self.snpeff_cols, self.snpeff_outfile)
         self.write_header(self.ma_cols, self.ma_outfile)
         self.write_header(self.ids_cols, self.ids_outfile)
+        self.write_header(self.primary_cols, self.outfile)
 
     def get_reader(self, vcf_file):
         return vcf.Reader(filename=vcf_file)
 
+    def get_primary_cols_from_header(self, reader):
+        try:
+            row1 = next(reader)
+        except StopIteration:
+            return ["chrom", "pos", "ref", "alt", "qual", "filter"]
+
+        return list(self.parse_main_cols(row1).keys())
+
     def get_cols_from_header(self, reader, key):
-        info = reader.infos[key]
-        
+        try:
+            info = reader.infos[key]
+        except KeyError:
+            return ['chrom', 'pos']
+
         desc = info.desc
-        
+
         desc = desc.split("'")
         if len(desc) == 1:
             desc = desc[0].split("(")[1]
-        else: desc = desc[1]
+        else:
+            desc = desc[1]
 
         desc = desc.split('|')
 
@@ -191,32 +211,30 @@ class VcfParser(object):
                     if self.eval_expr(record[filter_name], relationship, value):
                         return True
 
-
     def parse_record(self, record):
         data = self.parse_main_cols(record)
         info = record.INFO
 
         snpeff_annotations = self.parse_snpeff(self.snpeff_cols, info['ANN'], record.CHROM, record.POS)
-       # ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
+        ma_annotations = self.parse_mutation_assessor(self.ma_cols, info['MA'], record.CHROM, record.POS)
 
         id_annotations = self.parse_list_annotations(info['DBSNP'], record.CHROM, record.POS, 'dbsnp')
         id_annotations += self.parse_list_annotations(info['Cosmic'], record.CHROM, record.POS, 'cosmic')
         ## TODO: I expected to see a 1000gen: False in the record. but the key is missing.
         id_annotations += self.parse_flag_annotation(info.get('1000Gen'), record.CHROM, record.POS, '1000Gen')
         id_annotations += self.parse_flag_annotation(info.get('LOW_MAPPABILITY'), record.CHROM, record.POS,
-                                                        'LOW_MAPPABILITY')  
-        return data, snpeff_annotations, id_annotations#ma_annotations, id_annotations
+                                                     'LOW_MAPPABILITY')
+        return data, snpeff_annotations, id_annotations, ma_annotations
 
     def parse_vcf(self):
         for record in self.reader:
 
-            data, snpeff_annotations, ma_annotations, id_annotations = parse_record(record)
-            
+            data, snpeff_annotations, id_annotations, ma_annotations = self.parse_record(record)
+
             if self.filter_records(data, id_annotations):
                 continue
 
-            #yield data, (snpeff_annotations, ma_annotations, id_annotations)
-            yield data, (snpeff_annotations, id_annotations)
+            yield data, (snpeff_annotations, ma_annotations, id_annotations)
 
     def write_record(self, record, header, outfile):
         '''
@@ -240,12 +258,9 @@ class VcfParser(object):
         :param blacklist:
         '''
         data = self.parse_vcf()
-
-        primary_header = None
-
+        primary_header = self.primary_cols
         for record in data:
             primary, annotations = record
-
             if not primary_header:
                 primary_header = list(primary.keys())
                 self.write_header(primary_header, self.outfile)
