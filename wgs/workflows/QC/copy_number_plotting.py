@@ -1,5 +1,6 @@
 import pandas as pd
 from matplotlib.lines import Line2D
+import numpy as np
 
 
 def read(copy_number):
@@ -22,7 +23,6 @@ def plot_anno_genes(anno_genes, min, max, ax):
     return ax
 
 
-
 def get_gene_annotation_data(chrom):
     '''
     make a hard coded dataframe of gene annotations
@@ -31,7 +31,7 @@ def get_gene_annotation_data(chrom):
                   "KRAS": [12, 25403870, "red"],           "MYC": [8, 128753674, "cyan"],
                   "PIK3CA": [3, 178957881, "magenta"],     "MECOM": [3, 169381406, "yellow"],
                   "RB1": [13, 49056122, "lightsteelblue"], "PTEN": [10, 89731687, "tan"],
-                  "BRCA1": [17, 41277500, "black"],        "BRCA2": [13, 32973805, "silver"],
+                  "BRCA1": [17, 41277500, "black"],        "BRCA2": [13, 32973805, "grey"],
                   "RAD51C": [17, 56811703, "saddlebrown"], "PALB2": [16, 23652631, "pink"]}
 
     anno_genes = pd.DataFrame(anno_genes).T
@@ -39,13 +39,26 @@ def get_gene_annotation_data(chrom):
     return anno_genes[anno_genes.chrom == chrom]
 
 
+def bin(positions, copy_number, state, n_bins, start, extent):
+    '''
+    bin coverage data
+    '''
+    bins = np.linspace(start, extent, n_bins)
+    digitized = np.digitize(positions, bins)
+
+    position = [positions[digitized == i].mean() for i in range(1, len(bins))]
+    lr = [copy_number[positions[digitized == i].index].mean() for i in range(1, len(bins))]
+    state = [state[positions[digitized == i].index].mean() for i in range(1, len(bins))]
+    return pd.DataFrame({"Position": position,
+                       "LogRatio": lr,
+                        "state": state})
+
 
 def prepare_at_chrom(copy_number, chrom):
     '''
-    prep copy numbe rdata for plotting at a chrom
+    prep copy number rdata for plotting at a chrom
     '''
-     return copy_number[copy_number["Chr"] == chrom][["Position", "LogRatio"]]
-
+    return copy_number[copy_number["Chr"] == chrom][["Position", "LogRatio"]]
 
 
 def make_annotation_legend(anno_genes, axis):
@@ -63,7 +76,6 @@ def make_annotation_legend(anno_genes, axis):
     return axis
 
 
-
 def plot(prepped_copy_number, anno_genes, axis):
     '''
     plot copy number data on axis
@@ -79,3 +91,33 @@ def plot(prepped_copy_number, anno_genes, axis):
         axis = make_annotation_legend(anno_genes, axis)
 
     return axis
+
+
+def make_for_circos(copy_number, outfile):
+    '''
+    prep copy number data to be used by circos.r
+    :param copy_number: input copy_number file
+    :param outfile: path to prepped copy_number csv
+    :return:
+    '''
+    df = read(copy_number)
+    output = []
+    chroms = df.Chr.unique()
+
+    for chrom in chroms:
+
+        prepped = copy_number[copy_number["Chr"] == chrom]
+        prepped = bin(prepped.Position, prepped.LogRatio, prepped.TITANstate, 200,
+                      prepped.Position.min(), prepped.Position.max())
+        prepped["Chr"] = [chrom] * len(prepped.index)
+        output.append(prepped)
+
+    output = pd.concat(output)
+    #the NaNs over centromere breaks the R code
+    output = output[~output.Position.isna()]
+    output.to_csv(outfile, index=False, header=True, sep="\t")
+
+
+#EXAMPLE RUN
+#run a titan_markers file through
+# make_for_circos() to get input for circos.r
