@@ -31,6 +31,11 @@ def add_global_args(subparser):
                            action='store_true',
                            help='''azure specific mode''')
 
+    subparser.add_argument("--refdir",
+                           required=True,
+                           help='''reference data dir''')
+
+
     pypeliner.app.add_arguments(subparser)
 
     return subparser

@@ -1,117 +1,259 @@
-import collections
 import os
-import warnings
 
-import wgs
 import yaml
-from wgs.utils import helpers
-
-from azure_config import azure_config
-from juno_config import juno_config
-from shahlab_config import shahlab_config
 
 
-def get_version():
-    version = wgs.__version__
-    # strip setuptools metadata
-    version = version.split("+")[0]
-    return version
+def load_refdir_metadata(refdir):
+    yamlpath = os.path.join(refdir, 'metadata.yaml')
+
+    with open(yamlpath) as yamlfile:
+        yamldata = yaml.safe_load(yamlfile)
+
+    return yamldata
 
 
-def containers():
-    version = get_version()
-    docker_images = {
-        'bwa': 'bwa:v0.0.1',
-        'samtools': 'samtools:v0.0.1',
-        'picard': 'picard:v0.0.1',
-        'wgs': 'wgs:v{}'.format(version),
-        'strelka': 'strelka:v0.0.1',
-        'mutationseq': 'mutationseq:v0.0.1',
-        'vcftools': 'vcftools:v0.0.1',
-        'snpeff': 'vcftools:v0.0.1',
-        'titan': 'titan:v0.0.2',
-        'destruct': 'destruct:v0.0.1',
-        'lumpy': 'lumpy:v0.0.1',
-        'vizutils': 'vizutils:v0.0.1',
-        'fastqc': 'fastqc:v0.0.1',
-        'hmmcopy': 'hmmcopy:v0.0.1',
+def pipeline_config(containers, refdir):
+    def get_path(metadata_key):
+        return os.path.join(refdir, metadata[metadata_key])
+
+    metadata = load_refdir_metadata(refdir)
+
+    docker_containers = containers['docker']
+
+    globals = {
+        'memory': {'low': 5, 'med': 10, 'high': 15, },
+        'threads': 8,
     }
 
-    singularity = {}
+    variant_calling = {
+        'split_size': 1e7,
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'reference': get_path('reference'),
+        'strelka_depth_threshold': True,
+        'annotation_params': {
+            'snpeff_params': {
+                'snpeff_config': get_path('snpeff_config')
+            },
+            'mutation_assessor_params': {
+                'db': get_path('mutation_assessor')
+            },
+            'dbsnp_params': {
+                'db': get_path('dbsnp'),
+            },
+            'thousandgen_params': {
+                'db': get_path('thousand_genomes')
+            },
+            'cosmic_params': {
+                'db': get_path('cosmic')
+            },
+            'mappability_ref': get_path('blacklist')
+        },
+        'plot_params': {
+            'threshold': 0.5,
+            'refdata_single_sample': get_path('germline_portrait_ref'),
+            'thousandgen_params': {
+                'db': get_path('thousand_genomes')
+            },
+            'dbsnp_params': {
+                'db': get_path('dbsnp')
+            },
+        },
+        'parse_strelka': {
+            'keep_1000gen': True,
+            ## TODO: why is this missing
+            # 'keep_cosmic': True,
+            'remove_duplicates': False,
+            'keep_dbsnp': True,
+            'chromosomes': map(str, range(1, 23)) + ['X'],
+            'mappability_ref': get_path('blacklist'),
+        },
+        'parse_museq': {
+            'keep_1000gen': True,
+            'keep_cosmic': True,
+            'remove_duplicates': False,
+            'keep_dbsnp': True,
+            'chromosomes': map(str, range(1, 23)) + ['X'],
+            'mappability_ref': get_path('blacklist'),
+            'pr_threshold': 0.85
+        },
+        'museq_params': {
+            'threshold': 0.5,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 20,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'strelka': docker_containers['strelka'],
+            'vcftools': docker_containers['vcftools'],
+            'samtools': docker_containers['samtools'],
+            'mutationseq': docker_containers['mutationseq'],
+            'vizutils': docker_containers['vizutils'],
+        }
+    }
 
-    return {'docker': docker_images, 'singularity': singularity}
+    sv_calling = {
+        'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
+        'samtools': 'samtools',
+        'lumpyexpress': 'lumpyexpress',
+        'refdata_destruct': get_path('refdata_destruct'),
+        'destruct_config': {
+            'genome_fasta': get_path('reference'),
+            'genome_fai': get_path('reference') + '.fai',
+            'gtf_filename': get_path('gtf'),
+        },
+        'mappability_ref': get_path('blacklist_destruct'),
+        'parse_lumpy': {
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'deletion_size_threshold': 0,
+            'tumour_read_support_threshold': 0,
+        },
+        'parse_destruct': {
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'deletion_size_threshold': 1000,
+            'foldback_threshold': 30000,
+            'readsupport_threshold': 4,
+            'breakdistance_threshold': 30
+        },
+        'consensus': {
+            'confidence_interval_size': 500,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'destruct': docker_containers['destruct'],
+            'lumpy': docker_containers['lumpy'],
+            'samtools': docker_containers['samtools'],
+            'vizutils': docker_containers['vizutils'],
+        }
+    }
 
+    copynumber_calling = {
+        'ncpus': 8,
+        'split_size': 1e7,
+        "min_num_reads": 5,
+        "reference_genome": get_path('reference'),
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'dbsnp_positions': get_path('het_positions_titan'),
+        'readcounter': {'w': 1000, 'q': 0},
+        'correction': {
+            'gc': get_path('gc_wig'),
+            'map': get_path('map_wig'),
+            'map_cutoff': 0.85
+        },
+        'titan_intervals': [
+            {'num_clusters': 1, 'ploidy': 2},
+            {'num_clusters': 2, 'ploidy': 2},
+            {'num_clusters': 3, 'ploidy': 2},
+            {'num_clusters': 4, 'ploidy': 2},
+            {'num_clusters': 5, 'ploidy': 2},
+            {'num_clusters': 1, 'ploidy': 4},
+            {'num_clusters': 2, 'ploidy': 4},
+            {'num_clusters': 3, 'ploidy': 4},
+            {'num_clusters': 4, 'ploidy': 4},
+            {'num_clusters': 5, 'ploidy': 4},
+        ],
+        'pygenes_gtf': get_path('gtf'),
+        'museq_params': {
+            'threshold': 0.85,
+            'verbose': True,
+            'purity': 70,
+            'coverage': 4,
+            'buffer_size': '2G',
+            'mapq_threshold': 10,
+            'indl_threshold': 0.05,
+            'normal_variant': 25,
+            'tumour_variant': 2,
+            'baseq_threshold': 10,
+        },
+        'hmmcopy_params': {
+            'normal_copy': None,
+            'normal_table': None,
+            'normal_table_out': None,
+            'm': None,
+            'mu': None,
+            'kappa': None,
+            'e': None,
+            'S': None,
+            'strength': None,
+            'lambda': None,
+            'nu': None,
+            'eta': None,
+            'gamma': None,
+        },
+        'titan_params': {
+            'y_threshold': 20,
+            'genome_type': 'NCBI',
+            'map': get_path('map_wig'),
+            'num_cores': 4,
+            'myskew': 0,
+            'estimate_ploidy': 'TRUE',
+            'normal_param_nzero': 0.5,
+            'normal_estimate_method': 'map',
+            'max_iters': 50,
+            'pseudo_counts': 1e-300,
+            'txn_exp_len': 1e16,
+            'txn_z_strength': 1e6,
+            'alpha_k': 15000,
+            'alpha_high': 20000,
+            'max_copynumber': 8,
+            'symmetric': 'TRUE',
+            'chrom': 'NULL',
+            'max_depth': 1000,
+        },
+        'parse_titan': {
+            'segment_size_threshold': 5000,
+            'chromosomes': map(str, range(1, 23) + ['X']),
+            'genes': None,
+            'types': None,
+        },
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'titan': docker_containers['titan'],
+            'hmmcopy': docker_containers['hmmcopy'],
+            'vizutils': docker_containers['vizutils'],
+            'mutationseq': docker_containers['mutationseq'],
+            'vcftools': docker_containers['vcftools'],
+        }
+    }
 
-def override_config(config, override):
-    def update(d, u):
-        for k, v in u.iteritems():
-            if isinstance(v, collections.Mapping):
-                d[k] = update(d.get(k, {}), v)
-            else:
-                d[k] = v
-        return d
+    alignment = {
+        "ref_genome": {
+            'file': get_path('reference'),
+            'header': {
+                'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
+                'AS': 'hg19/1000genomes',
+                'SP': 'Homo sapiens'
+            }
+        },
+        'picard_wgs_params': {
+            "min_bqual": 20,
+            "min_mqual": 20,
+            "count_unpaired": False,
+        },
+        'threads': 8,
+        'aligner': 'bwa-mem',
+        'split_size': 1e7,
+        'docker': {
+            'wgs': docker_containers['wgs'],
+            'bwa': docker_containers['bwa'],
+            'samtools': docker_containers['samtools'],
+            'picard': docker_containers['picard'],
+            'fastqc': docker_containers['fastqc']
+        }
+    }
 
-    if not override:
-        return config
-
-    cfg = update(config, override)
-
-    return cfg
-
-
-def get_config(override):
-    wgscontainers = containers()
-    if override["cluster"] == "shahlab":
-        config = shahlab_config(override["reference"], wgscontainers)
-    elif override["cluster"] == "juno":
-        config = juno_config(override["reference"], wgscontainers)
-    elif override["cluster"] == "azure":
-        config = azure_config(override["reference"], wgscontainers)
-    else:
-        raise Exception()
-
-    override.pop('cluster')
-    override.pop('reference')
-
-    config = override_config(config, override)
+    config = {
+        'copynumber_calling': copynumber_calling,
+        'globals': globals,
+        'sv_calling': sv_calling,
+        'variant_calling': variant_calling,
+        'alignment': alignment
+    }
 
     return config
-
-
-def write_config(params, filepath):
-    with open(filepath, 'w') as outputfile:
-        yaml.safe_dump(params, outputfile, default_flow_style=False)
-
-
-def generate_pipeline_config(args):
-    if args['which'] == 'generate_config':
-        config_yaml = args['pipeline_config']
-        config_yaml = os.path.abspath(config_yaml)
-    else:
-        config_yaml = "config.yaml"
-        tmpdir = args.get("tmpdir", None)
-        pipelinedir = args.get("pipelinedir", None)
-
-        # use pypeliner tmpdir to store yaml
-        if pipelinedir:
-            config_yaml = os.path.join(pipelinedir, config_yaml)
-        elif tmpdir:
-            config_yaml = os.path.join(tmpdir, config_yaml)
-        else:
-            warnings.warn("no tmpdir specified, generating configs in working dir")
-            config_yaml = os.path.join(os.getcwd(), config_yaml)
-
-        config_yaml = helpers.get_incrementing_filename(config_yaml)
-
-    params_override = {'cluster': 'azure', 'reference': 'grch37'}
-    if args['config_override']:
-        params_override.update(args["config_override"])
-
-    helpers.makedirs(config_yaml, isfile=True)
-
-    config = get_config(params_override)
-    write_config(config, config_yaml)
-
-    args["config_file"] = config_yaml
-
-    return args
