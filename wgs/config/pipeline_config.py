@@ -30,7 +30,7 @@ def pipeline_config(containers, refdir):
         'chromosomes': map(str, range(1, 23) + ['X']),
         'reference': get_path('reference'),
         'strelka_depth_threshold': True,
-        'annotation_params': {
+        'databases': {
             'snpeff_params': {
                 'snpeff_config': get_path('snpeff_config')
             },
@@ -51,37 +51,15 @@ def pipeline_config(containers, refdir):
         'plot_params': {
             'threshold': 0.5,
             'refdata_single_sample': get_path('germline_portrait_ref'),
-            'thousandgen_params': {
-                'db': get_path('thousand_genomes')
-            },
-            'dbsnp_params': {
-                'db': get_path('dbsnp')
-            },
         },
-        'parse_strelka': {
-            'keep_1000gen': True,
-            ## TODO: why is this missing
-            # 'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
-            'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': get_path('blacklist'),
-        },
+        'parse_strelka': {},
         'parse_museq': {
-            'keep_1000gen': True,
-            'keep_cosmic': True,
-            'remove_duplicates': False,
-            'keep_dbsnp': True,
-            'chromosomes': map(str, range(1, 23)) + ['X'],
-            'mappability_ref': get_path('blacklist'),
             'pr_threshold': 0.85
         },
         'museq_params': {
             'threshold': 0.5,
             'verbose': True,
-            'purity': 70,
             'coverage': 4,
-            'buffer_size': '2G',
             'mapq_threshold': 10,
             'indl_threshold': 0.05,
             'normal_variant': 25,
@@ -94,7 +72,6 @@ def pipeline_config(containers, refdir):
             'vcftools': docker_containers['vcftools'],
             'samtools': docker_containers['samtools'],
             'mutationseq': docker_containers['mutationseq'],
-            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -129,7 +106,6 @@ def pipeline_config(containers, refdir):
             'destruct': docker_containers['destruct'],
             'lumpy': docker_containers['lumpy'],
             'samtools': docker_containers['samtools'],
-            'vizutils': docker_containers['vizutils'],
         }
     }
 
@@ -216,7 +192,6 @@ def pipeline_config(containers, refdir):
             'wgs': docker_containers['wgs'],
             'titan': docker_containers['titan'],
             'hmmcopy': docker_containers['hmmcopy'],
-            'vizutils': docker_containers['vizutils'],
             'mutationseq': docker_containers['mutationseq'],
             'vcftools': docker_containers['vcftools'],
         }

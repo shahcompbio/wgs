@@ -68,6 +68,7 @@ def create_consensus_workflow(
             mgd.OutputFile(germline_ma_annotations, extensions=['.yaml']),
             mgd.OutputFile(germline_ids_annotations, extensions=['.yaml']),
             varcall_config["parse_museq"],
+            varcall_config['chromosomes'],
             mgd.TempSpace("tempdir_parse_germlines")
         ),
     )
@@ -85,6 +86,7 @@ def create_consensus_workflow(
             mgd.OutputFile(indel_ma_annotations, extensions=['.yaml']),
             mgd.OutputFile(indel_ids_annotations, extensions=['.yaml']),
             varcall_config["parse_strelka"],
+            varcall_config['chromosomes'],
             mgd.TempSpace("tempdir_strelka_indel")
         ),
     )
@@ -102,6 +104,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('museq_ma.csv', extensions=['.yaml']),
             mgd.TempOutputFile('museq_ids.csv', extensions=['.yaml']),
             varcall_config["parse_museq"],
+            varcall_config['chromosomes'],
             mgd.TempSpace("tempdir_parse_museq_snv")
         ),
     )
@@ -119,6 +122,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('strelka_snv_ma.csv', extensions=['.yaml']),
             mgd.TempOutputFile('strelka_snv_ids.csv', extensions=['.yaml']),
             varcall_config["parse_strelka"],
+            varcall_config['chromosomes'],
             mgd.TempSpace("tempdir_parse_strelka_snv")
         ),
     )

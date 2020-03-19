@@ -131,6 +131,7 @@ def create_museq_workflow(
             mgd.TempOutputFile('museqportrait.log'),
             single,
             varcall_config['plot_params'],
+            varcall_config['databases']
         ),
         kwargs={'docker_image': varcall_config['docker']['mutationseq']}
     )

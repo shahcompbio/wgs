@@ -12,7 +12,7 @@ def create_annotation_workflow(
         input_vcf,
         annotated_vcf,
         global_config,
-        varcall_config,
+        databases,
         vcftools_docker=None,
         snpeff_docker=None
 ):
@@ -27,7 +27,7 @@ def create_annotation_workflow(
         args=(
             mgd.InputFile(input_vcf),
             mgd.TempOutputFile('annotSnpEff.vcf'),
-            varcall_config,
+            databases,
         ),
         kwargs={'docker_image': snpeff_docker}
     )
@@ -41,7 +41,7 @@ def create_annotation_workflow(
         args=(
             mgd.TempInputFile('annotSnpEff.vcf'),
             mgd.TempOutputFile('annotMA.vcf'),
-            varcall_config,
+            databases,
         ),
     )
 
@@ -54,7 +54,7 @@ def create_annotation_workflow(
         args=(
             mgd.TempInputFile('annotMA.vcf'),
             mgd.TempOutputFile('flagDBsnp.vcf'),
-            varcall_config,
+            databases,
         ),
     )
 
@@ -67,7 +67,7 @@ def create_annotation_workflow(
         args=(
             mgd.TempInputFile('flagDBsnp.vcf'),
             mgd.TempOutputFile('flag1000gen.vcf'),
-            varcall_config,
+            databases,
         ),
     )
 
@@ -80,7 +80,7 @@ def create_annotation_workflow(
         args=(
             mgd.TempInputFile('flag1000gen.vcf'),
             mgd.TempOutputFile('cosmic.vcf'),
-            varcall_config,
+            databases,
         ),
     )
 
@@ -93,7 +93,7 @@ def create_annotation_workflow(
         args=(
             mgd.TempInputFile('cosmic.vcf'),
             mgd.TempOutputFile('low_mapp.vcf'),
-            varcall_config['mappability_ref']
+            databases['mappability_ref']
         ),
     ),
 

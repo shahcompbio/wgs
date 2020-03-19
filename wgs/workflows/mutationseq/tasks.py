@@ -20,31 +20,48 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            start = str(int(i * size)+1)
+            start = str(int(i * size) + 1)
             end = str(int((i + 1) * size))
             intervals.append(name + "_" + start + "_" + end)
 
     return intervals
 
 
-def run_museqportrait(infile, out_pdf, out_txt, museqportrait_log, single_mode, config,
-                      docker_image=None):
-    '''
+def run_museqportrait(
+        infile, out_pdf, out_txt, museqportrait_log,
+        single_mode, plot_params, databases, docker_image=None
+):
+    """
     Run museqportrait script on the input VCF file
 
-    :param infile: temporary input VCF file
-    :param out_dir: temporary output VCF file
-    :param museqportrait_log: path to the log file
-    '''
+    :param infile:
+    :type infile: str
+    :param out_pdf:
+    :type out_pdf: str
+    :param out_txt:
+    :type out_txt: str
+    :param museqportrait_log:
+    :type museqportrait_log: str
+    :param single_mode:
+    :type single_mode: bool
+    :param plot_params:
+    :type plot_params: dict
+    :param databases:
+    :type databases: dict
+    :param docker_image:
+    :type docker_image: str
+    :return:
+    :rtype:
+    """
 
     if single_mode:
         plt_ss = PlotSingleSample(
             infile,
-            config["thousandgen_params"]["db"],
-            config["dbsnp_params"]["db"],
-            config['refdata_single_sample'],
+            databases["thousandgen_params"]["db"],
+            databases["dbsnp_params"]["db"],
+            plot_params['refdata_single_sample'],
             out_pdf,
-            config['threshold']
+            plot_params['threshold']
         )
 
         plt_ss.main()

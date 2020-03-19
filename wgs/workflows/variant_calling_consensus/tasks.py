@@ -7,7 +7,7 @@ from .scripts import vcfparser
 
 def parse_vcf(
         infile, primary_table, snpeff_table,
-        ma_table, id_table, parse_config, tempdir
+        ma_table, id_table, parse_config, chromosomes, tempdir
 ):
     '''
     parses a vcf containing variant calls
@@ -35,8 +35,8 @@ def parse_vcf(
     if 'filter_low_mappability' in parse_config and parse_config['filter_low_mappability']:
         filter_out.append(('LOW_MAPPABILITY', 'eq', True))
 
-    if 'chromosomes' in parse_config and parse_config['chromosomes']:
-        filter_out.append(('CHROM', 'notin', parse_config['chromosomes']))
+    if chromosomes:
+        filter_out.append(('CHROM', 'notin', chromosomes))
 
     if 'pr_threshold' in parse_config and parse_config['pr_threshold']:
         filter_out.append(('PR', 'lt', parse_config['pr_threshold']))

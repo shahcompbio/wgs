@@ -30,7 +30,6 @@ def containers():
         'titan': 'titan:v0.0.2',
         'destruct': 'destruct:v0.0.1',
         'lumpy': 'lumpy:v0.0.1',
-        'vizutils': 'vizutils:v0.0.1',
         'fastqc': 'fastqc:v0.0.1',
         'hmmcopy': 'hmmcopy:v0.0.1',
     }
