@@ -9,6 +9,7 @@ from wgs.utils import helpers
 
 def create_samtools_germline_workflow(
         germline_vcf,
+        germline_roh,
         global_config,
         varcall_config,
         bam_file,
@@ -98,6 +99,19 @@ def create_samtools_germline_workflow(
         args=(
             mgd.TempInputFile('merged.vcf'),
             mgd.OutputFile(germline_vcf, extensions=['.tbi', '.csi']),
+        ),
+        kwargs={'docker_image': varcall_config['docker']['vcftools']}
+    )
+
+    workflow.transform(
+        name='roh_calling',
+        ctx=helpers.get_default_ctx(
+            walltime='8:00',
+        ),
+        func='wgs.workflows.samtools_germline.tasks.roh_calling',
+        args=(
+            mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
+            mgd.OutputFile(germline_roh)
         ),
         kwargs={'docker_image': varcall_config['docker']['vcftools']}
     )

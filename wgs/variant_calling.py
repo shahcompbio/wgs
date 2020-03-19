@@ -7,7 +7,7 @@ from wgs.utils import helpers
 
 
 def call_germlines_only(
-        samples, config, normals, museq_ss_vcf, samtools_germline_vcf,
+        samples, config, normals, museq_ss_vcf, samtools_germline_vcf, roh_calls,
         museq_single_pdf, single_node=False
 ):
     global_config = config['globals']
@@ -19,6 +19,8 @@ def call_germlines_only(
                              for sampid in samples])
     samtools_germline_vcf = dict([(sampid, samtools_germline_vcf[sampid])
                                   for sampid in samples])
+    roh_calls = dict([(sampid, roh_calls[sampid])
+                      for sampid in samples])
 
     workflow = pypeliner.workflow.Workflow(
         ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
@@ -53,6 +55,8 @@ def call_germlines_only(
         args=(
             mgd.OutputFile("samtools_germlines.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
                            fnames=samtools_germline_vcf),
+            mgd.OutputFile("roh_calls.csv", 'sample_id',
+                           fnames=roh_calls),
             global_config,
             config,
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
@@ -84,7 +88,7 @@ def call_germlines_only(
 
 def call_variants(
         samples, config, somatic_calls, indel_calls, germline_calls, outdir,
-        tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf,
+        tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
         museq_paired_pdf, museq_single_pdf,
         single_node=False
@@ -102,6 +106,9 @@ def call_variants(
                          for sampid in samples])
     samtools_germlines_vcf = dict([(sampid, samtools_germlines_vcf[sampid])
                                    for sampid in samples])
+    roh_calls = dict([(sampid, roh_calls[sampid])
+                      for sampid in samples])
+
     museq_paired_pdf = dict([(sampid, museq_paired_pdf[sampid])
                              for sampid in samples])
     museq_single_pdf = dict([(sampid, museq_single_pdf[sampid])
@@ -166,6 +173,8 @@ def call_variants(
         args=(
             mgd.OutputFile("samtools_germlines.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
                            fnames=samtools_germlines_vcf),
+            mgd.OutputFile("roh_calls.csv.gz", 'sample_id',
+                           fnames=roh_calls),
             global_config,
             config,
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
@@ -296,7 +305,10 @@ def variant_calling_workflow(args):
     var_dir = os.path.join(args['out_dir'], 'variants')
     museq_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.vcf.gz')
     museq_ss_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_single_annotated.vcf.gz')
+
     samtools_germline_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_samtools_germline.vcf.gz')
+    samtools_roh = os.path.join(var_dir, '{sample_id}', '{sample_id}_roh.csv')
+
     strelka_snv_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_strelka_snv_annotated.vcf.gz')
     strelka_indel_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_strelka_indel_annotated.vcf.gz')
     museq_paired_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_paired_museqportrait.pdf')
@@ -328,6 +340,7 @@ def variant_calling_workflow(args):
                               extensions=['.bai'], axes_origin=[]),
                 mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
                 mgd.OutputFile('samtools_germline', 'sample_id', template=samtools_germline_vcf, axes_origin=[]),
+                mgd.OutputFile('samtools_roh', 'sample_id', template=samtools_roh, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
             ),
             kwargs={'single_node': args['single_node']}
@@ -350,6 +363,7 @@ def variant_calling_workflow(args):
                 mgd.OutputFile('museq', 'sample_id', template=museq_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
                 mgd.OutputFile('samtools_germline', 'sample_id', template=samtools_germline_vcf, axes_origin=[]),
+                mgd.OutputFile('roh_calls', 'sample_id',template=samtools_roh, axes_origin=[]),
                 mgd.OutputFile('strelka_snv', 'sample_id', template=strelka_snv_vcf, axes_origin=[]),
                 mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),

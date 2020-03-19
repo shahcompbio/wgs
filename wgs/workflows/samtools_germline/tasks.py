@@ -3,9 +3,10 @@ Created on Feb 21, 2018
 
 @author: pwalters
 '''
-import pysam
-import pypeliner
 import os
+
+import pypeliner
+import pysam
 from wgs.utils import helpers
 from wgs.utils import vcfutils
 
@@ -29,13 +30,12 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
 
 def samtools_germline_command(vcf, reference, interval, bam_file):
-
     interval = interval.split('_')
 
     interval = '{}:{}-{}'.format(interval[0], interval[1], interval[2])
 
     cmd = [
-        'samtools', 'mpileup', '-ugf', reference, '-Q', 20, '-q', 10, '-r', interval,  bam_file,
+        'samtools', 'mpileup', '-ugf', reference, '-Q', 20, '-q', 10, '-r', interval, bam_file,
         '|', 'bcftools', 'call', '-vmO', 'z', '-o', vcf
     ]
 
@@ -72,3 +72,9 @@ def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
     vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+
+
+def roh_calling(samtools_germlines, roh_output, docker_image=None):
+    cmd = ['bcftools', 'roh', '-G30', '--AF-dflt', 0.4, samtools_germlines, '>', roh_output]
+
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
