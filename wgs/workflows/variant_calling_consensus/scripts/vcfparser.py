@@ -216,13 +216,11 @@ class VcfParser(object):
         :param header: header containg colnames
         :param outfile: path to outfile
         '''
-        outstr = [record[col] for col in header]
+        outstr = [record.get(col) for col in header]
         outstr = ','.join(map(str, outstr)) + '\n'
         outfile.write(outstr)
 
     def write_header(self, header, outfile):
-        print(header, outfile)
-
         outstr = ','.join(map(str, header)) + '\n'
         outfile.write(outstr)
 
