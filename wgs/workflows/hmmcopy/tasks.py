@@ -24,9 +24,9 @@ def calc_corr(input_wig, output_file, output_obj, config, docker_image=None):
     cmd = [
         'hmmcopy_correct_reads.R',
         input_wig,
-        config['correction']['gc'],
-        config['correction']['map'],
-        str(config['correction']['map_cutoff']),
+        config['reference_wigs']['gc'],
+        config['reference_wigs']['map'],
+        str(config['map_cutoff']),
         output_file,
         output_obj,
     ]

@@ -165,7 +165,7 @@ def create_titan_workflow(
         ctx=helpers.get_default_ctx(
             memory=global_config['memory']['high'],
             walltime='72:00',
-            ncpus=config['ncpus']),
+            ncpus=global_config['threads']),
         func='wgs.workflows.titan.tasks.run_titan',
         args=(
             mgd.TempInputFile('museq_postprocess.txt'),
@@ -174,6 +174,7 @@ def create_titan_workflow(
             mgd.TempOutputFile('titan.Rdata', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_params', 'numclusters', 'ploidy'),
             config['titan_params'],
+            config['reference_wigs'],
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy'),
             sample_id
@@ -244,6 +245,7 @@ def create_titan_workflow(
             mgd.TempOutputFile('titan_parsed.csv', 'numclusters', 'ploidy'),
             config['parse_titan'],
         ),
+        kwargs={'chromosomes': config['chromosomes']}
     )
 
     # select optimal solution

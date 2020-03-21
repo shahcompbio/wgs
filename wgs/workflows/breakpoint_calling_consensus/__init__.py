@@ -30,6 +30,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('lumpy.csv'),
             svcalling_config["parse_lumpy"],
         ),
+        kwargs={'chromosomes': svcalling_config['chromosomes']}
     )
 
     workflow.transform(
@@ -44,6 +45,7 @@ def create_consensus_workflow(
             mgd.TempOutputFile('destruct.csv'),
             svcalling_config["parse_destruct"],
         ),
+        kwargs={'chromosomes': svcalling_config['chromosomes']}
     )
 
     workflow.transform(

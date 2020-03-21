@@ -50,10 +50,10 @@ def write(df, outfile):
 
 
 def filter_calls(data, filters):
-    if filters['readsupport_threshold']:
+    if filters.get('readsupport_threshold'):
         data = data[data['num_reads'] > filters['readsupport_threshold']]
 
-    if filters['chromosomes']:
+    if filters.get('chromosomes'):
         data = data[data['chromosome_1'].isin(filters['chromosomes'])]
         data = data[data['chromosome_2'].isin(filters['chromosomes'])]
 
@@ -64,7 +64,7 @@ def filter_calls(data, filters):
         data = data[
             (data['type'] != 'deletion') | (data['break_distance'] >= filters['deletion_size_threshold'])]
 
-    if filters['break_distance_threshold']:
+    if filters.get('break_distance_threshold'):
         data = data[data['break_distance'] > filters['break_distance_threshold']]
 
     return data

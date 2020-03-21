@@ -76,9 +76,12 @@ def pipeline_config(containers, refdir):
     }
 
     sv_calling = {
-        'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
-        'samtools': 'samtools',
-        'lumpyexpress': 'lumpyexpress',
+        'chromosomes': map(str, range(1, 23) + ['X']),
+        'lumpy_paths': {
+            'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
+            'samtools': 'samtools',
+            'lumpyexpress': 'lumpyexpress',
+        },
         'refdata_destruct': get_path('refdata_destruct'),
         'destruct_config': {
             'genome_fasta': get_path('reference'),
@@ -87,12 +90,10 @@ def pipeline_config(containers, refdir):
         },
         'mappability_ref': get_path('blacklist_destruct'),
         'parse_lumpy': {
-            'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 0,
             'tumour_read_support_threshold': 0,
         },
         'parse_destruct': {
-            'chromosomes': map(str, range(1, 23) + ['X']),
             'deletion_size_threshold': 1000,
             'foldback_threshold': 30000,
             'readsupport_threshold': 4,
@@ -110,18 +111,16 @@ def pipeline_config(containers, refdir):
     }
 
     copynumber_calling = {
-        'ncpus': 8,
         'split_size': 1e7,
-        "min_num_reads": 5,
         "reference_genome": get_path('reference'),
         'chromosomes': map(str, range(1, 23) + ['X']),
         'dbsnp_positions': get_path('het_positions_titan'),
         'readcounter': {'w': 1000, 'q': 0},
-        'correction': {
+        'reference_wigs': {
             'gc': get_path('gc_wig'),
             'map': get_path('map_wig'),
-            'map_cutoff': 0.85
         },
+        'map_cutoff': 0.85,
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
             {'num_clusters': 2, 'ploidy': 2},
@@ -138,9 +137,6 @@ def pipeline_config(containers, refdir):
         'museq_params': {
             'threshold': 0.85,
             'verbose': True,
-            'purity': 70,
-            'coverage': 4,
-            'buffer_size': '2G',
             'mapq_threshold': 10,
             'indl_threshold': 0.05,
             'normal_variant': 25,
@@ -165,7 +161,6 @@ def pipeline_config(containers, refdir):
         'titan_params': {
             'y_threshold': 20,
             'genome_type': 'NCBI',
-            'map': get_path('map_wig'),
             'num_cores': 4,
             'myskew': 0,
             'estimate_ploidy': 'TRUE',
@@ -184,7 +179,6 @@ def pipeline_config(containers, refdir):
         },
         'parse_titan': {
             'segment_size_threshold': 5000,
-            'chromosomes': map(str, range(1, 23) + ['X']),
             'genes': None,
             'types': None,
         },
@@ -198,14 +192,7 @@ def pipeline_config(containers, refdir):
     }
 
     alignment = {
-        "ref_genome": {
-            'file': get_path('reference'),
-            'header': {
-                'UR': 'http://www.bcgsc.ca/downloads/genomes/9606/hg19/1000genomes/bwa_ind/genome',
-                'AS': 'hg19/1000genomes',
-                'SP': 'Homo sapiens'
-            }
-        },
+        "ref_genome": get_path('reference'),
         'picard_wgs_params': {
             "min_bqual": 20,
             "min_mqual": 20,

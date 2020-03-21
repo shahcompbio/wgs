@@ -70,8 +70,8 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
     '''
 
     script = 'correct_reads.R'
-    gc = config['correction']['gc']
-    map_wig = config['titan_params']['map']
+    gc = config['reference_wigs']['gc']
+    map_wig = config['reference_wigs']['map']
     if not target_list:
         target_list = 'NULL'
     genome_type = config['titan_params']['genome_type']
@@ -88,11 +88,11 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
-        titan_params, num_clusters, ploidy, sample_id,
+        titan_params, wigs, num_clusters, ploidy, sample_id,
         docker_image=None
 ):
     script = 'titan.R'
-    map_wig = titan_params['map']
+    map_wig = wigs['map']
 
     cmd = [script, sample_id, infile, cnfile, map_wig, num_clusters,
            titan_params['num_cores'], ploidy, outfile, outparam,

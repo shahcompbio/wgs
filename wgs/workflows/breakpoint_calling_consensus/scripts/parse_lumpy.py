@@ -118,13 +118,13 @@ def convert_to_df(data):
 
 
 def filter_calls(data, filters):
-    if filters['tumour_read_support_threshold']:
+    if filters.get('tumour_read_support_threshold'):
         data = data[data['SU'] >= filters['tumour_read_support_threshold']]
 
-    if filters['deletion_size_threshold']:
+    if filters.get('deletion_size_threshold'):
         data = data[(data['SVTYPE'] == 'DEL') & (data['SVLEN'] >= filters['deletion_size_threshold'])]
 
-    if filters['chromosomes']:
+    if filters.get('chromosomes'):
         data = data[data['chromosome_1'].isin(filters['chromosomes'])]
         data = data[data['chromosome_2'].isin(filters['chromosomes'])]
 

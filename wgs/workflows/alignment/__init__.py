@@ -65,7 +65,7 @@ def collect_bam_metrics(
         ),
         args=(
             mgd.InputFile(bam),
-            config["ref_genome"]['file'],
+            config["ref_genome"],
             mgd.OutputFile(picard_GC_metrics),
             mgd.OutputFile(picard_GC_summary),
             mgd.OutputFile(picard_GC_pdf),
@@ -84,7 +84,7 @@ def collect_bam_metrics(
         ),
         args=(
             mgd.InputFile(bam),
-            config['ref_genome']['file'],
+            config['ref_genome'],
             mgd.OutputFile(picard_wgs_metrics),
             config['picard_wgs_params'],
             mgd.TempSpace('picard_wgs')
@@ -296,7 +296,7 @@ def align_samples(
 
 
 def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
-    ref_genome = config['ref_genome']['file']
+    ref_genome = config['ref_genome']
 
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
@@ -367,7 +367,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
 
 
 def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
-    ref_genome = config['ref_genome']['file']
+    ref_genome = config['ref_genome']
 
     read_group_config = config.get('read_group', {})
 
