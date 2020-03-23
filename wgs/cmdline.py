@@ -3,9 +3,9 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 '''
-import argparse
 import json
 
+import argparse
 import pypeliner
 from wgs import __version__
 
@@ -34,7 +34,6 @@ def add_global_args(subparser):
     subparser.add_argument("--refdir",
                            required=True,
                            help='''reference data dir''')
-
 
     pypeliner.app.add_arguments(subparser)
 
@@ -70,6 +69,12 @@ def parse_args():
     variant_calling = subparsers.add_parser("variant_calling")
     variant_calling.set_defaults(which='variant_calling')
     variant_calling = add_global_args(variant_calling)
+    variant_calling.add_argument(
+        "--remove_strelka_depth_filter",
+        default=False,
+        action='store_true',
+        help='''strelka filter'''
+    )
 
     # ================
     # breakpoints calling

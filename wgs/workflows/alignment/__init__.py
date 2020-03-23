@@ -2,12 +2,13 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 from wgs.workflows.alignment.dtypes import dtypes
 
 
 def collect_bam_metrics(
-        config, config_globals, bam, markdups_metrics, outdir, metrics, sample_id
+        bam, markdups_metrics, outdir, metrics, sample_id, refdir
 ):
     '''
     calculates bam metrics in bams
@@ -24,6 +25,10 @@ def collect_bam_metrics(
     :param single_node:
     '''
 
+    ref_gsenome = config.refdir_data(refdir)['paths']['reference']
+
+    picard_wgs_params = config.default_params('alignment')['picard_wgs_params']
+
     workflow = pypeliner.workflow.Workflow()
 
     picard_insert_metrics = os.path.join(outdir, 'picard_insert_metrics.txt')
@@ -37,7 +42,7 @@ def collect_bam_metrics(
     workflow.transform(
         name="calc_picard_insert_metrics",
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='72:00',
             disk=400
         ),
@@ -50,8 +55,8 @@ def collect_bam_metrics(
             mgd.TempSpace('picard_insert'),
         ),
         kwargs={
-            'picard_docker': config["docker"]["picard"],
-            'samtools_docker': config["docker"]["samtools"]
+            'picard_docker': config.containers('picard'),
+            'samtools_docker': config.containers('samtools')
         }
     )
 
@@ -59,44 +64,44 @@ def collect_bam_metrics(
         name="calc_picard_gc_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_gc_metrics',
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='72:00',
             disk=400
         ),
         args=(
             mgd.InputFile(bam),
-            config["ref_genome"],
+            ref_genome,
             mgd.OutputFile(picard_GC_metrics),
             mgd.OutputFile(picard_GC_summary),
             mgd.OutputFile(picard_GC_pdf),
             mgd.TempSpace('picard_gc')
         ),
-        kwargs={'docker_image': config["docker"]["picard"]}
+        kwargs={'docker_image': config.containers('picard')}
     )
 
     workflow.transform(
         name="calc_picard_wgs_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_wgs_metrics',
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='72:00',
             disk=400
         ),
         args=(
             mgd.InputFile(bam),
-            config['ref_genome'],
+            ref_genome,
             mgd.OutputFile(picard_wgs_metrics),
-            config['picard_wgs_params'],
+            picard_wgs_params,
             mgd.TempSpace('picard_wgs')
         ),
-        kwargs={'docker_image': config["docker"]["picard"]}
+        kwargs={'docker_image': config.containers('picard')}
     )
 
     workflow.transform(
         name='collect_metrics',
         func='wgs.workflows.alignment.tasks.bam_collect_all_metrics',
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='4:00',
             disk=400
         ),
@@ -117,7 +122,7 @@ def collect_bam_metrics(
     return workflow
 
 
-def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
+def fastqc_workflow(fastq_r1, fastq_r2, outdir):
     report_r1 = os.path.join(outdir, 'R1_fastqc_report')
     r1_html = os.path.join(report_r1, 'R1_fastqc.html')
     r1_plot = os.path.join(report_r1, 'R1_fastqc.pdf')
@@ -131,7 +136,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
     workflow.transform(
         name="fastqc_r1",
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='48:00',
             disk=400
         ),
@@ -143,7 +148,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
             mgd.TempSpace('fastqc_R1'),
         ),
         kwargs={
-            'docker_image': config["docker"]["fastqc"],
+            'docker_image': config.containers("fastqc"),
         }
     )
 
@@ -151,7 +156,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
         name="fastqc_r2",
         func='wgs.workflows.alignment.tasks.run_fastqc',
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='48:00',
             disk=400
         ),
@@ -162,7 +167,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
             mgd.TempSpace('fastqc_R2'),
         ),
         kwargs={
-            'docker_image': config["docker"]["fastqc"],
+            'docker_image': config.containers('fastqc'),
         }
     )
 
@@ -170,13 +175,12 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir, config, config_globals):
 
 
 def align_samples(
-        config,
-        config_globals,
         fastqs_r1,
         fastqs_r2,
         bam_outputs,
         outdir,
         sample_info,
+        refdir,
         single_node=False
 ):
     lane_metrics_template = os.path.join(outdir, '{sample_id}', 'metrics', 'lane_metrics', '{lane_id}')
@@ -210,8 +214,6 @@ def align_samples(
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.Template('fastqc', 'sample_id', 'lane_id', template=lane_metrics_template),
-            config,
-            config_globals
         )
     )
 
@@ -220,21 +222,21 @@ def align_samples(
         func=align_func,
         axes=('sample_id', 'lane_id'),
         args=(
-            config,
             mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
             mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             mgd.Template(lane_metrics_template, 'sample_id', 'lane_id'),
             mgd.InputInstance("sample_id"),
             mgd.InputInstance("lane_id"),
-            mgd.TempInputObj('sampleinfo', 'sample_id')
+            mgd.TempInputObj('sampleinfo', 'sample_id'),
+            refdir
         )
     )
 
     workflow.transform(
         name='merge_tumour_lanes',
         ctx=helpers.get_default_ctx(
-            memory=config_globals['memory']['med'],
+            memory='10',
             walltime='24:00',
             disk=400
         ),
@@ -245,8 +247,8 @@ def align_samples(
             mgd.TempOutputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
         ),
         kwargs={
-            'picard_docker_image': config['docker']['picard'],
-            'samtools_docker_image': config['docker']['samtools']
+            'picard_docker_image': config.containers('picard'),
+            'samtools_docker_image': config.containers('samtools')
         }
     )
 
@@ -271,8 +273,8 @@ def align_samples(
             pypeliner.managed.TempSpace("temp_markdups", "sample_id"),
         ),
         kwargs={
-            'picard_docker': config['docker']['picard'],
-            'samtools_docker': config['docker']['samtools'],
+            'picard_docker': config.containers('picard'),
+            'samtools_docker': config.containers('samtools'),
             'mem': '8G'
         }
     )
@@ -282,21 +284,20 @@ def align_samples(
         func=collect_bam_metrics,
         axes=('sample_id',),
         args=(
-            config,
-            config_globals,
             mgd.InputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
             mgd.InputFile('markdups_metrics', 'sample_id', template=markdups_outputs),
             mgd.Template('metrics_outdir', 'sample_id', template=metrics_outdir),
             mgd.OutputFile('metrics_output', 'sample_id', template=metrics_output),
-            mgd.InputInstance('sample_id')
+            mgd.InputInstance('sample_id'),
+            refdir
         )
     )
 
     return workflow
 
 
-def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
-    ref_genome = config['ref_genome']
+def align_sample_no_split(fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info, refdir):
+    ref_genome = config.refdir_data(refdir)['paths']['reference']
 
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
@@ -309,7 +310,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
         ctx=helpers.get_default_ctx(
             memory=8,
             walltime='48:00',
-            ncpus=config['threads'],
+            ncpus='8',
             disk=300
         ),
         func='wgs.workflows.alignment.tasks.align_bwa_mem',
@@ -318,13 +319,13 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
             pypeliner.managed.InputFile(fastq_2),
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam'),
-            config['threads'],
+            '8',
             sample_info,
         ),
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'docker_config': config['docker']
+            'docker_image': config.containers('bwa')
         }
     )
 
@@ -333,7 +334,7 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
         ctx=helpers.get_default_ctx(
             memory=8,
             walltime='48:00',
-            ncpus=config['threads'],
+            ncpus='8',
             disk=300
         ),
         func='wgs.workflows.alignment.tasks.bam_sort',
@@ -342,8 +343,8 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
             pypeliner.managed.OutputFile(out_file),
         ),
         kwargs={
-            'docker_image': config['docker']['samtools'],
-            'threads': config['threads'],
+            'docker_image': config.containers('picard'),
+            'threads': '8',
         }
     )
 
@@ -360,27 +361,22 @@ def align_sample_no_split(config, fastq_1, fastq_2, out_file, outdir, sample_id,
             pypeliner.managed.OutputFile(out_bai),
             pypeliner.managed.OutputFile(samtools_flagstat)
         ),
-        kwargs={'docker_image': config['docker']['samtools']}
+        kwargs={'docker_image': config.containers('samtools')}
     )
 
     return workflow
 
 
-def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info):
-    ref_genome = config['ref_genome']
+def align_sample_split(fastq_1, fastq_2, out_file, outdir, sample_id, lane_id, sample_info,refdir):
+    ref_genome = config.refdir_data(refdir)['paths']['reference']
 
-    read_group_config = config.get('read_group', {})
+    split_size = config.default_params('alignment')['split_size']
 
     samtools_flagstat = os.path.join(outdir, 'samtools_flagstat.txt')
 
     out_bai = out_file + '.bai'
 
     workflow = pypeliner.workflow.Workflow()
-
-    workflow.setobj(
-        obj=pypeliner.managed.TempOutputObj('read_group_config'),
-        value=read_group_config,
-    )
 
     workflow.transform(
         name='split_fastq_1',
@@ -392,7 +388,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         args=(
             pypeliner.managed.InputFile(fastq_1),
             pypeliner.managed.TempOutputFile('read_1', 'split'),
-            config['split_size'],
+            split_size,
         ),
     )
 
@@ -406,7 +402,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         args=(
             pypeliner.managed.InputFile(fastq_2),
             pypeliner.managed.TempOutputFile('read_2', 'split', axes_origin=[]),
-            config['split_size'],
+            split_size,
         ),
     )
 
@@ -416,7 +412,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         ctx=helpers.get_default_ctx(
             memory=8,
             walltime='16:00',
-            ncpus=config['threads'],
+            ncpus=8,
         ),
         func='wgs.workflows.alignment.tasks.align_bwa_mem',
         args=(
@@ -424,13 +420,13 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
             pypeliner.managed.TempInputFile('read_2', 'split'),
             ref_genome,
             pypeliner.managed.TempOutputFile('aligned.bam', 'split'),
-            config['threads'],
+            '8',
             sample_info,
         ),
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'docker_config': config['docker']
+            'docker_image': config.containers('bwa')
         }
     )
 
@@ -447,7 +443,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
             pypeliner.managed.TempOutputFile('sorted.bam', 'split'),
         ),
         kwargs={
-            'docker_image': config['docker']['samtools'],
+            'docker_image': config.containers('samtools'),
         }
     )
 
@@ -463,8 +459,8 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
             pypeliner.managed.OutputFile(out_file),
         ),
         kwargs={
-            'picard_docker_image': config['docker']['picard'],
-            'samtools_docker_image': config['docker']['samtools']
+            'picard_docker_image': config.containers('picard'),
+            'samtools_docker_image': config.containers('samtools')
         }
     )
 
@@ -473,7 +469,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='16:00',
-            docker_image=config['docker']['samtools']
+            docker_image=config.containers('samtools')
         ),
         args=(
             'samtools',
@@ -488,7 +484,7 @@ def align_sample_split(config, fastq_1, fastq_2, out_file, outdir, sample_id, la
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='16:00',
-            docker_image=config['docker']['samtools']
+            docker_image=config.containers('samtools')
         ),
         args=(
             'samtools',

@@ -5,26 +5,30 @@ import pypeliner.managed as mgd
 from  wgs.workflows.hmmcopy import tasks
 from wgs.utils import helpers
 
+from wgs.config import config
 
 def create_hmmcopy_workflow(
-        bam_file, out_dir, global_config, config,
-        sample_id, bias_pdf, correction_pdf, hmmcopy_pdf,
-        hmmcopy_table, pygenes_table
+        bam_file, sample_id, bias_pdf, correction_pdf,
+        hmmcopy_pdf, hmmcopy_table, pygenes_table,
+        chromosomes, map_wig, gc_wig, pygenes_gtf,
 ):
 
-    workflow = pypeliner.workflow.Workflow()
 
+    cn_params = config.default_params()['copynumber_calling']
+
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='hmmcopy_readcounter',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='2:00', ),
         func=tasks.hmmcopy_readcounter,
         args=(
             mgd.InputFile(bam_file, extensions=['.bai']),
             mgd.TempOutputFile('infile.wig'),
-            config,
+            chromosomes,
+            cn_params['readcounter'],
         )
     )
 
@@ -35,9 +39,11 @@ def create_hmmcopy_workflow(
             mgd.TempInputFile('infile.wig'),
             mgd.TempOutputFile('infile_copy.txt'),
             mgd.TempOutputFile('infile_copy.obj'),
-            config,
+            gc_wig,
+            map_wig,
+            cn_params['map_cutoff'],
         ),
-        kwargs={'docker_image': config['docker']['hmmcopy']}
+        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(
@@ -50,9 +56,9 @@ def create_hmmcopy_workflow(
             mgd.TempOutputFile('hmmcopy_segments.txt'),
             mgd.OutputFile(hmmcopy_table),
             sample_id,
-            config,
+            cn_params['hmmcopy_params'],
         ),
-        kwargs={'docker_image': config['docker']['hmmcopy']}
+        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(
@@ -67,7 +73,7 @@ def create_hmmcopy_workflow(
             mgd.OutputFile(correction_pdf),
             mgd.OutputFile(hmmcopy_pdf),
         ),
-        kwargs={'docker_image': config['docker']['hmmcopy']}
+        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(
@@ -76,7 +82,7 @@ def create_hmmcopy_workflow(
         args=(
             mgd.TempInputFile('hmmcopy_segments.txt'),
             mgd.OutputFile(pygenes_table),
-            config,
+            pygenes_gtf,
         )
     )
 

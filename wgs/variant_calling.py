@@ -3,16 +3,14 @@ import sys
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 
 
 def call_germlines_only(
-        samples, config, normals, museq_ss_vcf, samtools_germline_vcf, roh_calls,
-        museq_single_pdf, single_node=False
+        samples, normals, museq_ss_vcf, samtools_germline_vcf, roh_calls,
+        museq_single_pdf, refdir, single_node=False
 ):
-    global_config = config['globals']
-    config = config['variant_calling']
-
     museq_ss_vcf = dict([(sampid, museq_ss_vcf[sampid])
                          for sampid in samples])
     museq_single_pdf = dict([(sampid, museq_single_pdf[sampid])
@@ -22,8 +20,11 @@ def call_germlines_only(
     roh_calls = dict([(sampid, roh_calls[sampid])
                       for sampid in samples])
 
+    chromosomes = config.refdir_data(refdir)['params']['chromosomes']
+    paths_refdir = config.refdir_data(refdir)['paths']
+
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
+        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
     )
 
     workflow.setobj(
@@ -37,14 +38,17 @@ def call_germlines_only(
         args=(
             mgd.TempOutputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_single_pdf', 'sample_id', fnames=museq_single_pdf),
-            global_config,
-            config,
+            paths_refdir['reference'],
+            chromosomes,
         ),
         kwargs={
             'tumour_bam': None,
             'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                                         extensions=['.bai'], axes_origin=[]),
             'single_node': single_node,
+            'germline_refdata': paths_refdir['germline_portrait_ref'],
+            'thousand_genomes': paths_refdir['thousand_genomes'],
+            'dbsnp': paths_refdir['dbsnp'],
         }
     )
 
@@ -57,8 +61,6 @@ def call_germlines_only(
                            fnames=samtools_germline_vcf),
             mgd.OutputFile("roh_calls.csv", 'sample_id',
                            fnames=roh_calls),
-            global_config,
-            config,
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
         ),
@@ -75,11 +77,15 @@ def call_germlines_only(
             mgd.TempInputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_germlines_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=museq_ss_vcf),
-            global_config,
-            config['databases'],
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
         ),
-        kwargs={'vcftools_docker': config['docker']['vcftools'],
-                'snpeff_docker': config['docker']['vcftools'],
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
                 }
     )
 
@@ -87,15 +93,12 @@ def call_germlines_only(
 
 
 def call_variants(
-        samples, config, somatic_calls, indel_calls, germline_calls, outdir,
+        samples, somatic_calls, indel_calls, germline_calls, outdir,
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
-        museq_paired_pdf, museq_single_pdf,
-        single_node=False
+        museq_paired_pdf, museq_single_pdf, refdir,
+        single_node=False, strelka_depth_filter=True
 ):
-    global_config = config['globals']
-    config = config['variant_calling']
-
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
                             for sampid in samples])
     strelka_indel_vcf = dict([(sampid, strelka_indel_vcf[sampid])
@@ -121,8 +124,11 @@ def call_variants(
     germline_calls = dict([(sampid, germline_calls[sampid])
                            for sampid in samples])
 
+    chromosomes = config.refdir_data(refdir)['params']['chromosomes']
+    paths_refdir = config.refdir_data(refdir)['paths']
+
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
+        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
     )
 
     workflow.setobj(
@@ -136,8 +142,8 @@ def call_variants(
         args=(
             mgd.TempOutputFile("museq_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_paired_pdf', 'sample_id', fnames=museq_paired_pdf),
-            global_config,
-            config,
+            paths_refdir['reference'],
+            chromosomes
         ),
         kwargs={
             'tumour_bam': mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
@@ -155,14 +161,17 @@ def call_variants(
         args=(
             mgd.TempOutputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_single_pdf', 'sample_id', fnames=museq_single_pdf),
-            global_config,
-            config,
+            paths_refdir['reference'],
+            chromosomes
         ),
         kwargs={
             'tumour_bam': None,
             'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                                         extensions=['.bai'], axes_origin=[]),
             'single_node': single_node,
+            'germline_refdata': paths_refdir['germline_portrait_ref'],
+            'thousand_genomes': paths_refdir['thousand_genomes'],
+            'dbsnp': paths_refdir['dbsnp'],
         }
     )
 
@@ -175,10 +184,10 @@ def call_variants(
                            fnames=samtools_germlines_vcf),
             mgd.OutputFile("roh_calls.csv.gz", 'sample_id',
                            fnames=roh_calls),
-            global_config,
-            config,
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai'], axes_origin=[])
+                          extensions=['.bai'], axes_origin=[]),
+            paths_refdir['reference'],
+            chromosomes
         ),
         kwargs={
             'single_node': single_node,
@@ -192,15 +201,14 @@ def call_variants(
         args=(
             mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
             mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            config['reference'],
             mgd.TempOutputFile('strelka_indel.vcf.gz', 'sample_id'),
             mgd.TempOutputFile('strelka_snv.vcf.gz', 'sample_id'),
-            global_config,
-            config,
+            paths_refdir['reference'],
+            chromosomes
         ),
         kwargs={
             'single_node': single_node,
-            'use_depth_thresholds': config['strelka_depth_threshold']
+            'use_depth_thresholds': strelka_depth_filter
         },
 
     )
@@ -213,11 +221,15 @@ def call_variants(
             mgd.TempInputFile("museq_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_snv_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=museq_vcf),
-            global_config,
-            config['databases'],
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
         ),
-        kwargs={'vcftools_docker': config['docker']['vcftools'],
-                'snpeff_docker': config['docker']['vcftools'],
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
                 }
     )
 
@@ -229,11 +241,15 @@ def call_variants(
             mgd.TempInputFile("museq_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile('museq_germlines_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=museq_ss_vcf),
-            global_config,
-            config['databases'],
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
         ),
-        kwargs={'vcftools_docker': config['docker']['vcftools'],
-                'snpeff_docker': config['docker']['vcftools'],
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
                 }
     )
 
@@ -245,11 +261,15 @@ def call_variants(
             mgd.TempInputFile("strelka_snv.vcf.gz", 'sample_id'),
             mgd.OutputFile('strelka_snv_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=strelka_snv_vcf),
-            global_config,
-            config['databases'],
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
         ),
-        kwargs={'vcftools_docker': config['docker']['vcftools'],
-                'snpeff_docker': config['docker']['vcftools'],
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
                 }
     )
 
@@ -261,11 +281,15 @@ def call_variants(
             mgd.TempInputFile("strelka_indel.vcf.gz", 'sample_id'),
             mgd.OutputFile('strelka_indel_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=strelka_indel_vcf),
-            global_config,
-            config['databases'],
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
         ),
-        kwargs={'vcftools_docker': config['docker']['vcftools'],
-                'snpeff_docker': config['docker']['vcftools'],
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
                 }
     )
 
@@ -284,8 +308,6 @@ def call_variants(
             mgd.OutputFile('germline_csv', 'sample_id', fnames=germline_calls),
             mgd.Template('template_outdir', 'sample_id', template=outdir),
             mgd.InputInstance('sample_id'),
-            global_config,
-            config,
         ),
     )
 
@@ -293,8 +315,8 @@ def call_variants(
 
 
 def variant_calling_workflow(args):
-    config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
+
     meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
     input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
 
@@ -321,7 +343,7 @@ def variant_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config['variant_calling']['docker']['wgs'])
+        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
     )
 
     workflow.setobj(
@@ -335,13 +357,13 @@ def variant_calling_workflow(args):
             func=call_germlines_only,
             args=(
                 samples,
-                config,
                 mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                               extensions=['.bai'], axes_origin=[]),
                 mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
                 mgd.OutputFile('samtools_germline', 'sample_id', template=samtools_germline_vcf, axes_origin=[]),
                 mgd.OutputFile('samtools_roh', 'sample_id', template=samtools_roh, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
+                args['refdir']
             ),
             kwargs={'single_node': args['single_node']}
         )
@@ -351,7 +373,6 @@ def variant_calling_workflow(args):
             func=call_variants,
             args=(
                 samples,
-                config,
                 mgd.OutputFile('somatic_csv', 'sample_id', template=somatic_csv, axes_origin=[]),
                 mgd.OutputFile('indel_csv', 'sample_id', template=indel_csv, axes_origin=[]),
                 mgd.OutputFile('germline_csv', 'sample_id', template=germline_csv, axes_origin=[]),
@@ -363,13 +384,17 @@ def variant_calling_workflow(args):
                 mgd.OutputFile('museq', 'sample_id', template=museq_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_ss', 'sample_id', template=museq_ss_vcf, axes_origin=[]),
                 mgd.OutputFile('samtools_germline', 'sample_id', template=samtools_germline_vcf, axes_origin=[]),
-                mgd.OutputFile('roh_calls', 'sample_id',template=samtools_roh, axes_origin=[]),
+                mgd.OutputFile('roh_calls', 'sample_id', template=samtools_roh, axes_origin=[]),
                 mgd.OutputFile('strelka_snv', 'sample_id', template=strelka_snv_vcf, axes_origin=[]),
                 mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
+                args['refdir'],
             ),
-            kwargs={'single_node': args['single_node']}
+            kwargs={
+                'single_node': args['single_node'],
+                'strelka_depth_filter': not args['remove_strelka_depth_filter'],
+            }
         )
 
         filenames = [somatic_csv, indel_csv, germline_csv, museq_vcf,

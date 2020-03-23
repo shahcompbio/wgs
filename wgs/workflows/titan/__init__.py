@@ -2,22 +2,25 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, outfile, params, segs, igv_segs,
-        parsed, plots, tar_outputs,  titan_raw_dir,
-        global_config, config, intervals, sample_id,
+        parsed, plots, tar_outputs, titan_raw_dir,
+        sample_id, reference, chromosomes, het_positions, map_wig, gc_wig, pygenes_gtf,
         single_node=None
 ):
+    cn_params = config.default_params('copynumber_calling')
+
     museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))
 
-    chunks = [(v['num_clusters'], v['ploidy']) for v in intervals]
+    chunks = [(v['num_clusters'], v['ploidy']) for v in cn_params['titan_intervals']]
 
     targets = mgd.InputFile(targets) if targets else None
 
-    ctx = {'docker_image': config['docker']['wgs']}
+    ctx = {'docker_image': config.containers('wgs')}
 
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
@@ -30,66 +33,66 @@ def create_titan_workflow(
         name='generate_intervals',
         func='wgs.workflows.titan.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='2:00', ),
         ret=mgd.OutputChunks('interval'),
         args=(
-            config['reference_genome'],
-            config['chromosomes']
+            reference,
+            chromosomes,
         ),
-        kwargs={'size': config['split_size']}
+        kwargs={'size': cn_params['split_size']}
     )
 
     if single_node:
         workflow.transform(
             name='run_museq',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='96:00',
-                ncpus=global_config['threads']),
+                ncpus=8),
             func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
                 mgd.TempSpace("run_museq_temp"),
                 mgd.OutputFile(museq_vcf),
-                config['reference_genome'],
+                reference,
                 mgd.InputChunks('interval'),
-                config['museq_params'],
+                cn_params['museq_params'],
             ),
             kwargs={
                 'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
                 'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
                 'titan_mode': True,
-                'museq_docker_image': config['docker']['mutationseq'],
-                'vcftools_docker_image': config['docker']['vcftools']
+                'museq_docker_image': config.containers('mutationseq'),
+                'vcftools_docker_image': config.containers('vcftools')
             }
         )
     else:
         workflow.transform(
             name='run_museq',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='24:00'),
             axes=('interval',),
             func='wgs.utils.museq_utils.run_museq',
             args=(
                 mgd.TempOutputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('museq.log', 'interval'),
-                config['reference_genome'],
+                reference,
                 mgd.InputInstance('interval'),
-                config['museq_params']
+                cn_params['museq_params']
             ),
             kwargs={
                 'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
                 'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
                 'titan_mode': True,
-                'docker_image': config['docker']['mutationseq']
+                'docker_image': config.containers('mutationseq')
             }
         )
 
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='4:00', ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
@@ -97,26 +100,26 @@ def create_titan_workflow(
                 mgd.OutputFile(museq_vcf),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': config['docker']['vcftools']}
+            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
         name='convert_museq_vcf2counts',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.convert_museq_vcf2counts',
         args=(
             mgd.InputFile(museq_vcf),
             mgd.TempOutputFile('museq_postprocess.txt'),
-            config
+            het_positions,
         ),
     )
 
     workflow.transform(
         name='run_readcounter_tumour',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='16:00',
             disk=200
         ),
@@ -124,14 +127,15 @@ def create_titan_workflow(
         args=(
             mgd.InputFile(tumour_bam, extensions=['.bai']),
             mgd.TempOutputFile('tumour.wig'),
-            config,
+            chromosomes,
+            cn_params['readcounter']
         ),
     )
 
     workflow.transform(
         name='run_readcounter_normal',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='16:00',
             disk=200
         ),
@@ -139,14 +143,15 @@ def create_titan_workflow(
         args=(
             mgd.InputFile(normal_bam, extensions=['.bai']),
             mgd.TempOutputFile('normal.wig'),
-            config,
+            chromosomes,
+            cn_params['readcounter']
         ),
     )
 
     workflow.transform(
         name='calc_correctreads_wig',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_correctreads_wig',
         args=(
@@ -154,18 +159,20 @@ def create_titan_workflow(
             mgd.TempInputFile('normal.wig'),
             targets,
             mgd.TempOutputFile('correct_reads.txt'),
-            config,
+            map_wig,
+            gc_wig,
+            cn_params['genome_type']
         ),
-        kwargs={'docker_image': config['docker']['titan']}
+        kwargs={'docker_image': config.containers('titan')}
     )
 
     workflow.transform(
         name='run_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='72:00',
-            ncpus=global_config['threads']),
+            ncpus='8'),
         func='wgs.workflows.titan.tasks.run_titan',
         args=(
             mgd.TempInputFile('museq_postprocess.txt'),
@@ -173,20 +180,20 @@ def create_titan_workflow(
             mgd.TempOutputFile('titan_outfile', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan.Rdata', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_params', 'numclusters', 'ploidy'),
-            config['titan_params'],
-            config['reference_wigs'],
             mgd.InputInstance('numclusters'),
             mgd.InputInstance('ploidy'),
-            sample_id
+            sample_id,
+            map_wig,
+            cn_params['titan_params']
         ),
-        kwargs={'docker_image': config['docker']['titan']}
+        kwargs={'docker_image': config.containers('titan'), 'threads': '8'}
     )
 
     workflow.transform(
         name='plot_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='16:00', ),
         func='wgs.workflows.titan.tasks.plot_titan',
         args=(
@@ -197,8 +204,8 @@ def create_titan_workflow(
             mgd.InputInstance('ploidy')
         ),
         kwargs={
-            'chromosomes': config['chromosomes'],
-            'docker_image': config['docker']['titan'],
+            'chromosomes': chromosomes,
+            'docker_image': config.containers('titan'),
         },
     )
 
@@ -206,7 +213,7 @@ def create_titan_workflow(
         name='calc_cnsegments_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_cnsegments_titan',
         args=(
@@ -215,20 +222,20 @@ def create_titan_workflow(
             mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
             sample_id,
         ),
-        kwargs={'docker_image': config['docker']['titan']}
+        kwargs={'docker_image': config.containers('titan')}
     )
 
     workflow.transform(
         name='annot_pygenes',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.annot_pygenes',
         args=(
             mgd.TempInputFile('segs.csv', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_segs.csv', 'numclusters', 'ploidy'),
-            config,
+            pygenes_gtf,
         ),
     )
 
@@ -236,23 +243,23 @@ def create_titan_workflow(
         name='parse_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.parse_titan_data',
         args=(
             mgd.TempInputFile('titan_segs.csv', 'numclusters', 'ploidy'),
             mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_parsed.csv', 'numclusters', 'ploidy'),
-            config['parse_titan'],
+            cn_params['parse_titan'],
         ),
-        kwargs={'chromosomes': config['chromosomes']}
+        kwargs={'chromosomes': chromosomes}
     )
 
     # select optimal solution
     workflow.transform(
         name="select_optimal_solution",
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='4:00', ),
         func="wgs.workflows.titan.tasks.select_optimal_solution",
         args=(
@@ -275,7 +282,7 @@ def create_titan_workflow(
     workflow.transform(
         name='tar_all_data',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='4:00', ),
         func="wgs.workflows.titan.tasks.tar_all_data",
         args=(
@@ -290,6 +297,5 @@ def create_titan_workflow(
             chunks
         )
     )
-
 
     return workflow

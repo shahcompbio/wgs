@@ -3,8 +3,11 @@ import pypeliner.managed as mgd
 
 from wgs.utils import helpers
 
+from wgs.config import config
+
+
 def lumpy_preprocess_workflow(
-        global_config, bamfile, sv_config, discordants_sorted_bam,
+        bamfile, discordants_sorted_bam,
         splitters_sorted_bam, single_node=False
 ):
     workflow = pypeliner.workflow.Workflow()
@@ -13,7 +16,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_lumpy_preprocess',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['med'],
+                memory='10',
                 walltime='96:00',
                 disk=300
             ),
@@ -23,18 +26,17 @@ def lumpy_preprocess_workflow(
                 mgd.OutputFile(discordants_sorted_bam),
                 mgd.OutputFile(splitters_sorted_bam),
                 mgd.TempSpace("lumpy_preprocess_temp"),
-                sv_config,
             ),
             kwargs={
-                'lumpy_docker_image': sv_config['docker']['lumpy'],
-                'samtools_docker_image': sv_config['docker']['samtools']
+                'lumpy_docker_image': config.containers('lumpy'),
+                'samtools_docker_image': config.containers('samtools')
             }
         )
     else:
         workflow.transform(
             name='run_samtools_view_normal',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['med'],
+                memory='10',
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_view',
@@ -42,28 +44,27 @@ def lumpy_preprocess_workflow(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.discordants.unsorted.bam'),
             ),
-            kwargs={'docker_image': sv_config['docker']['samtools']}
+            kwargs={'docker_image': config.containers('samtools')}
         )
 
         workflow.transform(
             name='run_lumpy_extract_split_reads_bwamem_normal',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['med'],
+                memory='10',
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_lumpy_extract_split_reads_bwamem',
             args=(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
-                sv_config
             ),
-            kwargs={'docker_image': sv_config['docker']['lumpy']}
+            kwargs={'docker_image': config.containers('lumpy')}
         )
 
         workflow.transform(
             name='run_samtools_sort_discordants_normal',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['med'],
+                memory='10',
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_sort',
@@ -71,13 +72,13 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
                 mgd.OutputFile(discordants_sorted_bam),
             ),
-            kwargs={'docker_image': sv_config['docker']['samtools']}
+            kwargs={'docker_image': config.containers('samtools')}
         )
 
         workflow.transform(
             name='run_samtools_sort_splitters_normal',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['med'],
+                memory='10',
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_sort',
@@ -85,13 +86,13 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
                 mgd.OutputFile(splitters_sorted_bam),
             ),
-            kwargs={'docker_image': sv_config['docker']['samtools']}
+            kwargs={'docker_image': config.containers('samtools')}
         )
 
     return workflow
 
 
-def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, normal_bam=None, single_node=False):
+def create_lumpy_workflow(lumpy_vcf, tumour_bam=None, normal_bam=None, single_node=False):
     workflow = pypeliner.workflow.Workflow()
 
     lumpy_job_name = 'run_lumpy'
@@ -118,9 +119,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
             name='preprocess_lumpy_normal',
             func=lumpy_preprocess_workflow,
             args=(
-                global_config,
                 normal_bam,
-                sv_config,
                 mgd.TempOutputFile('normal.discordants.sorted.bam'),
                 mgd.TempOutputFile('normal.splitters.sorted.bam')
             ),
@@ -132,9 +131,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
             name='preprocess_lumpy_tumour',
             func=lumpy_preprocess_workflow,
             args=(
-                global_config,
                 tumour_bam,
-                sv_config,
                 mgd.TempOutputFile('tumour.discordants.sorted.bam'),
                 mgd.TempOutputFile('tumour.splitters.sorted.bam')
             ),
@@ -144,14 +141,13 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
     workflow.transform(
         name=lumpy_job_name,
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             disk=500,
             walltime='72:00'
         ),
         func='wgs.workflows.lumpy.tasks.run_lumpyexpress',
         args=(
             mgd.OutputFile(lumpy_vcf),
-            sv_config,
         ),
         kwargs={
             'tumour_bam': tumour_bam,
@@ -160,7 +156,7 @@ def create_lumpy_workflow(lumpy_vcf, global_config, sv_config, tumour_bam=None, 
             'normal_bam': normal_bam,
             'normal_discordants': normal_disc,
             'normal_splitters': normal_split,
-            'docker_image': sv_config['docker']['lumpy']
+            'docker_image': config.containers('lumpy')
         }
     )
 

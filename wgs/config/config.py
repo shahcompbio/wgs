@@ -1,57 +1,14 @@
 import os
 
+import wgs
 import yaml
 
 
-def load_refdir_metadata(refdir):
-    yamlpath = os.path.join(refdir, 'metadata.yaml')
-
-    with open(yamlpath) as yamlfile:
-        yamldata = yaml.safe_load(yamlfile)
-
-    return yamldata
-
-
-def pipeline_config(containers, refdir):
-    def get_path(metadata_key):
-        return os.path.join(refdir, metadata[metadata_key])
-
-    metadata = load_refdir_metadata(refdir)
-
-    docker_containers = containers['docker']
-
-    globals = {
-        'memory': {'low': 5, 'med': 10, 'high': 15, },
-        'threads': 8,
-    }
-
+def default_params(mode='all'):
     variant_calling = {
         'split_size': 1e7,
-        'chromosomes': map(str, range(1, 23) + ['X']),
-        'reference': get_path('reference'),
         'strelka_depth_threshold': True,
-        'databases': {
-            'snpeff_params': {
-                'snpeff_config': get_path('snpeff_config')
-            },
-            'mutation_assessor_params': {
-                'db': get_path('mutation_assessor')
-            },
-            'dbsnp_params': {
-                'db': get_path('dbsnp'),
-            },
-            'thousandgen_params': {
-                'db': get_path('thousand_genomes')
-            },
-            'cosmic_params': {
-                'db': get_path('cosmic')
-            },
-            'mappability_ref': get_path('blacklist')
-        },
-        'plot_params': {
-            'threshold': 0.5,
-            'refdata_single_sample': get_path('germline_portrait_ref'),
-        },
+        'germline_portrait_threshold': 0.5,
         'parse_strelka': {},
         'parse_museq': {
             'pr_threshold': 0.85
@@ -66,29 +23,15 @@ def pipeline_config(containers, refdir):
             'tumour_variant': 2,
             'baseq_threshold': 20,
         },
-        'docker': {
-            'wgs': docker_containers['wgs'],
-            'strelka': docker_containers['strelka'],
-            'vcftools': docker_containers['vcftools'],
-            'samtools': docker_containers['samtools'],
-            'mutationseq': docker_containers['mutationseq'],
-        }
     }
 
-    sv_calling = {
+    breakpoint_calling = {
         'chromosomes': map(str, range(1, 23) + ['X']),
         'lumpy_paths': {
             'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
             'samtools': 'samtools',
             'lumpyexpress': 'lumpyexpress',
         },
-        'refdata_destruct': get_path('refdata_destruct'),
-        'destruct_config': {
-            'genome_fasta': get_path('reference'),
-            'genome_fai': get_path('reference') + '.fai',
-            'gtf_filename': get_path('gtf'),
-        },
-        'mappability_ref': get_path('blacklist_destruct'),
         'parse_lumpy': {
             'deletion_size_threshold': 0,
             'tumour_read_support_threshold': 0,
@@ -102,25 +45,14 @@ def pipeline_config(containers, refdir):
         'consensus': {
             'confidence_interval_size': 500,
         },
-        'docker': {
-            'wgs': docker_containers['wgs'],
-            'destruct': docker_containers['destruct'],
-            'lumpy': docker_containers['lumpy'],
-            'samtools': docker_containers['samtools'],
-        }
     }
 
     copynumber_calling = {
         'split_size': 1e7,
-        "reference_genome": get_path('reference'),
         'chromosomes': map(str, range(1, 23) + ['X']),
-        'dbsnp_positions': get_path('het_positions_titan'),
         'readcounter': {'w': 1000, 'q': 0},
-        'reference_wigs': {
-            'gc': get_path('gc_wig'),
-            'map': get_path('map_wig'),
-        },
         'map_cutoff': 0.85,
+        'genome_type': 'NCBI',
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
             {'num_clusters': 2, 'ploidy': 2},
@@ -133,7 +65,6 @@ def pipeline_config(containers, refdir):
             {'num_clusters': 4, 'ploidy': 4},
             {'num_clusters': 5, 'ploidy': 4},
         ],
-        'pygenes_gtf': get_path('gtf'),
         'museq_params': {
             'threshold': 0.85,
             'verbose': True,
@@ -160,7 +91,6 @@ def pipeline_config(containers, refdir):
         },
         'titan_params': {
             'y_threshold': 20,
-            'genome_type': 'NCBI',
             'num_cores': 4,
             'myskew': 0,
             'estimate_ploidy': 'TRUE',
@@ -182,17 +112,9 @@ def pipeline_config(containers, refdir):
             'genes': None,
             'types': None,
         },
-        'docker': {
-            'wgs': docker_containers['wgs'],
-            'titan': docker_containers['titan'],
-            'hmmcopy': docker_containers['hmmcopy'],
-            'mutationseq': docker_containers['mutationseq'],
-            'vcftools': docker_containers['vcftools'],
-        }
     }
 
     alignment = {
-        "ref_genome": get_path('reference'),
         'picard_wgs_params': {
             "min_bqual": 20,
             "min_mqual": 20,
@@ -201,21 +123,52 @@ def pipeline_config(containers, refdir):
         'threads': 8,
         'aligner': 'bwa-mem',
         'split_size': 1e7,
-        'docker': {
-            'wgs': docker_containers['wgs'],
-            'bwa': docker_containers['bwa'],
-            'samtools': docker_containers['samtools'],
-            'picard': docker_containers['picard'],
-            'fastqc': docker_containers['fastqc']
-        }
     }
 
     config = {
         'copynumber_calling': copynumber_calling,
-        'globals': globals,
-        'sv_calling': sv_calling,
+        'breakpoint_calling': breakpoint_calling,
         'variant_calling': variant_calling,
         'alignment': alignment
     }
 
+    if not mode=='all':
+        return config[mode]
+
     return config
+
+
+def refdir_data(refdir):
+    yamlpath = os.path.join(refdir, 'metadata.yaml')
+
+    with open(yamlpath) as yamlfile:
+        yamldata = yaml.safe_load(yamlfile)
+
+    for k, v in yamldata['paths'].iteritems():
+        yamldata['paths'][k] = os.path.join(refdir, v)
+
+    return yamldata
+
+
+def containers(container_name):
+    version = wgs.__version__
+    # strip setuptools metadata
+    version = version.split("+")[0]
+
+    docker_images = {
+        'bwa': 'bwa:v0.0.1',
+        'samtools': 'samtools:v0.0.1',
+        'picard': 'picard:v0.0.1',
+        'wgs': 'wgs:v{}'.format(version),
+        'strelka': 'strelka:v0.0.1',
+        'mutationseq': 'mutationseq:v0.0.1',
+        'vcftools': 'vcftools:v0.0.1',
+        'snpeff': 'vcftools:v0.0.1',
+        'titan': 'titan:v0.0.2',
+        'destruct': 'destruct:v0.0.1',
+        'lumpy': 'lumpy:v0.0.1',
+        'fastqc': 'fastqc:v0.0.1',
+        'hmmcopy': 'hmmcopy:v0.0.1',
+    }
+
+    return docker_images[container_name]

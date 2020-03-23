@@ -11,17 +11,30 @@ from wgs.utils import helpers
 def create_annotation_workflow(
         input_vcf,
         annotated_vcf,
-        global_config,
-        databases,
+        snpeff,
+        mutationassessor,
+        dbsnp,
+        thousand_genomes,
+        cosmic,
+        mappability,
         vcftools_docker=None,
         snpeff_docker=None
 ):
+    databases = {
+        'snpeff_params': {'snpeff_config': snpeff, },
+        'mutation_assessor_params': {'db': mutationassessor},
+        'dbsnp_params': {'db': dbsnp},
+        'thousandgen_params': {'db': thousand_genomes},
+        'cosmic_params': {'db': cosmic},
+        'mappability_ref': mappability
+    }
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='run_snpeff',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_snpeff',
         args=(
@@ -30,12 +43,13 @@ def create_annotation_workflow(
             databases,
         ),
         kwargs={'docker_image': snpeff_docker}
+
     )
 
     workflow.transform(
         name='run_mutation_assessor',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['med'],
+            memory='10',
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_mutation_assessor',
         args=(
@@ -48,7 +62,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_DBSNP',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_DBSNP',
         args=(
@@ -61,7 +75,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_1000gen',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_1000gen',
         args=(
@@ -74,7 +88,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_cosmic',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_cosmic',
         args=(
@@ -88,7 +102,7 @@ def create_annotation_workflow(
         name='low_mappability_flag',
         func='wgs.workflows.vcf_annotation.tasks.flag_low_mappability',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         args=(
             mgd.TempInputFile('cosmic.vcf'),
@@ -100,7 +114,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='finalize',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory='15',
             walltime='8:00', ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(

@@ -1,4 +1,3 @@
-import itertools
 import os
 import shutil
 import tarfile
@@ -7,14 +6,14 @@ import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
+from scripts import PygeneAnnotation
 from scripts import ReadCounter
 from scripts import TransformVcfCounts
 from scripts import parse_titan
+from wgs.utils import csvutils
 from wgs.utils import helpers
 from wgs.utils import pdfutils
 from wgs.utils import vcfutils
-from wgs.utils import csvutils
-from scripts import PygeneAnnotation
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -28,7 +27,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            start = str(int(i * size)+1)
+            start = str(int(i * size) + 1)
             end = str(int((i + 1) * size))
             intervals.append(name + "_" + start + "_" + end)
 
@@ -39,7 +38,7 @@ def merge_vcfs(inputs, output):
     vcfutils.concatenate_vcf(inputs, output)
 
 
-def convert_museq_vcf2counts(infile, outfile, config):
+def convert_museq_vcf2counts(infile, outfile, het_positions):
     """
     Transform museq vcf file to a text file of counts
 
@@ -47,19 +46,20 @@ def convert_museq_vcf2counts(infile, outfile, config):
     :param outfile: temporary text file of counts (museq_postprocess.txt)
     """
 
-    transformer = TransformVcfCounts(infile, outfile, config['dbsnp_positions'])
+    transformer = TransformVcfCounts(infile, outfile, het_positions)
     transformer.main()
 
 
-def run_readcounter(input_bam, output_wig, config):
+def run_readcounter(input_bam, output_wig, chromosomes, config):
     rc = ReadCounter(
-        input_bam, output_wig, config['readcounter']['w'],
-        config['chromosomes'], config['readcounter']['q'],
+        input_bam, output_wig, config['w'],
+        chromosomes, config['q'],
     )
     rc.main()
 
 
-def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, docker_image=None):
+def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, gc_wig, map_wig, genome_type,
+                          docker_image=None):
     '''
     Run script to calculate correct reads
 
@@ -70,13 +70,10 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
     '''
 
     script = 'correct_reads.R'
-    gc = config['reference_wigs']['gc']
-    map_wig = config['reference_wigs']['map']
     if not target_list:
         target_list = 'NULL'
-    genome_type = config['titan_params']['genome_type']
 
-    cmd = [script, tumour_wig, normal_wig, gc, map_wig,
+    cmd = [script, tumour_wig, normal_wig, gc_wig, map_wig,
            target_list, outfile, genome_type]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
@@ -88,14 +85,13 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, config, 
 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
-        titan_params, wigs, num_clusters, ploidy, sample_id,
-        docker_image=None
+        map_wig, titan_params, num_clusters, ploidy, sample_id,
+        docker_image=None, threads=8
 ):
     script = 'titan.R'
-    map_wig = wigs['map']
 
     cmd = [script, sample_id, infile, cnfile, map_wig, num_clusters,
-           titan_params['num_cores'], ploidy, outfile, outparam,
+           threads, ploidy, outfile, outparam,
            titan_params['myskew'], titan_params['estimate_ploidy'], titan_params['normal_param_nzero'],
            titan_params['normal_estimate_method'], titan_params['max_iters'], titan_params['pseudo_counts'],
            titan_params['txn_exp_len'], titan_params['txn_z_strength'], titan_params['alpha_k'],
@@ -138,9 +134,8 @@ def calc_cnsegments_titan(infile, outigv, outfile, sample_id, docker_image=None)
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def annot_pygenes(infile, outfile, config):
-    gene_sets_gtf = config['pygenes_gtf']
-    annotator = PygeneAnnotation(infile, outfile, gtf=gene_sets_gtf)
+def annot_pygenes(infile, outfile, pygenes_gtf):
+    annotator = PygeneAnnotation(infile, outfile, gtf=pygenes_gtf)
     annotator.write_output()
 
 
@@ -245,7 +240,6 @@ def select_optimal_solution(
         for optimal plots file
     '''
 
-
     model_select_idxs = []
 
     # find optimal cluster/ploidy
@@ -257,7 +251,6 @@ def select_optimal_solution(
 
     best_model = min(model_select_idxs, key=lambda t: t[1])
     best_model = best_model[0]
-
 
     # copy the file at the optimal cluster/ploidy to the
     # optimal file output path
@@ -273,6 +266,7 @@ def select_optimal_solution(
         params_output.write('ploidy: {}\n'.format(ploidy))
         params_output.write('num_clusters: {}\n'.format(num_clusters))
 
+
 def tar_all_data(params, segs, igv_segs, markers, parsed, plots, tar_output, tempdir, chunks):
     helpers.makedirs(tempdir)
 
@@ -282,7 +276,7 @@ def tar_all_data(params, segs, igv_segs, markers, parsed, plots, tar_output, tem
         num_cluster = str(num_cluster)
         ploidy = str(ploidy)
 
-        outdir = os.path.join(tempdir, 'numcluster_'+num_cluster, 'ploidy_'+ploidy)
+        outdir = os.path.join(tempdir, 'numcluster_' + num_cluster, 'ploidy_' + ploidy)
 
         helpers.makedirs(outdir)
 
@@ -305,6 +299,3 @@ def tar_all_data(params, segs, igv_segs, markers, parsed, plots, tar_output, tem
         shutil.copyfile(plots[chunk], plots_outfile)
 
     helpers.make_tarfile(tar_output, tempdir)
-
-
-

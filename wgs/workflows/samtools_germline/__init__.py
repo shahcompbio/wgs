@@ -5,80 +5,83 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
+
 
 def create_samtools_germline_workflow(
         germline_vcf,
         germline_roh,
-        global_config,
-        varcall_config,
         bam_file,
+        reference,
+        chromosomes,
         single_node=None
 ):
+    params = config.default_params('variant_calling')
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': varcall_config['docker']['wgs']})
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
 
     workflow.transform(
         name='generate_intervals',
         func='wgs.workflows.samtools_germline.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='1:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
-            varcall_config['reference'],
-            varcall_config['chromosomes']
+            reference,
+            chromosomes
         ),
-        kwargs={'size': varcall_config['split_size']}
+        kwargs={'size': params['split_size']}
     )
 
     if single_node:
         workflow.transform(
             name='samtools_germline',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='48:00',
-                ncpus=global_config['threads'],
+                ncpus=8,
                 disk=600
-        ),
+            ),
             func='wgs.workflows.samtools_germline.tasks.run_samtools_germline_one_job',
             args=(
                 mgd.TempSpace("run_samtools_temp"),
                 mgd.TempOutputFile('merged.vcf'),
-                varcall_config['reference'],
+                reference,
                 mgd.InputChunks('interval'),
                 mgd.InputFile(bam_file)
             ),
             kwargs={
-                'samtools_docker_image': varcall_config['docker']['samtools'],
-                'vcftools_docker_image': varcall_config['docker']['vcftools']
+                'samtools_docker_image': config.containers('samtools'),
+                'vcftools_docker_image': config.containers('vcftools')
             }
         )
     else:
         workflow.transform(
             name='samtools_germline',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='24:00',
             ),
             axes=('interval',),
             func='wgs.workflows.samtools_germline.tasks.run_samtools_germline',
             args=(
                 mgd.TempOutputFile('germline.vcf.gz', 'interval'),
-                varcall_config['reference'],
+                reference,
                 mgd.InputInstance('interval'),
                 mgd.InputFile(bam_file)
             ),
             kwargs={
-                'docker_image': varcall_config['docker']['samtools']
+                'docker_image': config.containers('samtools')
             }
         )
 
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='8:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
@@ -87,7 +90,7 @@ def create_samtools_germline_workflow(
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': varcall_config['docker']['vcftools']}
+            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -100,7 +103,7 @@ def create_samtools_germline_workflow(
             mgd.TempInputFile('merged.vcf'),
             mgd.OutputFile(germline_vcf, extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': varcall_config['docker']['vcftools']}
+        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.transform(
@@ -113,7 +116,7 @@ def create_samtools_germline_workflow(
             mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(germline_roh)
         ),
-        kwargs={'docker_image': varcall_config['docker']['vcftools']}
+        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     return workflow

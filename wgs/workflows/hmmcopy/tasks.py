@@ -12,21 +12,21 @@ scripts = os.path.join(
 )
 
 
-def hmmcopy_readcounter(input_bam, output_wig, config):
+def hmmcopy_readcounter(input_bam, output_wig, chromosomes, config):
     rc = ReadCounter(
-        input_bam, output_wig, config['readcounter']['w'],
-        config['chromosomes'], config['readcounter']['q'],
+        input_bam, output_wig, config['w'],
+        chromosomes, config['q'],
     )
     rc.main()
 
 
-def calc_corr(input_wig, output_file, output_obj, config, docker_image=None):
+def calc_corr(input_wig, output_file, output_obj, gc_wig, map_wig, map_cutoff, docker_image=None):
     cmd = [
         'hmmcopy_correct_reads.R',
         input_wig,
-        config['reference_wigs']['gc'],
-        config['reference_wigs']['map'],
-        str(config['map_cutoff']),
+        gc_wig,
+        map_wig,
+        map_cutoff,
         output_file,
         output_obj,
     ]
@@ -41,11 +41,11 @@ def run_hmmcopy(
         output_segments,
         tumour_table_out,
         sample_id,
-        config,
+        hmmcopy_params,
         docker_image=None
 ):
     args = {key: 'NULL' if value is None else value
-            for key, value in config['hmmcopy_params'].items()}
+            for key, value in hmmcopy_params.items()}
 
     param_list = (
         'm',
@@ -117,7 +117,6 @@ def plot_hmm(
     pdfutils.merge_pdfs(human_pdfs, hmmcopy_pdf)
 
 
-def annot_hmm(input_segments, output_file, config):
-    gene_sets_gtf = config['pygenes_gtf']
-    annotator = PygeneAnnotation(input_segments, output_file, gtf=gene_sets_gtf)
+def annot_hmm(input_segments, output_file, pygenes_gtf):
+    annotator = PygeneAnnotation(input_segments, output_file, gtf=pygenes_gtf)
     annotator.write_output()

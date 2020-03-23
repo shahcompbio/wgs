@@ -6,9 +6,9 @@ import pypeliner.managed as mgd
 from wgs.utils import helpers
 from workflows import alignment
 
+from wgs.config import config
 
 def alignment_workflow(args):
-    config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
     outdir = args['out_dir']
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
@@ -20,23 +20,19 @@ def alignment_workflow(args):
 
     sample_info = helpers.get_sample_info(inputs)
 
-    config_globals = config['globals']
-    config = config['alignment']
-
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs']))
+    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config.containers('wgs')))
 
     workflow.subworkflow(
         name="align_samples",
         func=alignment.align_samples,
         args=(
-            config,
-            config_globals,
             fastqs_r1,
             fastqs_r2,
             outputs,
             outdir,
             sample_info,
+            args['refdir']
         ),
         kwargs={'single_node': args['single_node']}
     )

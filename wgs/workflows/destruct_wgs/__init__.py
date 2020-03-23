@@ -6,28 +6,35 @@ Created on Feb 21, 2018
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
+from wgs.config import config
 
 
 def create_destruct_wgs_workflow(
         tumour_bam, normal_bam, raw_breakpoints, raw_library,
         breakpoints, library, reads,
-        sample_id, global_config, sv_config,
+        sample_id, reference, destruct_refdata, gtf, mappability,
         single_node=False
 ):
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': sv_config['docker']['wgs']})
+    destruct_config = {
+        'genome_fasta': reference,
+        'genome_fai': reference + '.fai',
+        'gtf_filename': gtf
+    }
+
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
 
     workflow.transform(
         name="get_destruct_config",
         func="destruct.defaultconfig.get_config",
         ctx=helpers.get_default_ctx(
-            docker_image=sv_config['docker']['destruct'],
+            docker_image=config.containers('destruct'),
             walltime="48:00",
         ),
         ret=mgd.TempOutputObj("destruct_config"),
         args=(
-            sv_config['refdata_destruct'],
-            sv_config['destruct_config']
+            destruct_refdata,
+            destruct_config
         )
     )
 
@@ -48,15 +55,15 @@ def create_destruct_wgs_workflow(
                 mgd.TempOutputFile("raw_library"),
                 mgd.OutputFile(reads),
                 mgd.TempInputObj("destruct_config"),
-                sv_config['refdata_destruct'],
+                destruct_refdata,
             ),
-            kwargs={'ncpus': None, 'docker_image': sv_config['docker']['destruct']}
+            kwargs={'ncpus': None, 'docker_image': config.containers('destruct')}
         )
     else:
         workflow.subworkflow(
             name='destruct_parallel',
             ctx=helpers.get_default_ctx(
-                docker_image=sv_config['docker']['destruct'],
+                docker_image=config.containers('destruct'),
                 walltime="48:00",
             ),
             # refers to seperate destruct package
@@ -68,14 +75,14 @@ def create_destruct_wgs_workflow(
                 mgd.TempOutputFile("raw_library"),
                 mgd.OutputFile(reads),
                 mgd.TempInputObj("destruct_config"),
-                sv_config['refdata_destruct']
+                destruct_refdata
             )
         )
 
     workflow.commandline(
         name='filter_annotate_breakpoints',
         ctx=helpers.get_default_ctx(
-            docker_image=sv_config['docker']['destruct'],
+            docker_image=config.containers('destruct'),
             memory=8,
             walltime='8:00'
         ),
@@ -104,7 +111,7 @@ def create_destruct_wgs_workflow(
         args=(
             mgd.TempInputFile("filter_annotate_breakpoints_output"),
             mgd.TempOutputFile("breakpoints"),
-            sv_config["mappability_ref"],
+            mappability,
         )
     )
 

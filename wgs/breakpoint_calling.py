@@ -7,12 +7,11 @@ from wgs.utils import helpers
 from wgs.workflows import breakpoint_calling_consensus
 from wgs.workflows import destruct_wgs
 from wgs.workflows import lumpy
-
+from wgs.config import config
 
 def sv_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
-    config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
 
     meta_yaml = os.path.join(args["out_dir"], 'metadata.yaml')
@@ -33,11 +32,11 @@ def sv_calling_workflow(args):
 
     single_node = args['single_node']
 
-    global_config = config['globals']
-    config = config['sv_calling']
+    refdir_paths = config.refdir_data(args['refdir'])['paths']
+    chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
+        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
     )
 
     workflow.setobj(
@@ -59,8 +58,10 @@ def sv_calling_workflow(args):
             mgd.OutputFile('destruct_library', 'sample_id', template=destruct_library),
             mgd.OutputFile('destruct_reads', 'sample_id', template=destruct_reads),
             mgd.InputInstance('sample_id'),
-            global_config,
-            config
+            refdir_paths['reference'],
+            refdir_paths['refdata_destruct'],
+            refdir_paths['gtf'],
+            refdir_paths['blacklist_destruct']
         ),
         kwargs={'single_node': single_node}
     )
@@ -71,8 +72,6 @@ def sv_calling_workflow(args):
         axes=('sample_id',),
         args=(
             mgd.OutputFile('lumpy_vcf', 'sample_id', template=lumpy_vcf),
-            global_config,
-            config
         ),
         kwargs={
             'tumour_bam': mgd.InputFile(
@@ -93,9 +92,7 @@ def sv_calling_workflow(args):
             mgd.InputFile('destruct_breakpoints', 'sample_id', template=destruct_breakpoints),
             mgd.InputFile('lumpy_vcf', 'sample_id', template=lumpy_vcf),
             mgd.OutputFile('consensus_calls', 'sample_id', template=parsed_csv),
-            global_config,
-            config,
-            mgd.InputInstance('sample_id')
+            chromosomes
         ),
     )
     

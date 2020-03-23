@@ -29,7 +29,8 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
 def run_museqportrait(
         infile, out_pdf, out_txt, museqportrait_log,
-        single_mode, plot_params, databases, docker_image=None
+        single_mode, thousand_genomes=None, dbsnp=None, germline_refdata=None, germline_plot_threshold=0.5,
+        docker_image=None
 ):
     """
     Run museqportrait script on the input VCF file
@@ -57,11 +58,11 @@ def run_museqportrait(
     if single_mode:
         plt_ss = PlotSingleSample(
             infile,
-            databases["thousandgen_params"]["db"],
-            databases["dbsnp_params"]["db"],
-            plot_params['refdata_single_sample'],
+            thousand_genomes,
+            dbsnp,
+            germline_refdata,
             out_pdf,
-            plot_params['threshold']
+            germline_plot_threshold
         )
 
         plt_ss.main()

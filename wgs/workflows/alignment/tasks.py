@@ -190,7 +190,7 @@ def samtools_sam_to_bam(samfile, bamfile,
 
 def align_bwa_mem(
         read_1, read_2, ref_genome, aligned_bam, threads, sample_info,
-        sample_id=None, lane_id=None, docker_config=None
+        sample_id=None, lane_id=None, docker_image=None
 ):
 
     if lane_id in sample_info:
@@ -200,7 +200,7 @@ def align_bwa_mem(
 
     bwa_mem_paired_end(
         read_1, read_2, aligned_bam, ref_genome,
-        readgroup, threads, docker_image=docker_config['bwa']
+        readgroup, threads, docker_image=docker_image
     )
 
 

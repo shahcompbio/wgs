@@ -5,13 +5,18 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
+
 
 def create_museq_workflow(
         snv_vcf,
         museqportrait_pdf,
-        global_config,
-        varcall_config,
+        reference,
+        chromosomes,
+        thousand_genomes=None,
+        dbsnp=None,
+        germline_refdata=None,
         tumour_bam=None,
         normal_bam=None,
         single_node=None
@@ -25,52 +30,54 @@ def create_museq_workflow(
         name += '_normal'
     single = False if name == 'run_museq_tumour_normal' else True
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': varcall_config['docker']['wgs']})
+    params = config.default_params('variant_calling')
+
+    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
 
     workflow.transform(
         name='generate_intervals',
         func='wgs.workflows.mutationseq.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='1:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
-            varcall_config['reference'],
-            varcall_config['chromosomes']
+            reference,
+            chromosomes
         ),
-        kwargs={'size': varcall_config['split_size']}
+        kwargs={'size': params['split_size']}
     )
 
     if single_node:
         workflow.transform(
             name=name,
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='48:00',
-                ncpus=global_config['threads'],
+                ncpus='8',
                 disk=600
-        ),
+            ),
             func='wgs.utils.museq_utils.run_museq_one_job',
             args=(
                 mgd.TempSpace("run_museq_temp"),
                 mgd.TempOutputFile('merged.vcf'),
-                varcall_config['reference'],
+                reference,
                 mgd.InputChunks('interval'),
-                varcall_config['museq_params'],
+                params['museq_params'],
             ),
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
-                'museq_docker_image': varcall_config['docker']['mutationseq'],
-                'vcftools_docker_image': varcall_config['docker']['vcftools']
+                'museq_docker_image': config.containers('mutationseq'),
+                'vcftools_docker_image': config.containers('vcftools')
             }
         )
     else:
         workflow.transform(
             name=name,
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='24:00',
             ),
             axes=('interval',),
@@ -78,21 +85,21 @@ def create_museq_workflow(
             args=(
                 mgd.TempOutputFile('museq.vcf', 'interval'),
                 mgd.TempOutputFile('museq.log', 'interval'),
-                varcall_config['reference'],
+                reference,
                 mgd.InputInstance('interval'),
-                varcall_config['museq_params'],
+                params['museq_params'],
             ),
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
-                'docker_image': varcall_config['docker']['mutationseq']
+                'docker_image': config.containers('mutationseq'),
             }
         )
 
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory='15',
                 walltime='8:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
@@ -101,7 +108,7 @@ def create_museq_workflow(
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': varcall_config['docker']['vcftools']}
+            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -114,13 +121,13 @@ def create_museq_workflow(
             mgd.TempInputFile('merged.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': varcall_config['docker']['vcftools']}
+        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.transform(
         name='run_museqportrait',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['low'],
+            memory='5',
             walltime='8:00',
         ),
         func='wgs.workflows.mutationseq.tasks.run_museqportrait',
@@ -130,10 +137,13 @@ def create_museq_workflow(
             mgd.TempOutputFile('museqportrait.txt'),
             mgd.TempOutputFile('museqportrait.log'),
             single,
-            varcall_config['plot_params'],
-            varcall_config['databases']
         ),
-        kwargs={'docker_image': varcall_config['docker']['mutationseq']}
+        kwargs={'docker_image': config.containers('mutationseq'),
+                'thousand_genomes': thousand_genomes,
+                'dbsnp': dbsnp,
+                'germline_refdata': germline_refdata,
+                'germline_plot_threshold': params['germline_portrait_threshold']
+                }
     )
 
     return workflow

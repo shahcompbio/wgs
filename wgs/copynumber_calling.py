@@ -8,14 +8,12 @@ from wgs.workflows import hmmcopy
 from wgs.workflows import titan
 
 
+from wgs.config import config
+
 def copynumber_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
-    config = helpers.load_yaml(args['config_file'])
     inputs = helpers.load_yaml(args['input_yaml'])
-
-    global_config = config['globals']
-    config = config['copynumber_calling']
 
     outdir = args['out_dir']
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
@@ -52,8 +50,12 @@ def copynumber_calling_workflow(args):
     tumour_correction_table = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_correctreads_with_state.txt')
     tumour_pygenes = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
+    refdir_paths = config.refdir_data(args['refdir'])['paths']
+    chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
+
+
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs'])
+        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
     )
 
     workflow.setobj(
@@ -78,10 +80,13 @@ def copynumber_calling_workflow(args):
             mgd.OutputFile('plots', 'sample_id', template=titan_plots),
             mgd.OutputFile('tar_outputs', 'sample_id', template=titan_tar_outputs),
             mgd.Template(titan_raw_dir, 'sample_id'),
-            global_config,
-            config,
-            config['titan_intervals'],
             mgd.InputInstance('sample_id'),
+            refdir_paths['reference'],
+            chromosomes,
+            refdir_paths['het_positions_titan'],
+            refdir_paths['map_wig'],
+            refdir_paths['gc_wig'],
+            refdir_paths['gtf'],
         ),
         kwargs={'single_node': args['single_node']}
     )
@@ -93,15 +98,16 @@ def copynumber_calling_workflow(args):
         args=(
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai']),
-            mgd.Template(hmmcopy_normal_raw_dir, 'sample_id'),
-            global_config,
-            config,
             mgd.InputInstance('sample_id'),
             mgd.OutputFile('normal_bias', 'sample_id', template=normal_bias_pdf),
             mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
             mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
             mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
             mgd.OutputFile('normal_pygenes', 'sample_id', template=normal_pygenes),
+            chromosomes,
+            refdir_paths['map_wig'],
+            refdir_paths['gc_wig'],
+            refdir_paths['gtf']
         ),
     )
 
@@ -112,15 +118,16 @@ def copynumber_calling_workflow(args):
         args=(
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                           extensions=['.bai']),
-            mgd.Template(hmmcopy_tumour_raw_dir, 'sample_id'),
-            global_config,
-            config,
             mgd.InputInstance('sample_id'),
             mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_bias_pdf),
             mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
             mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
             mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
             mgd.OutputFile('tumour_pygenes', 'sample_id', template=tumour_pygenes),
+            chromosomes,
+            refdir_paths['map_wig'],
+            refdir_paths['gc_wig'],
+            refdir_paths['gtf']
         ),
     )
 
