@@ -57,6 +57,7 @@ def lumpy_preprocess_workflow(
             args=(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
+                config.default_params('breakpoint_calling')['lumpy_paths']
             ),
             kwargs={'docker_image': config.containers('lumpy')}
         )
@@ -148,6 +149,7 @@ def create_lumpy_workflow(lumpy_vcf, tumour_bam=None, normal_bam=None, single_no
         func='wgs.workflows.lumpy.tasks.run_lumpyexpress',
         args=(
             mgd.OutputFile(lumpy_vcf),
+            config.default_params('breakpoint_calling')['lumpy_paths']
         ),
         kwargs={
             'tumour_bam': tumour_bam,

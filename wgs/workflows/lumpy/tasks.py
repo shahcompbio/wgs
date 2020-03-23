@@ -13,7 +13,7 @@ def run_samtools_view(infile, outfile, docker_image=None):
 
 
 def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=None):
-    extract_split_reads = config['lumpy_paths']['extractSplitReads_BwaMem']
+    extract_split_reads = config['extractSplitReads_BwaMem']
     cmd = [
         'samtools', 'view', '-h', infile, '|',
         extract_split_reads, '-i', 'stdin', '|',
@@ -40,7 +40,7 @@ def run_lumpyexpress(
         tumour_splitters=None,
         docker_image=None
 ):
-    lumpyexpress = config['lumpy_paths']['lumpyexpress']
+    lumpyexpress = config['lumpyexpress']
 
     cmd = [lumpyexpress,
            '-B', ','.join([e for e in [normal_bam, tumour_bam] if e]),
