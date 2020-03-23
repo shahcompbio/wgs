@@ -7,7 +7,7 @@ from alignment import alignment_workflow
 from cmdline import parse_args
 from copynumber_calling import copynumber_calling_workflow
 from realign import realign_bam_workflow
-from sv_calling import sv_calling_workflow
+from breakpoint_calling import breakpoint_calling_workflow
 from variant_calling import variant_calling_workflow
 from wgs.config import batch_config
 
@@ -38,7 +38,7 @@ def main():
 
     if args["which"] == "breakpoint_calling":
         args = generate_config(args)
-        sv_calling_workflow(args)
+        breakpoint_calling_workflow(args)
 
     if args["which"] == "copynumber_calling":
         args = generate_config(args)

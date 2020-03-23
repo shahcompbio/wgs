@@ -9,7 +9,7 @@ from wgs.workflows import destruct_wgs
 from wgs.workflows import lumpy
 from wgs.config import config
 
-def sv_calling_workflow(args):
+def breakpoint_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
     inputs = helpers.load_yaml(args['input_yaml'])
