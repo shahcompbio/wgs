@@ -42,7 +42,7 @@ def collect_bam_metrics(
     workflow.transform(
         name="calc_picard_insert_metrics",
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='72:00',
             disk=400
         ),
@@ -64,7 +64,7 @@ def collect_bam_metrics(
         name="calc_picard_gc_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_gc_metrics',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='72:00',
             disk=400
         ),
@@ -83,7 +83,7 @@ def collect_bam_metrics(
         name="calc_picard_wgs_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_wgs_metrics',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='72:00',
             disk=400
         ),
@@ -101,7 +101,7 @@ def collect_bam_metrics(
         name='collect_metrics',
         func='wgs.workflows.alignment.tasks.bam_collect_all_metrics',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='4:00',
             disk=400
         ),
@@ -136,7 +136,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir):
     workflow.transform(
         name="fastqc_r1",
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='48:00',
             disk=400
         ),
@@ -156,7 +156,7 @@ def fastqc_workflow(fastq_r1, fastq_r2, outdir):
         name="fastqc_r2",
         func='wgs.workflows.alignment.tasks.run_fastqc',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='48:00',
             disk=400
         ),
@@ -236,7 +236,7 @@ def align_samples(
     workflow.transform(
         name='merge_tumour_lanes',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='24:00',
             disk=400
         ),

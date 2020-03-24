@@ -33,7 +33,7 @@ def create_titan_workflow(
         name='generate_intervals',
         func='wgs.workflows.titan.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='2:00', ),
         ret=mgd.OutputChunks('interval'),
         args=(
@@ -47,7 +47,7 @@ def create_titan_workflow(
         workflow.transform(
             name='run_museq',
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='96:00',
                 ncpus=8),
             func='wgs.utils.museq_utils.run_museq_one_job',
@@ -70,7 +70,7 @@ def create_titan_workflow(
         workflow.transform(
             name='run_museq',
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='24:00'),
             axes=('interval',),
             func='wgs.utils.museq_utils.run_museq',
@@ -92,7 +92,7 @@ def create_titan_workflow(
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='4:00', ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
@@ -106,7 +106,7 @@ def create_titan_workflow(
     workflow.transform(
         name='convert_museq_vcf2counts',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.convert_museq_vcf2counts',
         args=(
@@ -119,7 +119,7 @@ def create_titan_workflow(
     workflow.transform(
         name='run_readcounter_tumour',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='16:00',
             disk=200
         ),
@@ -135,7 +135,7 @@ def create_titan_workflow(
     workflow.transform(
         name='run_readcounter_normal',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='16:00',
             disk=200
         ),
@@ -151,7 +151,7 @@ def create_titan_workflow(
     workflow.transform(
         name='calc_correctreads_wig',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_correctreads_wig',
         args=(
@@ -170,7 +170,7 @@ def create_titan_workflow(
         name='run_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='72:00',
             ncpus='8'),
         func='wgs.workflows.titan.tasks.run_titan',
@@ -193,7 +193,7 @@ def create_titan_workflow(
         name='plot_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='16:00', ),
         func='wgs.workflows.titan.tasks.plot_titan',
         args=(
@@ -213,7 +213,7 @@ def create_titan_workflow(
         name='calc_cnsegments_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.calc_cnsegments_titan',
         args=(
@@ -229,7 +229,7 @@ def create_titan_workflow(
         name='annot_pygenes',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.annot_pygenes',
         args=(
@@ -243,7 +243,7 @@ def create_titan_workflow(
         name='parse_titan',
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='4:00', ),
         func='wgs.workflows.titan.tasks.parse_titan_data',
         args=(
@@ -259,7 +259,7 @@ def create_titan_workflow(
     workflow.transform(
         name="select_optimal_solution",
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='4:00', ),
         func="wgs.workflows.titan.tasks.select_optimal_solution",
         args=(
@@ -282,7 +282,7 @@ def create_titan_workflow(
     workflow.transform(
         name='tar_all_data',
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='4:00', ),
         func="wgs.workflows.titan.tasks.tar_all_data",
         args=(

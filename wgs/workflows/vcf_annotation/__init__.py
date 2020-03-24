@@ -34,7 +34,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_snpeff',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_snpeff',
         args=(
@@ -49,7 +49,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_mutation_assessor',
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_mutation_assessor',
         args=(
@@ -62,7 +62,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_DBSNP',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_DBSNP',
         args=(
@@ -75,7 +75,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_1000gen',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_1000gen',
         args=(
@@ -88,7 +88,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='run_cosmic',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_cosmic',
         args=(
@@ -102,7 +102,7 @@ def create_annotation_workflow(
         name='low_mappability_flag',
         func='wgs.workflows.vcf_annotation.tasks.flag_low_mappability',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         args=(
             mgd.TempInputFile('cosmic.vcf'),
@@ -114,7 +114,7 @@ def create_annotation_workflow(
     workflow.transform(
         name='finalize',
         ctx=helpers.get_default_ctx(
-            memory='15',
+            memory=15,
             walltime='8:00', ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(

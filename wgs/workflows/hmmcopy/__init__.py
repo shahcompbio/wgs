@@ -21,7 +21,7 @@ def create_hmmcopy_workflow(
     workflow.transform(
         name='hmmcopy_readcounter',
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='2:00', ),
         func=tasks.hmmcopy_readcounter,
         args=(

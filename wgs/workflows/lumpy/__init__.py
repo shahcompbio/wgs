@@ -16,7 +16,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_lumpy_preprocess',
             ctx=helpers.get_default_ctx(
-                memory='10',
+                memory=10,
                 walltime='96:00',
                 disk=300
             ),
@@ -36,7 +36,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_samtools_view_normal',
             ctx=helpers.get_default_ctx(
-                memory='10',
+                memory=10,
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_view',
@@ -50,7 +50,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_lumpy_extract_split_reads_bwamem_normal',
             ctx=helpers.get_default_ctx(
-                memory='10',
+                memory=10,
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_lumpy_extract_split_reads_bwamem',
@@ -65,7 +65,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_samtools_sort_discordants_normal',
             ctx=helpers.get_default_ctx(
-                memory='10',
+                memory=10,
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_sort',
@@ -79,7 +79,7 @@ def lumpy_preprocess_workflow(
         workflow.transform(
             name='run_samtools_sort_splitters_normal',
             ctx=helpers.get_default_ctx(
-                memory='10',
+                memory=10,
                 walltime='24:00',
             ),
             func='wgs.workflows.lumpy.tasks.run_samtools_sort',
@@ -142,7 +142,7 @@ def create_lumpy_workflow(lumpy_vcf, tumour_bam=None, normal_bam=None, single_no
     workflow.transform(
         name=lumpy_job_name,
         ctx=helpers.get_default_ctx(
-            memory='10',
+            memory=10,
             disk=500,
             walltime='72:00'
         ),

@@ -38,7 +38,7 @@ def create_museq_workflow(
         name='generate_intervals',
         func='wgs.workflows.mutationseq.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='1:00',
         ),
         ret=mgd.OutputChunks('interval'),
@@ -53,7 +53,7 @@ def create_museq_workflow(
         workflow.transform(
             name=name,
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='48:00',
                 ncpus='8',
                 disk=600
@@ -77,7 +77,7 @@ def create_museq_workflow(
         workflow.transform(
             name=name,
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='24:00',
             ),
             axes=('interval',),
@@ -99,7 +99,7 @@ def create_museq_workflow(
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
-                memory='15',
+                memory=15,
                 walltime='8:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
@@ -127,7 +127,7 @@ def create_museq_workflow(
     workflow.transform(
         name='run_museqportrait',
         ctx=helpers.get_default_ctx(
-            memory='5',
+            memory=5,
             walltime='8:00',
         ),
         func='wgs.workflows.mutationseq.tasks.run_museqportrait',
