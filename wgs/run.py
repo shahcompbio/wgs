@@ -9,6 +9,7 @@ from copynumber_calling import copynumber_calling_workflow
 from realign import realign_bam_workflow
 from breakpoint_calling import breakpoint_calling_workflow
 from variant_calling import variant_calling_workflow
+from postprocessing import postprocessing_workflow
 from wgs.config import batch_config
 
 
@@ -47,6 +48,11 @@ def main():
     if args["which"] == "realignment":
         args = generate_config(args)
         realign_bam_workflow(args)
+
+    if args["which"] == "postprocessing":
+        args = generate_config(args)
+        postprocessing_workflow(args)
+
 
 
 if __name__ == "__main__":

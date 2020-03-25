@@ -90,6 +90,14 @@ def parse_args():
     cna_calling.set_defaults(which='copynumber_calling')
     cna_calling = add_global_args(cna_calling)
 
+    # ================
+    # postprocessing
+    # ================
+    postprocessing = subparsers.add_parser("postprocessing")
+    postprocessing.set_defaults(which='postprocessing')
+    postprocessing = add_global_args(postprocessing)
+
+
     # ======================================
     # generates pipeline and batch configs
     # ======================================

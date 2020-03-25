@@ -157,7 +157,7 @@ def containers(container_name):
 
     docker_images = {
         'bwa': 'bwa:v0.0.1',
-        'samtools': 'samtools:v0.0.1',
+        'samtools': 'samtools:v0.0.2',
         'picard': 'picard:v0.0.1',
         'wgs': 'wgs:v{}'.format(version),
         'strelka': 'strelka:v0.0.1',
@@ -169,6 +169,7 @@ def containers(container_name):
         'lumpy': 'lumpy:v0.0.1',
         'fastqc': 'fastqc:v0.0.1',
         'hmmcopy': 'hmmcopy:v0.0.1',
+        'circos': 'circos:v0.0.1'
     }
 
     return docker_images[container_name]

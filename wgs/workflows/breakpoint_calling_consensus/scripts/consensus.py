@@ -11,14 +11,14 @@ def build_interval_tree(data):
     itree = defaultdict(IntervalTree)
 
     for val in data:
-        chrom, pos, ci = val
+        chrom, pos, ci, brk_id = val
 
         ci = ci.split(',')
 
         start = pos + float(ci[0])
         end = pos + float(ci[1]) + 1
 
-        itree[chrom].addi(start, end)
+        itree[chrom].addi(start, end, brk_id)
 
     return itree
 
@@ -35,6 +35,7 @@ def load_data(infile):
 
 
 def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
+    # Add lumpy breakpoint id to each zipped entry
     if confidence_interval:
         confidence_interval = '-{},{}'.format(confidence_interval, confidence_interval)
         data = list(zip(lumpy_df.chromosome_1, lumpy_df.position_1, [confidence_interval]*len(lumpy_df)))
@@ -49,8 +50,20 @@ def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
 
 
 def filter_destruct_on_lumpy(destruct, lumpy_tree):
-    destruct = destruct[destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_1'], x['position_1']), axis=1)]
-    destruct = destruct[destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_2'], x['position_2']), axis=1)]
+    destruct['is_lumpy_filtered'] = False
+
+    for idx in destruct.index:
+        lumpy_brk_ids = dict()
+
+        for break_end in ('1', '2'):
+            chromosome = destruct.loc[idx, f'chromosome_{break_end}']
+            position = destruct.loc[idx, f'position_{break_end}']
+
+            for ival in interval_tree[chrom][pos]:
+                lumpy_brk_ids[break_end] = set([ival[2] for ival in interval_tree[chrom][pos]])
+
+        if len(lumpy_brk_ids['1'].intersection(lumpy_brk_ids['2'])) > 0:
+            destruct.loc[idx, 'is_lumpy_filtered'] = True
 
     return destruct
 
