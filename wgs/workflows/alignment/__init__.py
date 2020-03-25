@@ -25,7 +25,7 @@ def collect_bam_metrics(
     :param single_node:
     '''
 
-    ref_gsenome = config.refdir_data(refdir)['paths']['reference']
+    ref_genome = config.refdir_data(refdir)['paths']['reference']
 
     picard_wgs_params = config.default_params('alignment')['picard_wgs_params']
 
