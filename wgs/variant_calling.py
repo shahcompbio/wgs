@@ -308,6 +308,7 @@ def call_variants(
             mgd.OutputFile('germline_csv', 'sample_id', fnames=germline_calls),
             mgd.Template('template_outdir', 'sample_id', template=outdir),
             mgd.InputInstance('sample_id'),
+            refdir,
         ),
     )
 
