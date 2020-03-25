@@ -8,6 +8,7 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
+from wgs.config import config
 
 
 def create_consensus_workflow(
@@ -20,9 +21,11 @@ def create_consensus_workflow(
         germline_calls,
         outdir,
         sample_id,
-        global_config,
-        varcall_config
+        refdir
 ):
+    params = config.default_params('variant_calling')
+    chromosomes = config.refdir_data(refdir)['params']['chromosomes']
+
     germline_snpeff_annotations = os.path.join(
         outdir, '{}_germline_snpeff_annotations.csv.gz'.format(sample_id)
     )
@@ -58,7 +61,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='parse_museq_germlines',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
@@ -67,8 +70,8 @@ def create_consensus_workflow(
             mgd.OutputFile(germline_snpeff_annotations, extensions=['.yaml']),
             mgd.OutputFile(germline_ma_annotations, extensions=['.yaml']),
             mgd.OutputFile(germline_ids_annotations, extensions=['.yaml']),
-            varcall_config["parse_museq"],
-            varcall_config['chromosomes'],
+            params["parse_museq"],
+            chromosomes,
             mgd.TempSpace("tempdir_parse_germlines")
         ),
     )
@@ -76,7 +79,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='parse_strelka_indel',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
@@ -85,8 +88,8 @@ def create_consensus_workflow(
             mgd.OutputFile(indel_snpeff_annotations, extensions=['.yaml']),
             mgd.OutputFile(indel_ma_annotations, extensions=['.yaml']),
             mgd.OutputFile(indel_ids_annotations, extensions=['.yaml']),
-            varcall_config["parse_strelka"],
-            varcall_config['chromosomes'],
+            params["parse_strelka"],
+            chromosomes,
             mgd.TempSpace("tempdir_strelka_indel")
         ),
     )
@@ -94,7 +97,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='parse_museq_snv',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
@@ -103,8 +106,8 @@ def create_consensus_workflow(
             mgd.TempOutputFile('museq_snpeff.csv', extensions=['.yaml']),
             mgd.TempOutputFile('museq_ma.csv', extensions=['.yaml']),
             mgd.TempOutputFile('museq_ids.csv', extensions=['.yaml']),
-            varcall_config["parse_museq"],
-            varcall_config['chromosomes'],
+            params["parse_museq"],
+            chromosomes,
             mgd.TempSpace("tempdir_parse_museq_snv")
         ),
     )
@@ -112,7 +115,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='parse_strelka_snv',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
@@ -121,8 +124,8 @@ def create_consensus_workflow(
             mgd.TempOutputFile('strelka_snv_snpeff.csv', extensions=['.yaml']),
             mgd.TempOutputFile('strelka_snv_ma.csv', extensions=['.yaml']),
             mgd.TempOutputFile('strelka_snv_ids.csv', extensions=['.yaml']),
-            varcall_config["parse_strelka"],
-            varcall_config['chromosomes'],
+            params["parse_strelka"],
+            chromosomes,
             mgd.TempSpace("tempdir_parse_strelka_snv")
         ),
     )
@@ -130,7 +133,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='merge_snvs',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
@@ -143,7 +146,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='merge_snpeff',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
@@ -157,7 +160,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='merge_ma',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
@@ -171,7 +174,7 @@ def create_consensus_workflow(
     workflow.transform(
         name='merge_ids',
         ctx=helpers.get_default_ctx(
-            memory=global_config['memory']['high'],
+            memory=15,
             walltime='8:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
