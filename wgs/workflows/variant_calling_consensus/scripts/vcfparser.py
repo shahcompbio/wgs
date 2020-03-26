@@ -74,7 +74,7 @@ class VcfParser(object):
         try:
             info = reader.infos[key]
         except KeyError:
-            return ['chrom', 'pos']
+            return []
 
         desc = info.desc
 
