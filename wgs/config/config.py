@@ -157,7 +157,7 @@ def containers(container_name):
 
     docker_images = {
         'bwa': 'bwa:v0.0.1',
-        'samtools': 'samtools:v0.0.2',
+        'samtools': 'samtools:v0.0.1',
         'picard': 'picard:v0.0.1',
         'wgs': 'wgs:v{}'.format(version),
         'strelka': 'strelka:v0.0.1',
