@@ -7,6 +7,7 @@ Created on 30 Apr 2015
 
 import os
 import warnings
+import glob
 
 version = '1.0.1'
 
@@ -17,7 +18,7 @@ def get_table_hdr():
     mutation assessor file as a list
     '''
 
-    ma_file = os.path.join(args.db, 'MA.chr01.txt')
+    ma_file = glob.glob(os.path.join(args.db, 'MA.chr*.txt'))[0]
     with open(ma_file) as f:
         line = f.readline()
 
