@@ -13,6 +13,14 @@ from wgs.config import config
 def copynumber_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
+    run_hmmcopy = args['hmmcopy']
+    run_titan = args['titan']
+
+    if not run_hmmcopy and not run_titan:
+        run_hmmcopy = True
+        run_titan = True
+
+
     inputs = helpers.load_yaml(args['input_yaml'])
 
     outdir = args['out_dir']
@@ -62,74 +70,76 @@ def copynumber_calling_workflow(args):
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
-    workflow.subworkflow(
-        name='titan',
-        func=titan.create_titan_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai']),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai']),
-            mgd.InputFile("target_list", 'sample_id', fnames=targets),
-            mgd.OutputFile('outfile', 'sample_id', template=titan_outfile),
-            mgd.OutputFile('params', 'sample_id', template=titan_params),
-            mgd.OutputFile('segs', 'sample_id', template=titan_segs),
-            mgd.OutputFile('igv_segs', 'sample_id', template=titan_igv_segs),
-            mgd.OutputFile('parsed', 'sample_id', template=titan_parsed),
-            mgd.OutputFile('plots', 'sample_id', template=titan_plots),
-            mgd.OutputFile('tar_outputs', 'sample_id', template=titan_tar_outputs),
-            mgd.Template(titan_raw_dir, 'sample_id'),
-            mgd.InputInstance('sample_id'),
-            refdir_paths['reference'],
-            chromosomes,
-            refdir_paths['het_positions_titan'],
-            refdir_paths['map_wig'],
-            refdir_paths['gc_wig'],
-            refdir_paths['gtf'],
-        ),
-        kwargs={'single_node': args['single_node']}
-    )
+    if run_titan:
+        workflow.subworkflow(
+            name='titan',
+            func=titan.create_titan_workflow,
+            axes=('sample_id',),
+            args=(
+                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                              extensions=['.bai']),
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                              extensions=['.bai']),
+                mgd.InputFile("target_list", 'sample_id', fnames=targets),
+                mgd.OutputFile('outfile', 'sample_id', template=titan_outfile),
+                mgd.OutputFile('params', 'sample_id', template=titan_params),
+                mgd.OutputFile('segs', 'sample_id', template=titan_segs),
+                mgd.OutputFile('igv_segs', 'sample_id', template=titan_igv_segs),
+                mgd.OutputFile('parsed', 'sample_id', template=titan_parsed),
+                mgd.OutputFile('plots', 'sample_id', template=titan_plots),
+                mgd.OutputFile('tar_outputs', 'sample_id', template=titan_tar_outputs),
+                mgd.Template(titan_raw_dir, 'sample_id'),
+                mgd.InputInstance('sample_id'),
+                refdir_paths['reference'],
+                chromosomes,
+                refdir_paths['het_positions_titan'],
+                refdir_paths['map_wig'],
+                refdir_paths['gc_wig'],
+                refdir_paths['gtf'],
+            ),
+            kwargs={'single_node': args['single_node']}
+        )
 
-    workflow.subworkflow(
-        name='hmmcopy_normal',
-        func=hmmcopy.create_hmmcopy_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                          extensions=['.bai']),
-            mgd.InputInstance('sample_id'),
-            mgd.OutputFile('normal_bias', 'sample_id', template=normal_bias_pdf),
-            mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
-            mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
-            mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
-            mgd.OutputFile('normal_pygenes', 'sample_id', template=normal_pygenes),
-            chromosomes,
-            refdir_paths['map_wig'],
-            refdir_paths['gc_wig'],
-            refdir_paths['gtf']
-        ),
-    )
+    if run_hmmcopy:
+        workflow.subworkflow(
+            name='hmmcopy_normal',
+            func=hmmcopy.create_hmmcopy_workflow,
+            axes=('sample_id',),
+            args=(
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                              extensions=['.bai']),
+                mgd.InputInstance('sample_id'),
+                mgd.OutputFile('normal_bias', 'sample_id', template=normal_bias_pdf),
+                mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
+                mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
+                mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
+                mgd.OutputFile('normal_pygenes', 'sample_id', template=normal_pygenes),
+                chromosomes,
+                refdir_paths['map_wig'],
+                refdir_paths['gc_wig'],
+                refdir_paths['gtf']
+            ),
+        )
 
-    workflow.subworkflow(
-        name='hmmcopy_tumour',
-        func=hmmcopy.create_hmmcopy_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                          extensions=['.bai']),
-            mgd.InputInstance('sample_id'),
-            mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_bias_pdf),
-            mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
-            mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
-            mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
-            mgd.OutputFile('tumour_pygenes', 'sample_id', template=tumour_pygenes),
-            chromosomes,
-            refdir_paths['map_wig'],
-            refdir_paths['gc_wig'],
-            refdir_paths['gtf']
-        ),
-    )
+        workflow.subworkflow(
+            name='hmmcopy_tumour',
+            func=hmmcopy.create_hmmcopy_workflow,
+            axes=('sample_id',),
+            args=(
+                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                              extensions=['.bai']),
+                mgd.InputInstance('sample_id'),
+                mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_bias_pdf),
+                mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
+                mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
+                mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
+                mgd.OutputFile('tumour_pygenes', 'sample_id', template=tumour_pygenes),
+                chromosomes,
+                refdir_paths['map_wig'],
+                refdir_paths['gc_wig'],
+                refdir_paths['gtf']
+            ),
+        )
 
     filenames = [
         titan_outfile,

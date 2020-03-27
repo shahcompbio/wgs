@@ -89,6 +89,20 @@ def parse_args():
     cna_calling = subparsers.add_parser("copynumber_calling")
     cna_calling.set_defaults(which='copynumber_calling')
     cna_calling = add_global_args(cna_calling)
+    cna_calling.add_argument(
+        "--titan",
+        default=False,
+        action='store_true',
+        help='''titan'''
+    )
+    cna_calling.add_argument(
+        "--hmmcopy",
+        default=False,
+        action='store_true',
+        help='''hmmcopy'''
+    )
+
+
 
     # ================
     # postprocessing
