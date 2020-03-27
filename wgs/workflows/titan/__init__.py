@@ -184,7 +184,8 @@ def create_titan_workflow(
             mgd.InputInstance('ploidy'),
             sample_id,
             map_wig,
-            cn_params['titan_params']
+            cn_params['titan_params'],
+            cn_params['genome_type']
         ),
         kwargs={'docker_image': config.containers('titan'), 'threads': '8'}
     )
