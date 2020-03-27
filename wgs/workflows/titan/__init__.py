@@ -159,8 +159,8 @@ def create_titan_workflow(
             mgd.TempInputFile('normal.wig'),
             targets,
             mgd.TempOutputFile('correct_reads.txt'),
-            map_wig,
             gc_wig,
+            map_wig,
             cn_params['genome_type']
         ),
         kwargs={'docker_image': config.containers('titan')}
