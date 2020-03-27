@@ -85,7 +85,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, gc_wig, 
 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
-        map_wig, titan_params, num_clusters, ploidy, sample_id,
+        num_clusters, ploidy, sample_id, map_wig, titan_params,
         docker_image=None, threads=8
 ):
     script = 'titan.R'
