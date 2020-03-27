@@ -1,3 +1,5 @@
+
+  
 # Whole Genome Pipelines
 
 
@@ -94,8 +96,35 @@ HCC1395:
 wgs copynumber_calling --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref --hmmcopy
+  --refdir ref --titan
 ```
+
+### Breakpoint calling
+1. download test datasets
+```
+wget https://wgstestsets.blob.core.windows.net/datasets/breakpoint_data.tar.gz
+tar -xvf breakpoint_data.tar.gz
+cd data
+```
+2. create input.yaml
+```
+SA123:
+  normal: data/normal.bam
+  normal_id: SA123N
+  tumour: data/small.bam
+  tumour_id: SA123
+```
+3. create pipeline.sh
+```
+#!/bin/bash
+
+wgs breakpoint_calling --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local \
+  --refdir ref
+```
+
+
 
 
 #### Run with docker
