@@ -96,7 +96,7 @@ def run_titan(
            titan_params['normal_estimate_method'], titan_params['max_iters'], titan_params['pseudo_counts'],
            titan_params['txn_exp_len'], titan_params['txn_z_strength'], titan_params['alpha_k'],
            titan_params['alpha_high'], titan_params['max_copynumber'],
-           titan_params['symmetric'], obj_outfile, titan_params['genome_type'], titan_params['chrom'],
+           titan_params['symmetric'], obj_outfile, genome_type, titan_params['chrom'],
            titan_params['y_threshold'], titan_params['max_depth']]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
