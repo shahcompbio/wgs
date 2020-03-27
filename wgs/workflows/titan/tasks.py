@@ -164,7 +164,7 @@ def merge_to_h5(inputs, output, intervals, dtype=None):
             h5output.put(tablename, input_df, format='table')
 
 
-def parse_titan_data(infile, titan_file, output, config):
+def parse_titan_data(infile, titan_file, output):
     """
     Parse the input VCF file into a TSV file
 

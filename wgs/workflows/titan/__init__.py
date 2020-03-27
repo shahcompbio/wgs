@@ -251,9 +251,7 @@ def create_titan_workflow(
             mgd.TempInputFile('titan_segs.csv', 'numclusters', 'ploidy'),
             mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
             mgd.TempOutputFile('titan_parsed.csv', 'numclusters', 'ploidy'),
-            cn_params['parse_titan'],
         ),
-        kwargs={'chromosomes': chromosomes}
     )
 
     # select optimal solution
