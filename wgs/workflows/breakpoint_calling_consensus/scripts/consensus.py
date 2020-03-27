@@ -27,8 +27,8 @@ def compare_lumpy_destruct_type(lumpy_type, destruct_type):
     if lumpy_type not in ['DEL', 'INV', 'DUP', 'BND']:
         raise Exception('Unknown lumpy type: {}'.format(lumpy_type))
 
-    if lumpy_type not in ['deletion', 'inversion', 'duplication', 'translocation']:
-        raise Exception('Unknown lumpy type: {}'.format(lumpy_type))
+    if destruct_type not in ['deletion', 'inversion', 'duplication', 'translocation']:
+        raise Exception('Unknown destruct type: {}'.format(destruct_type))
 
     if lumpy_type == 'DEL' and destruct_type == 'deletion':
         return True
