@@ -1,4 +1,3 @@
-
 # Whole Genome Pipelines
 
 
@@ -16,6 +15,8 @@ Just copy and paste the below commands for the subpipeline you which to run.
 1. Download the test data set:
 ```
 wget  https://wgstestsets.blob.core.windows.net/datasets/alignment_data.tar.gz
+tar -xvf alignment_data.tar.gz
+cd data
 ```
 2. create input.yaml
 ```
@@ -50,6 +51,7 @@ Please refer to the docker guide to learn how to launch pipeline.
 ```
 wget https://wgstestsets.blob.core.windows.net/datasets/variant_data.tar.gz
 tar -xvf variant_data.tar.gz
+cd data
 ```
 2. create input.yaml
 ```
@@ -66,8 +68,35 @@ HCC1395:
 wgs variant_calling --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir data/ref
+  --refdir ref
 ```
+
+### Copynumber calling
+1. download test datasets
+```
+wget https://wgstestsets.blob.core.windows.net/datasets/copynumber_data.tar.gz
+tar -xvf copynumber_data.tar.gz
+cd data
+```
+2. create input.yaml
+```
+HCC1395:
+  normal: data/HCC1395BL_chr15_snps.bam
+  normal_id: HCC1395BL
+  tumour: data/HCC1395_chr15_snps.bam
+  tumour_id: HCC1395
+  target_list: data/targets.tsv
+```
+3. create pipeline.sh
+```
+#!/bin/bash
+
+wgs copynumber_calling --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local \
+  --refdir ref --hmmcopy
+```
+
 
 #### Run with docker
 
