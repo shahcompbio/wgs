@@ -1,5 +1,6 @@
 
   
+  
 # Whole Genome Pipelines
 
 
@@ -124,6 +125,29 @@ wgs breakpoint_calling --input_yaml input.yaml \
   --refdir ref
 ```
 
+###  Realignment
+1. download test datasets
+```
+wget https://wgstestsets.blob.core.windows.net/datasets/realignment_data.tar.gz
+tar -xvf realignment_data.tar.gz
+cd data
+```
+2. create input.yaml
+```
+SA123:
+  input: data/A20875_3_lanes_dupsFlagged_chr22_paired.bam
+  output: bams/output.bam
+```
+3. create pipeline.sh
+```
+#!/bin/bash
+
+wgs realignment --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local \
+  --refdir ref
+```
+
 
 
 
@@ -158,3 +182,4 @@ docker run -it -v $PWD:$PWD -w $PWD  -v /var/run/docker.sock:/var/run/docker.soc
 ```
 sh launcher.sh
 ```
+
