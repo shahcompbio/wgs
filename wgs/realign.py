@@ -6,9 +6,10 @@ import pypeliner.managed as mgd
 import yaml
 from wgs.utils import helpers
 from wgs.workflows import realignment
+from wgs.config import config
 
 
-def realign_bams(samples, inputs, outputs, out_dir, config, config_globals,single_node=False):
+def realign_bams(samples, inputs, outputs, out_dir, refdir,single_node=False):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
     inputs = dict([(sampid, inputs[sampid])
@@ -29,8 +30,7 @@ def realign_bams(samples, inputs, outputs, out_dir, config, config_globals,singl
             mgd.InputFile("input.bam", "sample_id", axes_origin=[], fnames=inputs),
             mgd.OutputFile("output.bam", "sample_id", axes_origin=[], fnames=outputs),
             out_dir,
-            config,
-            config_globals,
+            refdir,
             samples
         ),
         kwargs={'single_node': single_node}
@@ -40,19 +40,13 @@ def realign_bams(samples, inputs, outputs, out_dir, config, config_globals,singl
 
 
 def realign_bam_workflow(args):
-    config = helpers.load_yaml(args['config_file'])
-    config_globals = config['globals']
-    config = config['alignment']
 
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config['docker']['wgs']))
+    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config.containers('wgs')))
 
     outdir = args['out_dir']
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
     input_yaml_blob = os.path.join(outdir, 'input.yaml')
-
-    config = helpers.load_yaml(args['config_file'])
-    config = config['alignment']
 
     yamldata = yaml.safe_load(open(args['input_yaml']))
 
@@ -76,8 +70,7 @@ def realign_bam_workflow(args):
             mgd.OutputFile("realigned.bam", 'sample_id', fnames=output_bams,
                            extensions=['.bai'], axes_origin=[]),
             args["out_dir"],
-            config,
-            config_globals
+            args['refdir'],
         ),
         kwargs={'single_node': args['single_node']}
     )
