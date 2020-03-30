@@ -56,7 +56,8 @@ def collect_bam_metrics(
         ),
         kwargs={
             'picard_docker': config.containers('picard'),
-            'samtools_docker': config.containers('samtools')
+            'samtools_docker': config.containers('samtools'),
+            'mem': '8G'
         }
     )
 
@@ -76,7 +77,7 @@ def collect_bam_metrics(
             mgd.OutputFile(picard_GC_pdf),
             mgd.TempSpace('picard_gc')
         ),
-        kwargs={'docker_image': config.containers('picard')}
+        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
     )
 
     workflow.transform(
@@ -94,7 +95,7 @@ def collect_bam_metrics(
             picard_wgs_params,
             mgd.TempSpace('picard_wgs')
         ),
-        kwargs={'docker_image': config.containers('picard')}
+        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
     )
 
     workflow.transform(
