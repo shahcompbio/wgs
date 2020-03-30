@@ -59,9 +59,9 @@ cd data
 2. create input.yaml
 ```
 HCC1395:
-  normal: data/data/HCC1395BL_chr15_snps.bam
+  normal: data/HCC1395BL_chr15_snps.bam
   normal_id: HCC1395BL
-  tumour: data/data/HCC1395_chr15_snps.bam
+  tumour: data/HCC1395_chr15_snps.bam
   tumour_id: HCC1395
 ```
 3. create pipeline.sh
