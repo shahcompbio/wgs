@@ -44,7 +44,7 @@ TEST:
 wgs alignment --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref
+  --refdir ref --maxjobs 4
 ```
 
 Please refer to the docker guide to learn how to launch pipeline.
@@ -71,7 +71,7 @@ HCC1395:
 wgs variant_calling --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref
+  --refdir ref --maxjobs 4
 ```
 
 ### Copynumber calling
@@ -97,7 +97,7 @@ HCC1395:
 wgs copynumber_calling --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref --titan
+  --refdir ref --titan --maxjobs 4
 ```
 
 ### Breakpoint calling
@@ -122,7 +122,7 @@ SA123:
 wgs breakpoint_calling --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref
+  --refdir ref --maxjobs 4
 ```
 
 ###  Realignment
@@ -145,7 +145,7 @@ SA123:
 wgs realignment --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
-  --refdir ref
+  --refdir ref --maxjobs 4
 ```
 
 
