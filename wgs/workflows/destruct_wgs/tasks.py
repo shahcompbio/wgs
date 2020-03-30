@@ -22,7 +22,12 @@ def run_destruct_local(
               'submit': 'local', 'maxjobs': ncpus,
               'loglevel': 'DEBUG'}
 
+
     pyp = pypeliner.app.Pypeline(config=config)
+
+    context_config = pypeliner.helpers.GlobalState.get_all()['context_config']
+    pypeliner.helpers.GlobalState.set('context_config', context_config)
+
     workflow = pypeliner.workflow.Workflow(ctx={'docker_image': docker_image})
 
     logging.getLogger().setLevel(logging.DEBUG)

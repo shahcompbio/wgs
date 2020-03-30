@@ -57,7 +57,7 @@ def create_destruct_wgs_workflow(
                 mgd.TempInputObj("destruct_config"),
                 destruct_refdata,
             ),
-            kwargs={'ncpus': None, 'docker_image': config.containers('destruct')}
+            kwargs={'ncpus': 16, 'docker_image': config.containers('destruct')}
         )
     else:
         workflow.subworkflow(

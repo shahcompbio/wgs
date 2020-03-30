@@ -26,6 +26,7 @@ def lumpy_preprocess_workflow(
                 mgd.OutputFile(discordants_sorted_bam),
                 mgd.OutputFile(splitters_sorted_bam),
                 mgd.TempSpace("lumpy_preprocess_temp"),
+                config.default_params('breakpoint_calling')['lumpy_paths']
             ),
             kwargs={
                 'lumpy_docker_image': config.containers('lumpy'),
