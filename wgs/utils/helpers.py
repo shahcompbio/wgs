@@ -3,19 +3,22 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 '''
+import collections
 import errno
 import gzip
 import logging
 import multiprocessing
 import os
+import re
 import shutil
 import tarfile
 from multiprocessing.pool import ThreadPool
 from subprocess import Popen, PIPE
 
 import pypeliner
-import wgs
 import yaml
+
+import wgs
 
 
 class GetFileHandle(object):
@@ -403,6 +406,7 @@ def get_center_info(fastqs_file):
 
     return seqinfo
 
+
 def get_samples(fastqs_file):
     data = load_yaml(fastqs_file)
 
@@ -442,7 +446,7 @@ def add_extensions(filepaths):
     for filepath in filepaths:
         paths_extensions.append(filepath)
 
-        if filepath.endswith('.csv.gz'):
+        if filepath.endswith('.csv.gz') or filepath.endswith('csv'):
             paths_extensions.append(filepath + '.yaml')
         elif filepath.endswith('.vcf.gz'):
             paths_extensions.append(filepath + '.csi')
@@ -456,6 +460,22 @@ def add_extensions(filepaths):
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+def make_tar_from_files(output_filename, input_files, tempdir):
+    makedirs(tempdir)
+
+    for infile in input_files:
+        if isinstance(infile, str):
+            shutil.copyfile(infile, os.path.join(tempdir, os.path.basename(infile)))
+        elif isinstance(infile, collections.Mapping):
+            for key, filepath in infile.items():
+                if not isinstance(key, str):
+                    key = ' '.join(key)
+                shutil.copyfile(filepath, os.path.join(tempdir, '{}_{}'.format(key, os.path.basename(filepath))))
+
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(tempdir, arcname=os.path.basename(tempdir))
 
 
 def generate_meta_yaml_file(
@@ -487,6 +507,7 @@ def generate_meta_yaml_file(
 
     write_to_yaml(metadata_file, metadata)
 
+
 def expand_list(list, expanders, to_replace):
     '''
     for each str in list,
@@ -502,7 +523,7 @@ def expand_list(list, expanders, to_replace):
     the items in list
     '''
     outlist = []
-    replace_list = {to_replace:''}
+    replace_list = {to_replace: ''}
     for item in list:
         if to_replace in item:
             for expander in expanders:
@@ -510,6 +531,7 @@ def expand_list(list, expanders, to_replace):
                 final_name = item.format(**replace_list)
                 outlist.append(final_name)
     return outlist
+
 
 def get_version():
     '''
@@ -519,6 +541,10 @@ def get_version():
     # strip setuptools metadata
     version = version.split("+")[0]
     return version
+
+
+class InputException(Exception):
+    pass
 
 
 def generate_and_upload_metadata(
@@ -534,7 +560,7 @@ def generate_and_upload_metadata(
 
     metadata['command'] = ' '.join(command)
     metadata['version'] = get_version()
-#
+
     if type:
         metadata['type'] = type
 
@@ -556,8 +582,8 @@ def generate_and_upload_metadata(
 
         if not input_yaml.startswith(root_dir) and root_dir in input_yaml:
             input_yaml = input_yaml[input_yaml.index(root_dir):]
-            if input_yaml.endswith('.tmp'):
-                input_yaml = input_yaml[:-4]
+        if input_yaml.endswith('.tmp'):
+            input_yaml = input_yaml[:-4]
 
         metadata['input_yaml'] = os.path.relpath(input_yaml, root_dir)
         filepaths.append(input_yaml)

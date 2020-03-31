@@ -93,7 +93,10 @@ def call_germlines_only(
 
 
 def call_variants(
-        samples, somatic_calls, indel_calls, germline_calls, outdir,
+        samples,
+        somatic_calls, somatic_snpeff, somatic_ma, somatic_ids,
+        indel_calls, indel_snpeff, indel_ma, indel_ids,
+        germline_calls, germline_snpeff, germline_ma, germline_ids,
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
         museq_paired_pdf, museq_single_pdf, refdir,
@@ -119,10 +122,30 @@ def call_variants(
 
     somatic_calls = dict([(sampid, somatic_calls[sampid])
                           for sampid in samples])
+    somatic_snpeff = dict([(sampid, somatic_snpeff[sampid])
+                           for sampid in samples])
+    somatic_ma = dict([(sampid, somatic_ma[sampid])
+                       for sampid in samples])
+    somatic_ids = dict([(sampid, somatic_ids[sampid])
+                        for sampid in samples])
+
     indel_calls = dict([(sampid, indel_calls[sampid])
                         for sampid in samples])
+    indel_snpeff = dict([(sampid, indel_snpeff[sampid])
+                         for sampid in samples])
+    indel_ma = dict([(sampid, indel_ma[sampid])
+                     for sampid in samples])
+    indel_ids = dict([(sampid, indel_ids[sampid])
+                      for sampid in samples])
+
     germline_calls = dict([(sampid, germline_calls[sampid])
                            for sampid in samples])
+    germline_snpeff = dict([(sampid, germline_snpeff[sampid])
+                            for sampid in samples])
+    germline_ma = dict([(sampid, germline_ma[sampid])
+                        for sampid in samples])
+    germline_ids = dict([(sampid, germline_ids[sampid])
+                         for sampid in samples])
 
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
@@ -293,7 +316,6 @@ def call_variants(
                 }
     )
 
-    outdir = os.path.join(outdir, '{sample_id}')
     workflow.subworkflow(
         name="consensus_calling",
         func='wgs.workflows.variant_calling_consensus.create_consensus_workflow',
@@ -304,10 +326,17 @@ def call_variants(
             mgd.InputFile("strelka_snv_ann.vcf.gz", 'sample_id', fnames=strelka_snv_vcf),
             mgd.InputFile("strelka_indel_ann.vcf.gz", 'sample_id', fnames=strelka_indel_vcf),
             mgd.OutputFile('somatic_csv', 'sample_id', fnames=somatic_calls),
+            mgd.OutputFile('somatic_snpeff', 'sample_id', fnames=somatic_snpeff),
+            mgd.OutputFile('somatic_ma', 'sample_id', fnames=somatic_ma),
+            mgd.OutputFile('somatic_ids', 'sample_id', fnames=somatic_ids),
             mgd.OutputFile('indel_csv', 'sample_id', fnames=indel_calls),
+            mgd.OutputFile('indel_snpeff', 'sample_id', fnames=indel_snpeff),
+            mgd.OutputFile('indel_ma', 'sample_id', fnames=indel_ma),
+            mgd.OutputFile('indel_ids', 'sample_id', fnames=indel_ids),
             mgd.OutputFile('germline_csv', 'sample_id', fnames=germline_calls),
-            mgd.Template('template_outdir', 'sample_id', template=outdir),
-            mgd.InputInstance('sample_id'),
+            mgd.OutputFile('germline_snpeff', 'sample_id', fnames=germline_snpeff),
+            mgd.OutputFile('germline_ma', 'sample_id', fnames=germline_ma),
+            mgd.OutputFile('germline_ids', 'sample_id', fnames=germline_ids),
             refdir,
         ),
     )
@@ -338,8 +367,19 @@ def variant_calling_workflow(args):
     museq_single_pdf = os.path.join(var_dir, '{sample_id}', '{sample_id}_single_museqportrait.pdf')
 
     somatic_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus_somatic.csv.gz')
+    somatic_snpeff = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus_somatic_snpeff.csv.gz')
+    somatic_ma = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus_somatic_ma.csv.gz')
+    somatic_ids = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus_somatic_ids.csv.gz')
+
     indel_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel.csv.gz')
+    indel_snpeff = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel_snpeff.csv.gz')
+    indel_ma = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel_ma.csv.gz')
+    indel_ids = os.path.join(var_dir, '{sample_id}', '{sample_id}_indel_ids.csv.gz')
+
     germline_csv = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline.csv.gz')
+    germline_snpeff = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_snpeff.csv.gz')
+    germline_ma = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_ma.csv.gz')
+    germline_ids = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_ids.csv.gz')
 
     pyp = pypeliner.app.Pypeline(config=args)
 
@@ -375,9 +415,17 @@ def variant_calling_workflow(args):
             args=(
                 samples,
                 mgd.OutputFile('somatic_csv', 'sample_id', template=somatic_csv, axes_origin=[]),
+                mgd.OutputFile('somatic_snpeff', 'sample_id', template=somatic_snpeff, axes_origin=[]),
+                mgd.OutputFile('somatic_ma', 'sample_id', template=somatic_ma, axes_origin=[]),
+                mgd.OutputFile('somatic_ids', 'sample_id', template=somatic_ids, axes_origin=[]),
                 mgd.OutputFile('indel_csv', 'sample_id', template=indel_csv, axes_origin=[]),
+                mgd.OutputFile('indel_snpeff', 'sample_id', template=indel_snpeff, axes_origin=[]),
+                mgd.OutputFile('indel_ma', 'sample_id', template=indel_ma, axes_origin=[]),
+                mgd.OutputFile('indel_ids', 'sample_id', template=indel_ids, axes_origin=[]),
                 mgd.OutputFile('germline_csv', 'sample_id', template=germline_csv, axes_origin=[]),
-                var_dir,
+                mgd.OutputFile('germline_snpeff', 'sample_id', template=germline_csv, axes_origin=[]),
+                mgd.OutputFile('germline_ma', 'sample_id', template=germline_csv, axes_origin=[]),
+                mgd.OutputFile('germline_ids', 'sample_id', template=germline_csv, axes_origin=[]),
                 mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                               extensions=['.bai'], axes_origin=[]),
                 mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
@@ -398,9 +446,13 @@ def variant_calling_workflow(args):
             }
         )
 
-        filenames = [somatic_csv, indel_csv, germline_csv, museq_vcf,
-                     museq_ss_vcf, strelka_snv_vcf, strelka_indel_vcf,
-                     museq_paired_pdf, museq_single_pdf]
+        filenames = [
+            somatic_csv, somatic_snpeff, somatic_ma, somatic_ids,
+            indel_csv, indel_snpeff, indel_ma, indel_ids,
+            germline_csv, germline_snpeff, germline_ma, germline_ids,
+            museq_vcf, museq_ss_vcf, strelka_snv_vcf, strelka_indel_vcf,
+            museq_paired_pdf, museq_single_pdf
+        ]
 
         outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 

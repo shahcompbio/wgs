@@ -17,44 +17,51 @@ def create_consensus_workflow(
         strelka_snv,
         strelka_indel,
         somatic_calls,
+        somatic_snpeff,
+        somatic_ma,
+        somatic_ids,
         indel_calls,
+        indel_snpeff,
+        indel_ma,
+        indel_ids,
         germline_calls,
-        outdir,
-        sample_id,
+        germline_snpeff,
+        germline_ma,
+        germline_ids,
         refdir
 ):
     params = config.default_params('variant_calling')
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
 
-    germline_snpeff_annotations = os.path.join(
-        outdir, '{}_germline_snpeff_annotations.csv.gz'.format(sample_id)
-    )
-    indel_snpeff_annotations = os.path.join(
-        outdir, '{}_indel_snpeff_annotations.csv.gz'.format(sample_id)
-    )
-    somatic_snpeff_annotations = os.path.join(
-        outdir, '{}_somatic_snpeff_annotations.csv.gz'.format(sample_id)
-    )
-
-    germline_ma_annotations = os.path.join(
-        outdir, '{}_germline_ma_annotations.csv.gz'.format(sample_id)
-    )
-    indel_ma_annotations = os.path.join(
-        outdir, '{}_indel_ma_annotations.csv.gz'.format(sample_id)
-    )
-    somatic_ma_annotations = os.path.join(
-        outdir, '{}_somatic_ma_annotations.csv.gz'.format(sample_id)
-    )
-
-    germline_ids_annotations = os.path.join(
-        outdir, '{}_germline_ids_annotations.csv.gz'.format(sample_id)
-    )
-    indel_ids_annotations = os.path.join(
-        outdir, '{}_indel_ids_annotations.csv.gz'.format(sample_id)
-    )
-    somatic_ids_annotations = os.path.join(
-        outdir, '{}_somatic_ids_annotations.csv.gz'.format(sample_id)
-    )
+    # germline_snpeff_annotations = os.path.join(
+    #     outdir, '{}_germline_snpeff_annotations.csv.gz'.format(sample_id)
+    # )
+    # indel_snpeff_annotations = os.path.join(
+    #     outdir, '{}_indel_snpeff_annotations.csv.gz'.format(sample_id)
+    # )
+    # somatic_snpeff_annotations = os.path.join(
+    #     outdir, '{}_somatic_snpeff_annotations.csv.gz'.format(sample_id)
+    # )
+    #
+    # germline_ma_annotations = os.path.join(
+    #     outdir, '{}_germline_ma_annotations.csv.gz'.format(sample_id)
+    # )
+    # indel_ma_annotations = os.path.join(
+    #     outdir, '{}_indel_ma_annotations.csv.gz'.format(sample_id)
+    # )
+    # somatic_ma_annotations = os.path.join(
+    #     outdir, '{}_somatic_ma_annotations.csv.gz'.format(sample_id)
+    # )
+    #
+    # germline_ids_annotations = os.path.join(
+    #     outdir, '{}_germline_ids_annotations.csv.gz'.format(sample_id)
+    # )
+    # indel_ids_annotations = os.path.join(
+    #     outdir, '{}_indel_ids_annotations.csv.gz'.format(sample_id)
+    # )
+    # somatic_ids_annotations = os.path.join(
+    #     outdir, '{}_somatic_ids_annotations.csv.gz'.format(sample_id)
+    # )
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -67,9 +74,9 @@ def create_consensus_workflow(
         args=(
             mgd.InputFile(museq_germline, extensions=['.csi', '.tbi']),
             mgd.OutputFile(germline_calls, extensions=['.yaml']),
-            mgd.OutputFile(germline_snpeff_annotations, extensions=['.yaml']),
-            mgd.OutputFile(germline_ma_annotations, extensions=['.yaml']),
-            mgd.OutputFile(germline_ids_annotations, extensions=['.yaml']),
+            mgd.OutputFile(germline_snpeff, extensions=['.yaml']),
+            mgd.OutputFile(germline_ma, extensions=['.yaml']),
+            mgd.OutputFile(germline_ids, extensions=['.yaml']),
             params["parse_museq"],
             chromosomes,
             mgd.TempSpace("tempdir_parse_germlines")
@@ -85,9 +92,9 @@ def create_consensus_workflow(
         args=(
             mgd.InputFile(strelka_indel, extensions=['.csi', '.tbi']),
             mgd.OutputFile(indel_calls, extensions=['.yaml']),
-            mgd.OutputFile(indel_snpeff_annotations, extensions=['.yaml']),
-            mgd.OutputFile(indel_ma_annotations, extensions=['.yaml']),
-            mgd.OutputFile(indel_ids_annotations, extensions=['.yaml']),
+            mgd.OutputFile(indel_snpeff, extensions=['.yaml']),
+            mgd.OutputFile(indel_ma, extensions=['.yaml']),
+            mgd.OutputFile(indel_ids, extensions=['.yaml']),
             params["parse_strelka"],
             chromosomes,
             mgd.TempSpace("tempdir_strelka_indel")
@@ -152,7 +159,7 @@ def create_consensus_workflow(
         args=(
             [mgd.TempInputFile('strelka_snv_snpeff.csv', extensions=['.yaml']),
              mgd.TempInputFile('museq_snpeff.csv', extensions=['.yaml'])],
-            mgd.OutputFile(somatic_snpeff_annotations, extensions=['.yaml']),
+            mgd.OutputFile(somatic_snpeff, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
@@ -166,7 +173,7 @@ def create_consensus_workflow(
         args=(
             [mgd.TempInputFile('strelka_snv_ma.csv', extensions=['.yaml']),
              mgd.TempInputFile('museq_ma.csv', extensions=['.yaml'])],
-            mgd.OutputFile(somatic_ma_annotations, extensions=['.yaml']),
+            mgd.OutputFile(somatic_ma, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
@@ -180,7 +187,7 @@ def create_consensus_workflow(
         args=(
             [mgd.TempInputFile('strelka_snv_ids.csv', extensions=['.yaml']),
              mgd.TempInputFile('museq_ids.csv', extensions=['.yaml'])],
-            mgd.OutputFile(somatic_ids_annotations, extensions=['.yaml']),
+            mgd.OutputFile(somatic_ids, extensions=['.yaml']),
         ),
         kwargs={'on': ['chrom', 'pos']}
     )
