@@ -87,7 +87,7 @@ def create_data(vcfdata):
 
         elif len(record) == 2:
             out_record['chromosome_1'] = record[0]['chrom']
-            out_record['chromosome_2'] = record[0]['chrom']
+            out_record['chromosome_2'] = record[1]['chrom']
 
             out_record['position_1'] = record[0]['pos']
             out_record['position_2'] = record[1]['pos']
