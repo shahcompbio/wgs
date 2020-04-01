@@ -8,13 +8,11 @@ from wgs.utils import helpers
 
 def create_titan_workflow(
         tumour_bam, normal_bam, targets, outfile, params, segs, igv_segs,
-        parsed, plots, tar_outputs, titan_raw_dir,
+        parsed, plots, tar_outputs, museq_vcf,
         sample_id, reference, chromosomes, het_positions, map_wig, gc_wig, pygenes_gtf,
         single_node=None
 ):
     cn_params = config.default_params('copynumber_calling')
-
-    museq_vcf = os.path.join(titan_raw_dir, '{}_museq.vcf'.format(sample_id))
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in cn_params['titan_intervals']]
 

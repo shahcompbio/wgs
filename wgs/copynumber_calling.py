@@ -3,12 +3,11 @@ import sys
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 from wgs.workflows import hmmcopy
 from wgs.workflows import titan
 
-
-from wgs.config import config
 
 def copynumber_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
@@ -19,7 +18,6 @@ def copynumber_calling_workflow(args):
     if not run_hmmcopy and not run_titan:
         run_hmmcopy = True
         run_titan = True
-
 
     inputs = helpers.load_yaml(args['input_yaml'])
 
@@ -43,6 +41,7 @@ def copynumber_calling_workflow(args):
     titan_parsed = os.path.join(titan_raw_dir, '{sample_id}_titan_parsed.csv.gz')
     titan_plots = os.path.join(titan_raw_dir, '{sample_id}_titan_plots.pdf')
     titan_tar_outputs = os.path.join(titan_raw_dir, '{sample_id}_data_all_parameters.tar.gz')
+    museq_vcf = os.path.join(titan_raw_dir, '{sample_id}_museq.vcf')
 
     hmmcopy_normal_raw_dir = os.path.join(cna_outdir, 'hmmcopy_normal')
     normal_bias_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_bias.pdf')
@@ -60,7 +59,6 @@ def copynumber_calling_workflow(args):
 
     refdir_paths = config.refdir_data(args['refdir'])['paths']
     chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
-
 
     workflow = pypeliner.workflow.Workflow(
         ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
@@ -88,7 +86,7 @@ def copynumber_calling_workflow(args):
                 mgd.OutputFile('parsed', 'sample_id', template=titan_parsed),
                 mgd.OutputFile('plots', 'sample_id', template=titan_plots),
                 mgd.OutputFile('tar_outputs', 'sample_id', template=titan_tar_outputs),
-                mgd.Template(titan_raw_dir, 'sample_id'),
+                mgd.OutputFile('museq.vcf', 'sample_id', template=museq_vcf),
                 mgd.InputInstance('sample_id'),
                 refdir_paths['reference'],
                 chromosomes,
@@ -141,15 +139,31 @@ def copynumber_calling_workflow(args):
             ),
         )
 
-    filenames = [
-        titan_outfile,
-        titan_params,
-        titan_segs,
-        titan_igv_segs,
-        titan_parsed,
-        titan_plots,
-        titan_tar_outputs,
-    ]
+    filenames = []
+    if run_titan:
+        filenames += [
+            titan_outfile,
+            titan_params,
+            titan_segs,
+            titan_igv_segs,
+            titan_parsed,
+            titan_plots,
+            titan_tar_outputs,
+            museq_vcf,
+        ]
+    if run_hmmcopy:
+        filenames += [
+            normal_bias_pdf,
+            normal_correction_pdf,
+            normal_hmmcopy_pdf,
+            normal_correction_table,
+            normal_pygenes,
+            tumour_bias_pdf,
+            tumour_correction_pdf,
+            tumour_hmmcopy_pdf,
+            tumour_correction_table,
+            tumour_pygenes
+        ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 

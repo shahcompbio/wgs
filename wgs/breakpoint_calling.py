@@ -3,11 +3,12 @@ import sys
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 from wgs.workflows import breakpoint_calling_consensus
 from wgs.workflows import destruct_wgs
 from wgs.workflows import lumpy
-from wgs.config import config
+
 
 def breakpoint_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
@@ -95,9 +96,15 @@ def breakpoint_calling_workflow(args):
             chromosomes
         ),
     )
-    
-    filenames = [destruct_breakpoints, destruct_library, destruct_raw_breakpoints,
-        destruct_reads, lumpy_vcf, parsed_csv]
+
+    filenames = [
+        destruct_breakpoints,
+        destruct_library,
+        destruct_raw_breakpoints,
+        destruct_reads,
+        lumpy_vcf,
+        parsed_csv
+    ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
