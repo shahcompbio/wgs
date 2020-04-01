@@ -9,13 +9,11 @@ from wgs.workflows import realignment
 from wgs.config import config
 
 
-def realign_bams(samples, inputs, outputs, out_dir, refdir,single_node=False):
+def realign_bams(samples, inputs, outputs, metrics, metrics_tar, refdir,single_node=False):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
     inputs = dict([(sampid, inputs[sampid])
                    for sampid in samples])
-
-    os.path.join(out_dir, 'input.yaml')
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -29,7 +27,8 @@ def realign_bams(samples, inputs, outputs, out_dir, refdir,single_node=False):
         args=(
             mgd.InputFile("input.bam", "sample_id", axes_origin=[], fnames=inputs),
             mgd.OutputFile("output.bam", "sample_id", axes_origin=[], fnames=outputs),
-            out_dir,
+            mgd.OutputFile("output.txt", "sample_id", axes_origin=[], fnames=metrics),
+            mgd.OutputFile("output.tar", "sample_id", axes_origin=[], fnames=metrics_tar),
             refdir,
             samples
         ),
@@ -55,6 +54,9 @@ def realign_bam_workflow(args):
     input_bams = {sample: yamldata[sample]['input'] for sample in samples}
     output_bams = {sample: yamldata[sample]['output'] for sample in samples}
 
+    metrics = os.path.join(outdir, '{sample_id}.txt')
+    metrics_tar = os.path.join(outdir, '{sample_id}.tar')
+
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
@@ -69,7 +71,10 @@ def realign_bam_workflow(args):
                           extensions=['.bai'], axes_origin=[]),
             mgd.OutputFile("realigned.bam", 'sample_id', fnames=output_bams,
                            extensions=['.bai'], axes_origin=[]),
-            args["out_dir"],
+            mgd.OutputFile("realigned.txt", 'sample_id', fnames=metrics,
+                           extensions=['.bai'], axes_origin=[]),
+            mgd.OutputFile("realigned.tar", 'sample_id', fnames=metrics_tar,
+                           extensions=['.bai'], axes_origin=[]),
             args['refdir'],
         ),
         kwargs={'single_node': args['single_node']}
