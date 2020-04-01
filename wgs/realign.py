@@ -54,8 +54,8 @@ def realign_bam_workflow(args):
     input_bams = {sample: yamldata[sample]['input'] for sample in samples}
     output_bams = {sample: yamldata[sample]['output'] for sample in samples}
 
-    metrics = os.path.join(outdir, '{sample_id}.txt')
-    metrics_tar = os.path.join(outdir, '{sample_id}.tar')
+    metrics = os.path.join(outdir, '{sample_id}', '{sample_id}.txt')
+    metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}.tar')
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
@@ -71,9 +71,9 @@ def realign_bam_workflow(args):
                           extensions=['.bai'], axes_origin=[]),
             mgd.OutputFile("realigned.bam", 'sample_id', fnames=output_bams,
                            extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile("realigned.txt", 'sample_id', fnames=metrics,
+            mgd.OutputFile("realigned.txt", 'sample_id', template=metrics,
                            extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile("realigned.tar", 'sample_id', fnames=metrics_tar,
+            mgd.OutputFile("realigned.tar", 'sample_id', template=metrics_tar,
                            extensions=['.bai'], axes_origin=[]),
             args['refdir'],
         ),
