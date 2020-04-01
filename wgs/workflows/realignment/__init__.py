@@ -8,6 +8,9 @@ def realign_bam_files(inputs, outputs, metrics_output, metrics_tar, refdir, samp
     inputs = dict([(sample, inputs[sample]) for sample in samples])
     outputs = dict([(sample, outputs[sample]) for sample in samples])
 
+    metrics_output = dict([(sample, metrics_output[sample]) for sample in samples])
+    metrics_tar = dict([(sample, metrics_tar[sample]) for sample in samples])
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
