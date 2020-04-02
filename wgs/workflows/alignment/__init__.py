@@ -178,6 +178,9 @@ def align_samples(
     if not isinstance(bam_outputs, dict):
         samples = sorted(set([v[0] for v in fastqs_r1.keys()]))
         bam_outputs = {sample: bam_outputs[sample] for sample in samples}
+        metrics_outputs = {sample: metrics_outputs[sample] for sample in samples}
+        metrics_tar = {sample: metrics_tar[sample] for sample in samples}
+
 
     workflow = pypeliner.workflow.Workflow()
 

@@ -525,6 +525,8 @@ def expand_list(list, expanders, to_replace):
     outlist = []
     replace_list = {to_replace: ''}
     for item in list:
+        if isinstance(item, dict):
+            outlist.extend(item.values())
         if to_replace in item:
             for expander in expanders:
                 replace_list[to_replace] = expander

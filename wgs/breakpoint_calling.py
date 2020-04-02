@@ -120,7 +120,7 @@ def breakpoint_calling_workflow(args):
         kwargs={
             'input_yaml_data': helpers.load_yaml(args['input_yaml']),
             'input_yaml': mgd.OutputFile(input_yaml_blob),
-            'metadata': {'type': 'realignment'}
+            'metadata': {'type': 'breakpoint_calling'}
         }
     )
 
