@@ -7,7 +7,7 @@ def read(copy_number):
     '''
     read in copy number data
     '''
-    return pd.read_csv(copy_number, sep="\t")
+    return pd.read_csv(copy_number, sep="\t", dtype={'Chr': 'str'})
 
 
 def plot_anno_genes(anno_genes, min, max, ax):

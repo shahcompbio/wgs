@@ -80,7 +80,7 @@ def create_postprocessing_workflow(
     breakpoint_dir = breakpoint_dir[sample_id]
     copynumber_dir = copynumber_dir[sample_id]
 
-    cn_calls = os.path.join(copynumber_dir, '{}_titan_markers.csv.gz'.format(sample_id))
+    cn_calls = os.path.join(copynumber_dir, 'titan', '{}_titan_markers.csv.gz'.format(sample_id))
     sv_calls = os.path.join(breakpoint_dir, '{}_filtered_consensus_calls.csv.gz'.format(sample_id))
     roh_calls = os.path.join(variant_dir, '{}_roh.csv.gz'.format(sample_id))
     germline_vcf = os.path.join(variant_dir, '{}_samtools_germline.vcf.gz'.format(sample_id))

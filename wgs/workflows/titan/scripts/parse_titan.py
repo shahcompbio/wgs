@@ -24,7 +24,7 @@ def build_interval_tree(data):
 
 
 def load_segment_data(infile):
-    df = pd.read_csv(infile, sep='\t')
+    df = pd.read_csv(infile, sep='\t', dtype={'Chromosome': str})
 
     df['chrom'] = df['Chromosome']
     df['start'] = df['Start_Position(bp)']
@@ -40,7 +40,7 @@ def load_segment_data(infile):
 
 
 def load_markers_data(infile):
-    return pd.read_csv(infile, sep='\t')
+    return pd.read_csv(infile, sep='\t', dtype={'Chr': str})
 
 
 def get_marker_counts(markers, segs):

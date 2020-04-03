@@ -6,7 +6,6 @@ import pandas as pd
 import pypeliner
 import pypeliner.managed as mgd
 
-
 breakpoint_columns = [
     'prediction_id',
     'chromosome_1',
@@ -19,7 +18,7 @@ breakpoint_columns = [
 
 
 def filter_destruct_breakpoints(breakpoints, filtered_breakpoints, min_num_reads):
-    breakpoints = pd.read_csv(breakpoints, sep='\t')
+    breakpoints = pd.read_csv(breakpoints, sep='\t', dtype={'chromosome_1': str, 'chromosome_2': str})
     breakpoints = breakpoints[breakpoints['num_reads'] >= min_num_reads]
     breakpoints = breakpoints[breakpoint_columns]
     breakpoints.to_csv(filtered_breakpoints, sep='\t', index=False)

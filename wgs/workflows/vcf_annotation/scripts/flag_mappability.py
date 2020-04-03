@@ -4,7 +4,7 @@ from wgs.utils import helpers
 
 
 def load_blacklist(blacklist):
-    blacklist = pd.read_csv(blacklist, sep='\t')
+    blacklist = pd.read_csv(blacklist, sep='\t', dtype={'chromosome': str})
     return blacklist
 
 

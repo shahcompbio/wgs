@@ -45,7 +45,7 @@ def prep_cn_for_circos(copy_number, outfile):
     :param outfile: path to prepped copy_number csv
     :return:
     '''
-    copy_number = pd.read_csv(copy_number, sep="\t")
+    copy_number = pd.read_csv(copy_number, sep="\t", dtype={'Chr': str})
 
     output = []
     chroms = copy_number.Chr.unique()
@@ -64,7 +64,7 @@ def prep_cn_for_circos(copy_number, outfile):
 
 
 def prep_sv_for_circos(sv_calls, outfile):
-    svs = pd.read_csv(sv_calls, sep=",")
+    svs = pd.read_csv(sv_calls, sep=",", dtype={'chromosome_1': str, 'chromosome_2': str})
 
     svs = svs[['chromosome_1', 'position_1',
                'chromosome_2', 'position_2', 'rearrangement_type']]

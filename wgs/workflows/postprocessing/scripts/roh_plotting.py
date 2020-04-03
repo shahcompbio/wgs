@@ -18,6 +18,7 @@ def read(file):
     df = pd.read_csv(file, sep="\t", skiprows=skiprows)
 
     df.columns = ['ST', 'sample', 'chrom', 'pos', 'state', 'qual']
+    df.chrom = df.chrom.astype('str')
 
     return df
 

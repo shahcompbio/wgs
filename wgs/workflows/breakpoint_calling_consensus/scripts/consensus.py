@@ -55,7 +55,7 @@ def check_olp(interval_tree, chrom, pos, destruct_type):
 
 
 def load_data(infile):
-    return pd.read_csv(infile)
+    return pd.read_csv(infile, dtype={'chromosome_1': str, 'chromosome_2': str})
 
 
 def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
