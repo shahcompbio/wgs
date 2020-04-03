@@ -323,3 +323,14 @@ def bam_collect_all_metrics(
         wgs, insert, flagstat, markdups_metrics, output, sample_id, main_dtypes, insert_dtypes
     )
     collmet.main()
+
+
+def get_igvtools_count(input_bam, counts_file, reference, docker_image=None):
+
+    counts_file_no_tmp = counts_file[:-4]
+
+    cmd = ['igvtools', 'count', input_bam, counts_file_no_tmp, reference]
+
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    os.rename(counts_file_no_tmp, counts_file)

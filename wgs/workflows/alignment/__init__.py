@@ -9,7 +9,7 @@ def collect_bam_metrics(
         bam, markdups_metrics, sample_id, refdir,
         metrics, picard_insert_metrics, picard_insert_pdf,
         flagstat_metrics, picard_gc_metrics, picard_gc_summary,
-        picard_gc_pdf, picard_wgs_metrics
+        picard_gc_pdf, picard_wgs_metrics, bam_tdf
 ):
     '''
     calculates bam metrics in bams
@@ -29,6 +29,8 @@ def collect_bam_metrics(
     ref_genome = config.refdir_data(refdir)['paths']['reference']
 
     picard_wgs_params = config.default_params('alignment')['picard_wgs_params']
+
+    reftype = config.refdir_data(refdir)['params']['reference_type']
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -89,6 +91,23 @@ def collect_bam_metrics(
             mgd.TempSpace('picard_wgs')
         ),
         kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
+    )
+
+    workflow.transform(
+        name='igvtools_tdf',
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='16:00',
+            # docker_image=config.containers('igvtools')
+        ),
+        func='wgs.workflows.alignment.tasks.get_igvtools_count',
+        args=(
+            pypeliner.managed.InputFile(bam),
+            pypeliner.managed.OutputFile(bam_tdf),
+            reftype
+        ),
+        kwargs={'docker_image': config.containers('igvtools')}
+
     )
 
     workflow.transform(
@@ -166,6 +185,7 @@ def align_samples(
         bam_outputs,
         metrics_outputs,
         metrics_tar,
+        bam_tdf,
         sample_info,
         refdir,
         single_node=False
@@ -180,6 +200,7 @@ def align_samples(
         bam_outputs = {sample: bam_outputs[sample] for sample in samples}
         metrics_outputs = {sample: metrics_outputs[sample] for sample in samples}
         metrics_tar = {sample: metrics_tar[sample] for sample in samples}
+        bam_tdf = {sample: bam_tdf[sample] for sample in samples}
 
 
     workflow = pypeliner.workflow.Workflow()
@@ -283,6 +304,7 @@ def align_samples(
             mgd.TempOutputFile('picard_gc_summary.txt', 'sample_id'),
             mgd.TempOutputFile('picard_gc.pdf', 'sample_id'),
             mgd.TempOutputFile('picard_wgs_metrics.txt', 'sample_id'),
+            mgd.OutputFile('out.bam.tdf', 'sample_id', fnames=bam_tdf),
         )
     )
 

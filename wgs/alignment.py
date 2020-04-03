@@ -15,6 +15,7 @@ def alignment_workflow(args):
     input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
     outputs = os.path.join(outdir, '{sample_id}', '{sample_id}.bam')
+    outputs_tdf = os.path.join(outdir, '{sample_id}', '{sample_id}.bam.tdf')
     metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
     metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.tar.gz')
 
@@ -40,6 +41,7 @@ def alignment_workflow(args):
             mgd.Template('output.bam', 'sample_id', template=outputs),
             mgd.Template('metrics.txt', 'sample_id', template=metrics_output),
             mgd.Template('metrics.tar', 'sample_id', template=metrics_tar),
+            mgd.Template('output.bam.tdf', 'sample_id', template=outputs_tdf),
             sample_info,
             args['refdir']
         ),

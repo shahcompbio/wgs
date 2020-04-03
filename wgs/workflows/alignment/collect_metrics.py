@@ -212,7 +212,7 @@ class CollectMetrics(object):
         dtypes = self.main_dtypes
 
         header = [
-            'cell_id', 'unpaired_mapped_reads',
+            'sample_id', 'unpaired_mapped_reads',
             'paired_mapped_reads', 'unpaired_duplicate_reads',
             'paired_duplicate_reads', 'unmapped_reads', 'percent_duplicate_reads',
             'estimated_library_size', 'total_reads', 'total_mapped_reads',

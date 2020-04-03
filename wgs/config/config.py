@@ -169,7 +169,8 @@ def containers(container_name):
         'lumpy': 'lumpy:v0.0.1',
         'fastqc': 'fastqc:v0.0.1',
         'hmmcopy': 'hmmcopy:v0.0.1',
-        'circos': 'circos:v0.0.1'
+        'circos': 'circos:v0.0.1',
+        'igvtools': 'igvtools:v0.0.1',
     }
 
     return docker_images[container_name]
