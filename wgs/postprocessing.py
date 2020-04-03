@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pypeliner
 import pypeliner.managed as mgd
@@ -21,6 +22,8 @@ def postprocessing_workflow(args):
     copynumber_dir = {sample: yamldata[sample]['copynumber_dir'] for sample in samples}
 
     out_dir = args['out_dir']
+    meta_yaml = os.path.join(out_dir, 'metadata.yaml')
+    input_yaml_blob = os.path.join(out_dir, 'input.yaml')
 
     circos_plot = os.path.join(out_dir, '{sample_id}', '{sample_id}_circos.pdf')
     genome_wide_plot = os.path.join(out_dir, '{sample_id}', '{sample_id}_genome_wide.pdf')
@@ -52,6 +55,24 @@ def postprocessing_workflow(args):
             mgd.InputInstance('sample_id'),
         ),
         kwargs={'single_node': args['single_node']}
+    )
+
+    outputted_filenames = helpers.expand_list([circos_plot, genome_wide_plot], samples, "sample_id")
+
+    workflow.transform(
+        name='generate_meta_files_results',
+        func='wgs.utils.helpers.generate_and_upload_metadata',
+        args=(
+            sys.argv[0:],
+            args["out_dir"],
+            outputted_filenames,
+            mgd.OutputFile(meta_yaml)
+        ),
+        kwargs={
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
+            'metadata': {'type': 'copynumber_calling'}
+        }
     )
 
     pyp.run(workflow)
