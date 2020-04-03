@@ -7,7 +7,7 @@ import matplotlib.backends.backend_pdf
 import matplotlib.pyplot as plt
 import roh_plotting
 import variant_plotting
-
+import numpy as np
 
 def plot_chrom_on_axes(copy_number, roh, germline_calls, somatic_calls,
                        tumour_coverage, normal_coverage, chrom, axes):
@@ -23,6 +23,11 @@ def plot_chrom_on_axes(copy_number, roh, germline_calls, somatic_calls,
 
     coverage_ylim_MAX = prepped_tumour_coverage.coverage.max() + 10
     coverage_ylim_MIN = prepped_normal_coverage.coverage.min() - 10
+
+    if np.isnan(coverage_ylim_MAX):
+        coverage_ylim_MAX = 0
+    if np.isnan(coverage_ylim_MIN):
+        coverage_ylim_MIN = 0
 
     anno_genes = copy_number_plotting.get_gene_annotation_data(chrom)
 
