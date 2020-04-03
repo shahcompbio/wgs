@@ -1,6 +1,7 @@
 
   
   
+  
 # Whole Genome Pipelines
 
 
@@ -148,7 +149,31 @@ wgs realignment --input_yaml input.yaml \
   --refdir ref --maxjobs 4
 ```
 
+###  Postprocessing
+1. download test datasets
+```
+wget https://wgstestsets.blob.core.windows.net/datasets/postprocessing_data.tar.gz
+tar -xvf postprocessing_data.tar.gz
+cd data
+```
+2. create input.yaml
+```
+Sample_123:
+  normal: data/bams/normal.bam
+  tumour: data/bams/variants.bam
+  variant_dir: data/variants
+  breakpoint_dir: data/breakpoints
+  copynumber_dir: data/copynumber
+```
+3. create pipeline.sh
+```
+#!/bin/bash
 
+wgs postprocessing --input_yaml input.yaml \
+  --out_dir output --tmpdir temp --pipelinedir pipeline \
+  --loglevel DEBUG --submit local \
+  --refdir ref --maxjobs 4
+```
 
 
 #### Run with docker
@@ -182,4 +207,3 @@ docker run --rm -v $PWD:$PWD -w $PWD  -v /var/run/docker.sock:/var/run/docker.so
 ```
 sh launcher.sh
 ```
-
