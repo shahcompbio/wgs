@@ -175,7 +175,7 @@ wgs variant_calling --input_yaml inputs.yaml
 ```
 #!/bin/bash
 
-docker run -it -v $PWD:$PWD -w $PWD  -v /var/run/docker.sock:/var/run/docker.sock -v `which docker`:`which docker` wgspipeline/wgs:v0.0.6 sh pipeline.sh
+docker run --rm -v $PWD:$PWD -w $PWD  -v /var/run/docker.sock:/var/run/docker.sock -v `which docker`:`which docker` wgspipeline/wgs:v0.0.6 sh pipeline.sh
 ```
 
 4. start the pipeline:
