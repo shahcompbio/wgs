@@ -4,7 +4,7 @@ import sys
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from workflows import alignment
+from wgs.workflows import alignment
 
 from wgs.config import config
 
@@ -19,7 +19,7 @@ def alignment_workflow(args):
     metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
     metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.tar.gz')
 
-    samples = inputs.keys()
+    samples = list(inputs.keys())
     fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
 
     sample_info = helpers.get_sample_info(inputs)
@@ -29,7 +29,7 @@ def alignment_workflow(args):
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
-        value=fastqs_r1.keys(),
+        value=list(fastqs_r1.keys()),
     )
 
     workflow.subworkflow(

@@ -212,7 +212,7 @@ def align_samples(
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id', 'lane_id'),
-        value=fastqs_r1.keys(),
+        value=list(fastqs_r1.keys()),
     )
 
     workflow.subworkflow(

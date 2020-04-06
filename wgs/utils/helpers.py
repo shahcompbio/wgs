@@ -410,7 +410,7 @@ def get_center_info(fastqs_file):
 def get_samples(fastqs_file):
     data = load_yaml(fastqs_file)
 
-    return data.keys()
+    return list(data.keys())
 
 
 def get_bams(fastqs_file):

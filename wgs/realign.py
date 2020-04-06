@@ -53,7 +53,7 @@ def realign_bam_workflow(args):
 
     yamldata = yaml.safe_load(open(args['input_yaml']))
 
-    samples = yamldata.keys()
+    samples = list(yamldata.keys())
 
     input_bams = {sample: yamldata[sample]['input'] for sample in samples}
 

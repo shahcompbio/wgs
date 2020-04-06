@@ -72,7 +72,7 @@ def load_vcf_chromosome_lengths(file_name, chromosomes=None):
         return calculate_vcf_chromosome_lengths(file_name, chromosomes=chromosomes)
 
     if chromosomes is None:
-        chromosomes = vcf_reader.contigs.keys()
+        chromosomes = list(vcf_reader.contigs.keys())
 
     else:
         chromosomes = chromosomes

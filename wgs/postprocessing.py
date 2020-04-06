@@ -12,13 +12,13 @@ from wgs.workflows import postprocessing
 def postprocessing_workflow(args):
     yamldata = yaml.safe_load(open(args['input_yaml']))
 
-    samples = yamldata.keys()
+    samples = list(yamldata.keys())
 
     normals = {sample: yamldata[sample]['normal'] for sample in samples}
     tumours = {sample: yamldata[sample]['tumour'] for sample in samples}
 
     variant_dir = {sample: yamldata[sample]['variant_dir'] for sample in samples}
-    breakpoint_dir = {sample: yamldata[sample]['breakpoint_dir'] for sample in samples}
+    breakpoint_dir = {sample: yamldata[sample][' breakpoint_dir'] for sample in samples}
     copynumber_dir = {sample: yamldata[sample]['copynumber_dir'] for sample in samples}
 
     out_dir = args['out_dir']

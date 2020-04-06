@@ -3,13 +3,13 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 """
-from alignment import alignment_workflow
-from cmdline import parse_args
-from copynumber_calling import copynumber_calling_workflow
-from realign import realign_bam_workflow
-from breakpoint_calling import breakpoint_calling_workflow
-from variant_calling import variant_calling_workflow
-from postprocessing import postprocessing_workflow
+from wgs.alignment import alignment_workflow
+from wgs.cmdline import parse_args
+from wgs.copynumber_calling import copynumber_calling_workflow
+from wgs.realign import realign_bam_workflow
+from wgs.breakpoint_calling import breakpoint_calling_workflow
+from wgs.variant_calling import variant_calling_workflow
+from wgs.postprocessing import postprocessing_workflow
 from wgs.config import batch_config
 
 

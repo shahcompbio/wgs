@@ -352,7 +352,7 @@ def variant_calling_workflow(args):
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
-    samples = tumours.keys()
+    samples = list(tumours.keys())
 
     var_dir = os.path.join(args['out_dir'], 'variants')
     museq_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.vcf.gz')

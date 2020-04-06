@@ -6,11 +6,11 @@ import yaml
 from wgs.utils import helpers
 
 
-class folded_unicode(unicode):
+class folded_unicode(str):
     pass
 
 
-class literal_unicode(unicode):
+class literal_unicode(str):
     pass
 
 

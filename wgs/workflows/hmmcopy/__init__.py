@@ -2,7 +2,6 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
-from  wgs.workflows.hmmcopy import tasks
 from wgs.utils import helpers
 
 from wgs.config import config
@@ -23,7 +22,7 @@ def create_hmmcopy_workflow(
         ctx=helpers.get_default_ctx(
             memory=5,
             walltime='2:00', ),
-        func=tasks.hmmcopy_readcounter,
+        func='wgs.workflows.hmmcopy.tasks.hmmcopy_readcounter',
         args=(
             mgd.InputFile(bam_file, extensions=['.bai']),
             mgd.TempOutputFile('infile.wig'),
@@ -34,7 +33,7 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='calc_corr',
-        func=tasks.calc_corr,
+        func='wgs.workflows.hmmcopy.tasks.calc_corr',
         args=(
             mgd.TempInputFile('infile.wig'),
             mgd.TempOutputFile('infile_copy.txt'),
@@ -48,7 +47,7 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='run_hmmcopy',
-        func=tasks.run_hmmcopy,
+        func='wgs.workflows.hmmcopy.tasks.run_hmmcopy',
         args=(
             mgd.TempInputFile('infile_copy.obj'),
             mgd.TempInputFile('infile_copy.txt'),
@@ -63,7 +62,7 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='plot_hmm',
-        func=tasks.plot_hmm,
+        func='wgs.workflows.hmmcopy.tasks.plot_hmm',
         args=(
             mgd.TempInputFile('infile_copy.obj'),
             mgd.TempInputFile('hmmcopy_res.obj'),
@@ -78,7 +77,7 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='annot_hmm',
-        func=tasks.annot_hmm,
+        func='wgs.workflows.hmmcopy.tasks.annot_hmm',
         args=(
             mgd.TempInputFile('hmmcopy_segments.txt'),
             mgd.OutputFile(pygenes_table),

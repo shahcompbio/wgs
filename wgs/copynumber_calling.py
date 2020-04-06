@@ -28,7 +28,7 @@ def copynumber_calling_workflow(args):
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
     targets = helpers.get_values_from_input(inputs, 'target_list')
-    samples = tumours.keys()
+    samples = list(tumours.keys())
 
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
 

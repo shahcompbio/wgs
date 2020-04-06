@@ -20,7 +20,7 @@ def breakpoint_calling_workflow(args):
 
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
-    samples = tumours.keys()
+    samples = list(tumours.keys())
 
     sv_outdir = os.path.join(args['out_dir'], 'breakpoints', '{sample_id}')
     destruct_breakpoints = os.path.join(sv_outdir, '{sample_id}_destruct_breakpoints.csv.gz')

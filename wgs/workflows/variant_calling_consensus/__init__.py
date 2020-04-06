@@ -33,36 +33,6 @@ def create_consensus_workflow(
     params = config.default_params('variant_calling')
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
 
-    # germline_snpeff_annotations = os.path.join(
-    #     outdir, '{}_germline_snpeff_annotations.csv.gz'.format(sample_id)
-    # )
-    # indel_snpeff_annotations = os.path.join(
-    #     outdir, '{}_indel_snpeff_annotations.csv.gz'.format(sample_id)
-    # )
-    # somatic_snpeff_annotations = os.path.join(
-    #     outdir, '{}_somatic_snpeff_annotations.csv.gz'.format(sample_id)
-    # )
-    #
-    # germline_ma_annotations = os.path.join(
-    #     outdir, '{}_germline_ma_annotations.csv.gz'.format(sample_id)
-    # )
-    # indel_ma_annotations = os.path.join(
-    #     outdir, '{}_indel_ma_annotations.csv.gz'.format(sample_id)
-    # )
-    # somatic_ma_annotations = os.path.join(
-    #     outdir, '{}_somatic_ma_annotations.csv.gz'.format(sample_id)
-    # )
-    #
-    # germline_ids_annotations = os.path.join(
-    #     outdir, '{}_germline_ids_annotations.csv.gz'.format(sample_id)
-    # )
-    # indel_ids_annotations = os.path.join(
-    #     outdir, '{}_indel_ids_annotations.csv.gz'.format(sample_id)
-    # )
-    # somatic_ids_annotations = os.path.join(
-    #     outdir, '{}_somatic_ids_annotations.csv.gz'.format(sample_id)
-    # )
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(

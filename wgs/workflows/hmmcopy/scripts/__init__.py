@@ -1,2 +1,2 @@
-from read_counter import ReadCounter
-from pygene_annotation import PygeneAnnotation
+from .read_counter import ReadCounter
+from .pygene_annotation import PygeneAnnotation

@@ -633,7 +633,7 @@ def filter_indel_file_list(
 
 
 def _convert_dict_to_call(data_dict):
-    call_data_class = vcf.model.make_calldata_tuple(data_dict.keys())
+    call_data_class = vcf.model.make_calldata_tuple(list(data_dict.keys()))
 
     return call_data_class(**data_dict)
 
