@@ -4,7 +4,7 @@ import argparse
 import gzip
 import os
 import sys
-from string import maketrans
+# from string import maketrans
 
 import pysam
 from wgs.utils import helpers
@@ -68,7 +68,7 @@ def write_to_fastq(aln, read, rg, out_fastq):
 
 
 def revcomp(seq):
-    seq1 = seq.translate(maketrans("AGCTagct", "TCGAtcga"))
+    seq1 = seq.translate(str.maketrans("AGCTagct", "TCGAtcga"))
     seq2 = seq1[::-1]
     return seq2
 
@@ -89,8 +89,8 @@ def open_outfiles(outfiles):
     opened_files = {}
     for rgid, fastqs in outfiles.items():
         opened_files[rgid] = (
-            OpenFile(fastqs[0], 'w').__enter__(),
-            OpenFile(fastqs[1], 'w').__enter__()
+            OpenFile(fastqs[0], 'wt').__enter__(),
+            OpenFile(fastqs[1], 'wt').__enter__()
         )
     return opened_files
 

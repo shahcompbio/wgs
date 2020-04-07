@@ -1,5 +1,5 @@
-import scripts.parse_destruct as parse_destruct
-import scripts.parse_lumpy as parse_lumpy
+import wgs.workflows.breakpoint_calling_consensus.scripts.parse_destruct as parse_destruct
+import wgs.workflows.breakpoint_calling_consensus.scripts.parse_lumpy as parse_lumpy
 
 from .scripts import consensus
 

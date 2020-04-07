@@ -1,1 +1,1 @@
-from singlesampleplot import PlotSingleSample
+from .singlesampleplot import PlotSingleSample

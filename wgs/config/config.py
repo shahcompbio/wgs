@@ -26,7 +26,7 @@ def default_params(mode='all'):
     }
 
     breakpoint_calling = {
-        'chromosomes': map(str, range(1, 23) + ['X']),
+        'chromosomes': list(map(str, range(1, 23))) + ['X'],
         'lumpy_paths': {
             'extractSplitReads_BwaMem': 'lumpy_extractSplitReads_BwaMem',
             'samtools': 'samtools',
@@ -49,7 +49,7 @@ def default_params(mode='all'):
 
     copynumber_calling = {
         'split_size': 1e7,
-        'chromosomes': map(str, range(1, 23) + ['X']),
+        'chromosomes': list(map(str, range(1, 23))) + ['X'],
         'readcounter': {'w': 1000, 'q': 0},
         'map_cutoff': 0.85,
         'genome_type': 'NCBI',
@@ -144,7 +144,7 @@ def refdir_data(refdir):
     with open(yamlpath) as yamlfile:
         yamldata = yaml.safe_load(yamlfile)
 
-    for k, v in yamldata['paths'].iteritems():
+    for k, v in yamldata['paths'].items():
         yamldata['paths'][k] = os.path.join(refdir, v)
 
     return yamldata
@@ -157,7 +157,7 @@ def containers(container_name):
 
     docker_images = {
         'bwa': 'bwa:v0.0.1',
-        'samtools': 'samtools:v0.0.1',
+        'samtools': 'samtools:v0.0.2',
         'picard': 'picard:v0.0.1',
         'wgs': 'wgs:v{}'.format(version),
         'strelka': 'strelka:v0.0.1',
@@ -165,7 +165,7 @@ def containers(container_name):
         'vcftools': 'vcftools:v0.0.1',
         'snpeff': 'vcftools:v0.0.1',
         'titan': 'titan:v0.0.2',
-        'destruct': 'destruct:v0.0.1',
+        'destruct': 'destruct:v0.0.2',
         'lumpy': 'lumpy:v0.0.1',
         'fastqc': 'fastqc:v0.0.1',
         'hmmcopy': 'hmmcopy:v0.0.1',

@@ -6,7 +6,7 @@ Created on Feb 21, 2018
 import pypeliner
 import pysam
 
-from scripts import PlotSingleSample
+from wgs.workflows.mutationseq.scripts import PlotSingleSample
 
 
 def generate_intervals(ref, chromosomes, size=1000000):

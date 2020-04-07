@@ -185,7 +185,7 @@ def add_db_annotation(
 
 
 def parse_args():
-    chromosomes = map(str, range(1, 23))
+    chromosomes = list(map(str, range(1, 23)))
     chromosomes.append('X')
     chromosomes.append('Y')
 

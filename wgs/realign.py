@@ -74,7 +74,7 @@ def realign_bam_workflow(args):
             mgd.InputFile("input.bam", 'sample_id', fnames=input_bams,
                           extensions=['.bai'], axes_origin=[]),
             mgd.OutputFile("realigned.bam", 'sample_id', template=output_bams,
-                           extensions=['.bai'], axes_origin=[]),
+                           extensions=['.bai', '.tdf'], axes_origin=[]),
             mgd.OutputFile("realigned.txt", 'sample_id', template=metrics,
                            extensions=['.bai'], axes_origin=[]),
             mgd.OutputFile("realigned.tar", 'sample_id', template=metrics_tar,

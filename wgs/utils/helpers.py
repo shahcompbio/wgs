@@ -180,9 +180,9 @@ def get_fastq_files(input_yaml):
     data = load_yaml(input_yaml)
 
     items = {}
-    for cell_id, cell_data in data.iteritems():
+    for cell_id, cell_data in data.items():
         items[cell_id] = {}
-        for lane, laneinfo in cell_data["fastqs"].iteritems():
+        for lane, laneinfo in cell_data["fastqs"].items():
             items[cell_id][lane] = {}
             items[cell_id][lane]['fastq_1'] = format_file_yaml(laneinfo['fastq_1'])
             items[cell_id][lane]['fastq_2'] = format_file_yaml(laneinfo['fastq_2'])
@@ -358,7 +358,7 @@ def copy_file(infile, output):
 #     for cell in data.keys():
 #         fastqs = data[cell]["fastqs"]
 #
-#         for lane, paths in fastqs.iteritems():
+#         for lane, paths in fastqs.items():
 #             fastq_1_filenames[(cell, lane)] = paths["fastq_1"]
 #             fastq_2_filenames[(cell, lane)] = paths["fastq_2"]
 #
@@ -376,7 +376,7 @@ def get_instrument_info(fastqs_file):
     for cell in data.keys():
         fastqs = data[cell]["fastqs"]
 
-        for lane, paths in fastqs.iteritems():
+        for lane, paths in fastqs.items():
 
             if "sequencing_instrument" not in paths:
                 raise Exception(
@@ -397,7 +397,7 @@ def get_center_info(fastqs_file):
     for cell in data.keys():
         fastqs = data[cell]["fastqs"]
 
-        for lane, paths in fastqs.iteritems():
+        for lane, paths in fastqs.items():
 
             if "sequencing_center" not in paths:
                 raise Exception(

@@ -17,7 +17,7 @@ import vcf
 from wgs.utils import helpers
 from wgs.utils import vcfutils
 
-import vcf_tasks
+from wgs.workflows.strelka import vcf_tasks
 
 
 
@@ -329,7 +329,7 @@ def filter_snv_file_list(
 
     writer = None
 
-    with open(out_file, 'wb') as out_fh:
+    with open(out_file, 'wt') as out_fh:
         for key in sorted(in_files):
             reader = vcf.Reader(filename=in_files[key])
 
@@ -491,7 +491,7 @@ def filter_indel_file_list(
 
     writer = None
 
-    with open(out_file, 'wb') as out_fh:
+    with open(out_file, 'wt') as out_fh:
         for key in sorted(vcf_files):
             window = pd.read_csv(
                 window_files[key],

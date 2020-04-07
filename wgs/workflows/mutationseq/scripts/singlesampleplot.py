@@ -176,11 +176,11 @@ class PlotSingleSample(object):
         counts_ref = self.convert_to_cumulative(counts_ref)
 
         value_closest_3m = min(counts_all.values(), key=lambda x: abs(x - 3e6))
-        pr = [pr for pr, count in counts_all.iteritems() if count == value_closest_3m][0]
+        pr = [pr for pr, count in counts_all.items() if count == value_closest_3m][0]
         concordance_3m = self.get_percentages(counts_all, counts_ref)[pr]
 
         value_closest_35m = min(counts_all.values(), key=lambda x: abs(x - 3.5e6))
-        pr = [pr for pr, count in counts_all.iteritems() if count == value_closest_35m][0]
+        pr = [pr for pr, count in counts_all.items() if count == value_closest_35m][0]
         concordance_35m = self.get_percentages(counts_all, counts_ref)[pr]
 
         return concordance_3m, value_closest_3m, concordance_35m, value_closest_35m

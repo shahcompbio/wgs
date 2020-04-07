@@ -64,7 +64,7 @@ def concatenate_vcf(infiles, outfile):
                         warnings.warn('merging vcf files with mismatching headers')
 
                 for l in f:
-                    print >> ofile, l,
+                    ofile.write(l)
 
 
 def sort_vcf(infile, outfile, docker_image=None):

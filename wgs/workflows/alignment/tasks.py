@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 
-import collect_metrics
+from wgs.workflows.alignment.collect_metrics import CollectMetrics
 import pypeliner
 from wgs.utils import helpers
 
@@ -319,7 +319,7 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
 def bam_collect_all_metrics(
         flagstat, insert, wgs, markdups_metrics, output, sample_id, main_dtypes=None, insert_dtypes=None
 ):
-    collmet = collect_metrics.CollectMetrics(
+    collmet = CollectMetrics(
         wgs, insert, flagstat, markdups_metrics, output, sample_id, main_dtypes, insert_dtypes
     )
     collmet.main()

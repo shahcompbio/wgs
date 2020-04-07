@@ -28,7 +28,7 @@ yaml.add_representer(literal_unicode, literal_unicode_representer)
 
 def override_config(config, override):
     def update(d, u):
-        for k, v in u.iteritems():
+        for k, v in u.items():
             if isinstance(v, collections.Mapping):
                 d[k] = update(d.get(k, {}), v)
             else:

@@ -1,3 +1,3 @@
-import parse_lumpy
-import parse_destruct
-import consensus
+from . import parse_lumpy
+from . import parse_destruct
+from . import consensus

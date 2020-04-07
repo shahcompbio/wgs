@@ -30,7 +30,7 @@ def get_ancestor_directory(path, level=1):
     return ancestor_dir
 
 
-def make_directory(target_dir, mode=0775):
+def make_directory(target_dir, mode=775):
     '''
     Check if a directory exists and make it if not.
 
@@ -58,7 +58,7 @@ def make_directory(target_dir, mode=0775):
         os.umask(old_umask)
 
 
-def make_parent_directory(file_name, mode=0775):
+def make_parent_directory(file_name, mode=775):
     '''
     Given a file name, make the parent directory if it does not exist using make_directory.
 

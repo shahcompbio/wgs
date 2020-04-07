@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
-from scripts import PygeneAnnotation
-from scripts import ReadCounter
-from scripts import TransformVcfCounts
-from scripts import parse_titan
+from wgs.workflows.titan.scripts import PygeneAnnotation
+from wgs.workflows.titan.scripts import ReadCounter
+from wgs.workflows.titan.scripts import TransformVcfCounts
+from wgs.workflows.titan.scripts import parse_titan
 from wgs.utils import csvutils
 from wgs.utils import helpers
 from wgs.utils import pdfutils

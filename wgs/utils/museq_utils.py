@@ -46,7 +46,7 @@ def run_museq(
     if not tumour_bam or not normal_bam:
         cmd.extend(['-s'])
 
-    for key, val in museq_params.iteritems():
+    for key, val in museq_params.items():
         if isinstance(val, bool):
             if val:
                 cmd.append('--{}'.format(key))

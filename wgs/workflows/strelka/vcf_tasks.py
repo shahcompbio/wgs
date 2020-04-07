@@ -14,7 +14,7 @@ import pypeliner
 # import time
 import vcf
 
-from components_utils import flatten_input
+from wgs.workflows.strelka.components_utils import flatten_input
 
 from wgs.utils import helpers
 
@@ -45,7 +45,7 @@ def filter_vcf(in_file, out_file):
 
     reader = vcf.Reader(filename=in_file)
 
-    with open(out_file, 'wb') as out_fh:
+    with open(out_file, 'wt') as out_fh:
         writer = vcf.Writer(out_fh, reader)
 
         for record in reader:
