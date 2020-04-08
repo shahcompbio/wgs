@@ -47,7 +47,7 @@ def create_samtools_germline_workflow(
                 mgd.TempOutputFile('merged.vcf'),
                 varcall_config['reference'],
                 mgd.InputChunks('interval'),
-                mgd.InputFile(bam_file)
+                mgd.InputFile(bam_file, extensions=['.bai'])
             ),
             kwargs={
                 'samtools_docker_image': varcall_config['docker']['samtools'],
@@ -67,7 +67,7 @@ def create_samtools_germline_workflow(
                 mgd.TempOutputFile('germline.vcf.gz', 'interval'),
                 varcall_config['reference'],
                 mgd.InputInstance('interval'),
-                mgd.InputFile(bam_file)
+                mgd.InputFile(bam_file, extensions=['.bai'])
             ),
             kwargs={
                 'docker_image': varcall_config['docker']['samtools']
