@@ -50,7 +50,8 @@ def create_samtools_germline_workflow(
                 mgd.InputFile(bam_file)
             ),
             kwargs={
-                'docker_image': varcall_config['docker']['samtools']
+                'samtools_docker_image': varcall_config['docker']['samtools'],
+                'vcftools_docker_image': varcall_config['docker']['vcftools'],
             }
         )
     else:
