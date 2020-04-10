@@ -76,6 +76,11 @@ def create_data(vcfdata):
             out_record['position_1'] = record['pos']
             out_record['position_2'] = record['END']
 
+            strands = record['STRANDS'].split(':')[0]
+            assert len(strands) == 2
+            out_record['strand_1'] = strands[0]
+            out_record['strand_2'] = strands[1]
+
             for col in dup_cols:
                 value = record[col] if col in record else None
                 out_record[col + '_1'] = value
@@ -86,24 +91,37 @@ def create_data(vcfdata):
                 out_record[col] = value
 
         elif len(record) == 2:
-            out_record['chromosome_1'] = record[0]['chrom']
-            out_record['chromosome_2'] = record[1]['chrom']
+            if record[0]['MATEID'].endswith('_1'):
+                mate1 = record[0]
+                mate2 = record[1]
+            else:
+                mate1 = record[1]
+                mate2 = record[0]
 
-            out_record['position_1'] = record[0]['pos']
-            out_record['position_2'] = record[1]['pos']
+            out_record['chromosome_1'] = mate1['chrom']
+            out_record['chromosome_2'] = mate2['chrom']
+
+            out_record['position_1'] = mate1['pos']
+            out_record['position_2'] = mate2['pos']
+
+            strands_1 = mate1['STRANDS'].split(':')[0]
+            strands_2 = mate2['STRANDS'].split(':')[0]
+            assert strands_1 == strands_2[::-1]
+            out_record['strand_1'] = strands_1[0]
+            out_record['strand_2'] = strands_2[0]
 
             for col in dup_cols:
-                value_1 = record[0][col] if col in record[0] else None
-                value_2 = record[1][col] if col in record[1] else None
+                value_1 = mate1[col] if col in record[0] else None
+                value_2 = mate2[col] if col in record[1] else None
                 out_record[col + '_1'] = value_1
                 out_record[col + '_2'] = value_2
 
             for col in same_cols:
-                value = record[0][col] if col in record[0] else None
+                value = mate1[col] if col in mate1 else None
                 out_record[col] = value
 
                 if value:
-                    assert record[0][col] == record[1][col]
+                    assert mate1[col] == mate2[col]
         else:
             raise Exception('unknown record')
 
@@ -135,11 +153,3 @@ def write(output, data):
     data.to_csv(output, index=False)
 
 
-if __name__ == "__main__":
-    vcfdata = parse_vcf(VCF_FILE)
-
-    vcfdata = parse_vcf_group(vcfdata)
-
-    vcfdata = create_data(vcfdata)
-
-    write('parsed.csv', vcfdata)
