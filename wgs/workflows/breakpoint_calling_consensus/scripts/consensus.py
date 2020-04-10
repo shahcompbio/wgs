@@ -32,7 +32,7 @@ def compare_lumpy_destruct_type(lumpy_type, destruct_type):
 
     if lumpy_type == 'DEL' and destruct_type == 'deletion':
         return True
-    elif lumpy_type == 'INV' and destruct_type == 'inversion':
+    elif lumpy_type == 'INV' and destruct_type in ['inversion', 'foldback']:
         return True
     elif lumpy_type == 'DUP' and destruct_type == 'duplication':
         return True
