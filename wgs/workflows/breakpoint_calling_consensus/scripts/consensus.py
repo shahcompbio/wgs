@@ -23,32 +23,12 @@ def build_interval_tree(data):
     return itree
 
 
-def compare_lumpy_destruct_type(lumpy_type, destruct_type):
-    if lumpy_type not in ['DEL', 'INV', 'DUP', 'BND']:
-        raise Exception('Unknown lumpy type: {}'.format(lumpy_type))
-
-    if destruct_type not in ['deletion', 'inversion', 'duplication', 'translocation']:
-        raise Exception('Unknown destruct type: {}'.format(destruct_type))
-
-    if lumpy_type == 'DEL' and destruct_type == 'deletion':
-        return True
-    elif lumpy_type == 'INV' and destruct_type == 'inversion':
-        return True
-    elif lumpy_type == 'DUP' and destruct_type == 'duplication':
-        return True
-    elif lumpy_type == 'BND' and destruct_type == 'translocation':
-        return True
-    else:
-        return False
-
-
-def check_olp(interval_tree, chrom, pos, destruct_type):
+def check_olp(interval_tree, chrom, pos, destruct_strand):
     overlap = interval_tree[chrom][pos]
 
-    lumpy_types = [v[2] for v in overlap]
-    lumpy_types = [compare_lumpy_destruct_type(v, destruct_type) for v in lumpy_types]
+    overlapping_strands = [v[2] for v in overlap]
 
-    if lumpy_types and any(lumpy_types):
+    if destruct_strand in overlapping_strands:
         return True
     else:
         return False
@@ -60,16 +40,16 @@ def load_data(infile):
 
 def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
     # Add lumpy breakpoint id to each zipped entry
-
+ 
     if confidence_interval:
         confidence_interval = '-{},{}'.format(confidence_interval, confidence_interval)
         data = list(
-            zip(lumpy_df.chromosome_1, lumpy_df.position_1, [confidence_interval] * len(lumpy_df), lumpy_df.SVTYPE))
+            zip(lumpy_df.chromosome_1, lumpy_df.position_1, [confidence_interval] * len(lumpy_df), lumpy_df.strand_1))
         data += list(
-            zip(lumpy_df.chromosome_2, lumpy_df.position_2, [confidence_interval] * len(lumpy_df), lumpy_df.SVTYPE))
+            zip(lumpy_df.chromosome_2, lumpy_df.position_2, [confidence_interval] * len(lumpy_df), lumpy_df.strand_2))
     else:
-        data = list(zip(lumpy_df.chromosome_1, lumpy_df.position_1, lumpy_df['CIPOS'], lumpy_df['SVTYPE']))
-        data += list(zip(lumpy_df.chromosome_2, lumpy_df.position_2, lumpy_df['CIEND'], lumpy_df['SVTYPE']))
+        data = list(zip(lumpy_df.chromosome_1, lumpy_df.position_1, lumpy_df['CIPOS'], lumpy_df['strand_1']))
+        data += list(zip(lumpy_df.chromosome_2, lumpy_df.position_2, lumpy_df['CIEND'], lumpy_df['strand_2']))
 
     intervaltree = build_interval_tree(data)
 
@@ -78,10 +58,10 @@ def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
 
 def filter_destruct_on_lumpy(destruct, lumpy_tree):
     destruct = destruct[
-        destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_1'], x['position_1'], x['rearrangement_type']),
+        destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_1'], x['position_1'], x['strand_1']),
                        axis=1)]
     destruct = destruct[
-        destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_2'], x['position_2'], x['rearrangement_type']),
+        destruct.apply(lambda x: check_olp(lumpy_tree, x['chromosome_2'], x['position_2'], x['strand_2']),
                        axis=1)]
 
     return destruct
@@ -100,3 +80,5 @@ def consensus(destruct_infile, lumpy_infile, consensus, confidence_interval=None
     destruct = filter_destruct_on_lumpy(destruct, lumpy)
 
     write(destruct, consensus)
+
+
