@@ -100,7 +100,7 @@ def call_variants(
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
         museq_paired_pdf, museq_single_pdf, refdir,
-        single_node=False, strelka_depth_filter=True
+        single_node=False, is_exome=False
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
                             for sampid in samples])
@@ -231,7 +231,7 @@ def call_variants(
         ),
         kwargs={
             'single_node': single_node,
-            'use_depth_thresholds': strelka_depth_filter
+            'is_exome': is_exome
         },
 
     )
@@ -442,7 +442,7 @@ def variant_calling_workflow(args):
             ),
             kwargs={
                 'single_node': args['single_node'],
-                'strelka_depth_filter': not args['remove_strelka_depth_filter'],
+                'is_exome': args['is_exome'],
             }
         )
 

@@ -6,67 +6,13 @@ Created on Nov 1, 2015
 from __future__ import division
 
 import csv
-import math
 import os
-import re
+import shutil
 
-import pandas as pd
+import numpy as np
 import pypeliner
 import pysam
-import vcf
 from wgs.utils import helpers
-from wgs.utils import vcfutils
-
-from wgs.workflows.strelka import vcf_tasks
-
-
-
-def get_chromosomes(bam_file, chromosomes=None):
-    chromosomes = _get_chromosomes(bam_file, chromosomes)
-
-    return dict(zip(chromosomes, chromosomes))
-
-
-def _get_chromosomes(bam_file, chromosomes=None):
-    bam = pysam.Samfile(bam_file, 'rb')
-
-    if chromosomes is None:
-        chromosomes = bam.references
-
-    else:
-        chromosomes = chromosomes
-
-    return [str(x) for x in chromosomes]
-
-
-def get_coords(bam_file, chrom, split_size):
-    coords = {}
-
-    bam = pysam.Samfile(bam_file, 'rb')
-
-    chrom_lengths = dict(zip(bam.references, bam.lengths))
-
-    length = chrom_lengths[chrom]
-
-    lside_interval = range(1, length + 1, split_size)
-
-    rside_interval = range(split_size, length + split_size, split_size)
-
-    for coord_index, (beg, end) in enumerate(zip(lside_interval, rside_interval)):
-        coords[coord_index] = (beg, end)
-
-    return coords
-
-
-FILTER_ID_BASE = 'BCNoise'
-FILTER_ID_DEPTH = 'DP'
-FILTER_ID_INDEL_HPOL = 'iHpol'
-FILTER_ID_QSI = 'QSI_ref'
-FILTER_ID_QSS = 'QSS_ref'
-FILTER_ID_REPEAT = 'Repeat'
-FILTER_ID_SPANNING_DELETION = 'SpanDel'
-
-scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -80,41 +26,285 @@ def generate_intervals(ref, chromosomes, size=1000000):
         if name not in chromosomes:
             continue
         for i in range(int((length / size) + 1)):
-            start = str(int(i * size))
+            start = str(int(i * size) + 1)
             end = str(int((i + 1) * size))
             intervals.append(name + "_" + start + "_" + end)
 
     return intervals
 
 
-def _get_files_for_chrom(infiles, intervals, chrom):
-    if not isinstance(infiles, dict):
-        infiles = {ival: infiles[ival] for ival in intervals}
+def get_chromosome_depth(chrom, bam_file, ref_genome, out_file, docker_image=None):
+    chrom = chrom.split('_')[0]
 
-    outfiles = {}
+    cmd = [
+        'GetChromDepth',
+        '--align-file', bam_file,
+        '--chrom', chrom,
+        '--output-file', out_file,
+        # '--ref', ref_genome,
+    ]
 
-    for interval in intervals:
-        ival_chrom = interval.split("_")[0]
-
-        if ival_chrom == chrom:
-            outfiles[interval] = infiles[interval]
-
-    return outfiles
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def get_known_chromosome_sizes(size_file):
+def merge_chromosome_depths_weighted(infiles, outfile):
+    data = {}
+
+    for region, infile in infiles.items():
+        size = int(region.split('_')[2]) - int(region.split('_')[1])
+        with open(infile) as indata:
+            depthdata = indata.readline()
+            chrom, depth = depthdata.strip().split()
+            if chrom not in data:
+                data[chrom] = []
+            data[chrom].append((float(depth) * size, size))
+
+    with open(outfile, 'w') as output:
+        for chrom, depths in data.items():
+            total = sum([v[0] for v in depths])
+            size = sum([v[1] for v in depths])
+            output.write('{}\t{}\n'.format(chrom, total / size))
+
+
+def merge_chromosome_depths_plain(infiles, outfile):
+    data = {}
+
+    if isinstance(infiles, dict):
+        infiles = infiles.values()
+
+    for infile in infiles:
+        with open(infile) as indata:
+            depthdata = indata.readline()
+            chrom, depth = depthdata.strip().split()
+            if chrom not in data:
+                data[chrom] = []
+            data[chrom].append(float(depth))
+
+    with open(outfile, 'w') as output:
+        for chrom, depths in data.items():
+            output.write('{}\t{}\n'.format(chrom, np.mean(depths)))
+
+
+def merge_chromosome_depths(infiles, outfile):
+    if isinstance(infiles, dict):
+        merge_chromosome_depths_weighted(infiles, outfile)
+    else:
+        merge_chromosome_depths_plain(infiles, outfile)
+
+
+def strelka_one_node(
+        normal_bam_file,
+        tumour_bam_file,
+        ref_genome_fasta_file,
+        indel_file,
+        snv_file,
+        tmp_dir,
+        regions,
+        known_sizes,
+        is_exome=False,
+        strelka_docker_image=None,
+        vcftools_docker_image=None
+):
+    commands = []
+
+    chromosomes = [val.split('_')[0] for val in regions]
+
+    for chrom in chromosomes:
+        chrom_temp_dir = os.path.join(tmp_dir, 'chroms', str(chrom))
+
+        helpers.makedirs(chrom_temp_dir)
+
+        outfile = os.path.join(chrom_temp_dir, 'depth.txt')
+
+        cmd = [
+            'GetChromDepth',
+            '--align-file', normal_bam_file,
+            '--chrom', chrom,
+            '--output-file', outfile,
+            # '--ref', ref_genome,
+        ]
+
+        commands.append(cmd)
+
+    parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp_depths')
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+
+    depthfiles = [os.path.join(tmp_dir, 'chroms', str(chrom), 'depth.txt') for chrom in chromosomes]
+    depth_file = os.path.join(tmp_dir, 'chrom_depths.txt')
+    merge_chromosome_depths_plain(depthfiles, depth_file)
+
+    commands = []
+    for i, region in enumerate(regions):
+        ival_temp_dir = os.path.join(tmp_dir, 'intervals', str(i))
+        helpers.makedirs(ival_temp_dir)
+        indel_out = os.path.join(ival_temp_dir, 'strelka_indel.vcf')
+        snv_out = os.path.join(ival_temp_dir, 'strelka_snv.vcf')
+        stats_out = os.path.join(ival_temp_dir, 'stats.txt')
+
+        cmd = genome_segment_cmd(
+            depth_file,
+            normal_bam_file,
+            tumour_bam_file,
+            ref_genome_fasta_file,
+            indel_out,
+            snv_out,
+            stats_out,
+            region,
+            known_sizes,
+            is_exome=is_exome,
+        )
+        commands.append(cmd)
+
+    parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp')
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+
+    merge_temp = os.path.join(tmp_dir, 'indel_merge')
+    indel_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_indel.vcf')
+                   for i, region in enumerate(regions)]
+    concatenate_vcf(indel_files, indel_file, merge_temp, docker_image=vcftools_docker_image)
+
+    merge_temp = os.path.join(tmp_dir, 'snv_merge')
+    snv_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_snv.vcf')
+                 for i, region in enumerate(regions)]
+    concatenate_vcf(snv_files, snv_file, merge_temp, docker_image=vcftools_docker_image)
+
+
+def call_genome_segment(
+        chrom_depth_file,
+        normal_bam_file,
+        tumour_bam_file,
+        ref_genome_fasta_file,
+        indel_file,
+        snv_file,
+        tmp_dir,
+        region,
+        known_sizes,
+        is_exome=False,
+        docker_image=None,
+):
+    if os.path.exists(tmp_dir):
+        shutil.rmtree(tmp_dir)
+
+    os.makedirs(tmp_dir)
+
+    tmp_indel_file = os.path.join(tmp_dir, 'indels.vcf')
+
+    tmp_snv_file = os.path.join(tmp_dir, 'snvs.vcf')
+
+    stats_file = os.path.join(tmp_dir, 'stats.txt')
+
+    cmd = genome_segment_cmd(
+        chrom_depth_file,
+        normal_bam_file,
+        tumour_bam_file,
+        ref_genome_fasta_file,
+        tmp_indel_file,
+        tmp_snv_file,
+        stats_file,
+        region,
+        known_sizes,
+        is_exome=is_exome,
+    )
+
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    shutil.move(tmp_indel_file, indel_file)
+
+    shutil.move(tmp_snv_file, snv_file)
+
+
+def genome_segment_cmd(
+        chrom_depth_file,
+        normal_bam_file,
+        tumour_bam_file,
+        ref_genome_fasta_file,
+        indel_file,
+        snv_file,
+        stats_file,
+        region,
+        known_sizes,
+        is_exome=False,
+        depthFilterMultiple=3.0,
+        snvMaxFilteredBasecallFrac=0.4,
+        snvMaxSpanningDeletionFrac=0.75,
+        indelMaxWindowFilteredBasecallFrac=0.3,
+        ssnvPrior=0.0001,
+        sindelPrior=0.000001,
+        ssnvNoise=0.0000000005,
+        sindelNoiseFactor=2.2,
+        ssnvNoiseStrandBiasFrac=0.0,
+        minTier1Mapq=20,
+        minTier2Mapq=0,
+        ssnvQuality_LowerBound=15,
+        sindelQuality_LowerBound=40,
+        ssnvContamTolerance=0.15,
+        indelContamTolerance=0.15,
+):
+    region = '{}:{}-{}'.format(*region.split('_'))
+
+    genome_size = sum(known_sizes.values())
+
+    cmd = [
+        'run_strelka',
+        normal_bam_file,
+        tumour_bam_file,
+        indel_file,
+        snv_file,
+        stats_file,
+        # strelkaSharedWorkflow.py
+        region,
+        ref_genome_fasta_file,
+        genome_size,
+        '-max-indel-size', 50,
+        # strelkaSomaticWorkflow.py
+        '-min-mapping-quality', minTier1Mapq,
+        '-min-qscore', 0,
+        '-max-window-mismatch', 3, 20,
+        '-indel-nonsite-match-prob', 0.5,
+        '--somatic-snv-rate', ssnvPrior,
+        '--shared-site-error-rate', ssnvNoise,
+        '--shared-site-error-strand-bias-fraction', ssnvNoiseStrandBiasFrac,
+        '--somatic-indel-rate', sindelPrior,
+        '--shared-indel-error-factor', sindelNoiseFactor,
+        '--tier2-min-mapping-quality', minTier2Mapq,
+        '--tier2-mismatch-density-filter-count', 10,
+        '--tier2-indel-nonsite-match-prob', 0.25,
+        '--tier2-include-singleton',
+        '--tier2-include-anomalous',
+        '--strelka-snv-max-filtered-basecall-frac', snvMaxFilteredBasecallFrac,
+        '--strelka-snv-max-spanning-deletion-frac', snvMaxSpanningDeletionFrac,
+        '--strelka-snv-min-qss-ref', ssnvQuality_LowerBound,
+        '--strelka-indel-max-window-filtered-basecall-frac', indelMaxWindowFilteredBasecallFrac,
+        '--strelka-indel-min-qsi-ref', sindelQuality_LowerBound,
+        '--ssnv-contam-tolerance', ssnvContamTolerance,
+        '--indel-contam-tolerance', indelContamTolerance,
+    ]
+
+    if not is_exome:
+        cmd.extend([
+            '--strelka-chrom-depth-file', chrom_depth_file,
+            '--strelka-max-depth-factor', depthFilterMultiple,
+        ])
+
+    return cmd
+
+
+def get_known_chromosome_sizes(size_file, chromosomes):
     sizes = {}
 
     with open(size_file, 'r') as fh:
         reader = csv.DictReader(fh, ['path', 'chrom', 'known_size', 'size'], delimiter='\t')
 
         for row in reader:
+            if row['chrom'] not in chromosomes:
+                continue
+
             sizes[row['chrom']] = int(row['known_size'])
 
     return sizes
 
 
-def count_fasta_bases(ref_genome_fasta_file, out_file, **kwargs):
+def count_fasta_bases(ref_genome_fasta_file, out_file, docker_image=None):
     cmd = [
         'countFastaBases',
         ref_genome_fasta_file,
@@ -122,629 +312,68 @@ def count_fasta_bases(ref_genome_fasta_file, out_file, **kwargs):
         out_file
     ]
 
-    pypeliner.commandline.execute(*cmd, **kwargs)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def call_somatic_variants(
-        normal_bam_file,
-        tumour_bam_file,
-        known_sizes,
-        ref_genome,
-        indel_file,
-        indel_window_file,
-        snv_file,
-        stats_file,
-        interval,
-        max_input_depth=10000,
-        min_tier_one_mapq=20,
-        min_tier_two_mapq=5,
-        sindel_noise=0.000001,
-        sindel_prior=0.000001,
-        ssnv_noise=0.0000005,
-        ssnv_noise_strand_bias_frac=0.5,
-        ssnv_prior=0.000001,
-        docker_image=None,
-        return_cmd=False
-):
-    chrom, beg, end = interval.split('_')
+def index_bcf(in_file, docker_image=None):
+    """ Index a VCF or BCF file with bcftools.
+    :param in_file: Path of file to index.
+    :param index_file: Path of index file.
+    """
+    pypeliner.commandline.execute('bcftools', 'index', in_file, docker_image=docker_image)
 
-    genome_size = sum(known_sizes.values())
 
-    beg = int(beg)
-    beg = beg + 1 if beg == 0 else beg
-    end = int(end)
+def index_vcf(vcf_file, docker_image=None):
+    """ Create a tabix index for a VCF file
+    :param vcf_file: Path of VCF to create index for. Should compressed by bgzip.
+    :param index_file: Path of index file.
+    This is meant to be used from pypeliner so it does some name mangling to add .tmp to the index file.
+    """
 
+    pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file, docker_image=docker_image)
+
+
+def concatenate_vcf(
+        in_files, out_file, tempdir, docker_image=None,
+        allow_overlap=False):
+    """ Fast concatenation of VCF file using `bcftools`.
+    :param in_files: dict with values being files to be concatenated. Files will be concatenated based on sorted order of keys.
+    :param out_file: path where output file will be written in VCF format.
+    """
+    if isinstance(in_files, dict):
+        in_files = in_files.values()
+
+    helpers.makedirs(tempdir)
+
+    merged_file = os.path.join(tempdir, 'merged.vcf')
+    if allow_overlap:
+        cmd = ['bcftools', 'concat', '-a', '-O', 'z', '-o', merged_file]
+    else:
+        cmd = ['bcftools', 'concat', '-O', 'z', '-o', merged_file]
+
+    cmd += in_files
+
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    # sort merged vcf file
+    cmd = ['bcftools', 'sort', '-O', 'z', '-o', out_file, merged_file]
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    index_vcf(out_file, docker_image=docker_image)
+    index_bcf(out_file, docker_image=docker_image)
+
+
+def filter_vcf(raw_vcf, filtered_vcf, docker_image=None):
     cmd = [
-        'strelka2',
-        '-bam-file', normal_bam_file,
-        '--tumor-bam-file', tumour_bam_file,
-        '-samtools-reference', ref_genome,
-        '--somatic-indel-file', indel_file,
-        '--somatic-snv-file', snv_file,
-        '--variant-window-flank-file', 50, indel_window_file,
-        '-bam-seq-name', chrom,
-        '-report-range-begin', beg,
-        '-report-range-end', end,
-        '-clobber',
-        '-filter-unanchored',
-        '-genome-size', genome_size,
-        '-indel-nonsite-match-prob', 0.5,
-        '-max-indel-size', 50,
-        '-max-window-mismatch', 3, 20,
-        '-min-paired-align-score', min_tier_one_mapq,
-        '-min-single-align-score', 10,
-        '-min-qscore', 0,
-        '-print-used-allele-counts',
-        '--max-input-depth', max_input_depth,
-        '--min-contig-open-end-support', 35,
-        '--report-file', stats_file,
-        '--shared-site-error-rate', ssnv_noise,
-        '--shared-site-error-strand-bias-fraction', ssnv_noise_strand_bias_frac,
-        '--somatic-indel-rate', sindel_prior,
-        '--shared-indel-error-rate', sindel_noise,
-        '--somatic-snv-rate', ssnv_prior,
-        '--tier2-include-anomalous',
-        '--tier2-include-singleton',
-        '--tier2-indel-nonsite-match-prob', 0.25,
-        '--tier2-min-paired-align-score', min_tier_two_mapq,
-        '--tier2-min-single-align-score', min_tier_two_mapq,
-        '--tier2-mismatch-density-filter-count', 10,
-        '--tier2-no-filter-unanchored',
-        '--ignore-conflicting-read-names'
+        'bcftools',
+        'view',
+        '-O', 'z',
+        '-f', '.,PASS',
+        '-o', filtered_vcf,
+        raw_vcf,
     ]
 
-    if return_cmd:
-        return cmd
-    else:
-        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-
-def call_somatic_variants_one_job(
-        normal_bam_file,
-        tumour_bam_file,
-        strelka_snv_vcf,
-        strelka_indel_vcf,
-        known_sizes,
-        ref_genome,
-        intervals,
-        chromosomes,
-        tempdir,
-        max_input_depth=10000,
-        min_tier_one_mapq=20,
-        min_tier_two_mapq=5,
-        sindel_noise=0.000001,
-        sindel_prior=0.000001,
-        ssnv_noise=0.0000005,
-        ssnv_noise_strand_bias_frac=0.5,
-        ssnv_prior=0.000001,
-        depth_filter_multiple_snv=3.0,
-        max_filtered_basecall_frac_snv=0.4,
-        max_spanning_deletion_frac_snv=0.75,
-        quality_lower_bound_snv=15,
-        use_depth_filter_snv=True,
-        depth_filter_multiple_indel=3.0,
-        max_int_hpol_length_indel=14,
-        max_ref_repeat_indel=8,
-        max_window_filtered_basecall_frac_indel=0.3,
-        quality_lower_bound_indel=30,
-        use_depth_filter_indel=True,
-        strelka_docker_image=None,
-        vcftools_docker_image=None
-):
-    commands = []
-    for i, interval in enumerate(intervals):
-        ival_temp_dir = os.path.join(tempdir, 'intervals', str(i))
-        helpers.makedirs(ival_temp_dir)
-        indel_out = os.path.join(ival_temp_dir, 'strelka_indel.vcf')
-        indel_out_window = os.path.join(ival_temp_dir, 'strelka_indel.vcf.window')
-        snv_out = os.path.join(ival_temp_dir, 'strelka_snv.vcf')
-        snv_out_stats = os.path.join(ival_temp_dir, 'strelka_snv.vcf.stats')
-
-        command = call_somatic_variants(
-            normal_bam_file, tumour_bam_file, known_sizes, ref_genome,
-            indel_out, indel_out_window, snv_out, snv_out_stats, interval,
-            return_cmd=True,
-            max_input_depth=max_input_depth,
-            min_tier_one_mapq=min_tier_one_mapq,
-            min_tier_two_mapq=min_tier_two_mapq,
-            sindel_noise=sindel_noise,
-            sindel_prior=sindel_prior,
-            ssnv_noise=ssnv_noise,
-            ssnv_noise_strand_bias_frac=ssnv_noise_strand_bias_frac,
-            ssnv_prior=ssnv_prior
-        )
-
-        commands.append(command)
-
-    parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
-
-    snv_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf')
-                for i, ival in enumerate(intervals)}
-    snv_stats = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_snv.vcf.stats')
-                 for i, ival in enumerate(intervals)}
-    indel_vcfs = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_indel.vcf')
-                  for i, ival in enumerate(intervals)}
-    indel_windows = {ival: os.path.join(tempdir, 'intervals', str(i), 'strelka_indel.vcf.window')
-                     for i, ival in enumerate(intervals)}
-
-    for chrom in chromosomes:
-        helpers.makedirs(os.path.join(tempdir, 'chrs', chrom))
-        snv_chrom_out = os.path.join(tempdir, 'chrs', chrom, 'snv.vcf')
-        filter_snv_file_list(
-            snv_vcfs, snv_stats, snv_chrom_out, chrom, known_sizes,
-            intervals, depth_filter_multiple=depth_filter_multiple_snv,
-            max_filtered_basecall_frac=max_filtered_basecall_frac_snv,
-            max_spanning_deletion_frac=max_spanning_deletion_frac_snv,
-            quality_lower_bound=quality_lower_bound_snv,
-            use_depth_filter=use_depth_filter_snv,
-        )
-
-        indel_chrom_out = os.path.join(tempdir, 'chrs', chrom, 'indel.vcf')
-        filter_indel_file_list(
-            indel_vcfs, snv_stats, indel_windows, indel_chrom_out,
-            chrom, known_sizes, intervals,
-            depth_filter_multiple=depth_filter_multiple_indel,
-            max_int_hpol_length=max_int_hpol_length_indel,
-            max_ref_repeat=max_ref_repeat_indel,
-            max_window_filtered_basecall_frac=max_window_filtered_basecall_frac_indel,
-            quality_lower_bound=quality_lower_bound_indel,
-            use_depth_filter=use_depth_filter_indel
-        )
-
-    vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'snv.vcf') for chrom in chromosomes]
-    vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
-    concat_snvs = os.path.join(tempdir, 'concat_snv.vcf')
-    vcfutils.concatenate_vcf(vcf_files, concat_snvs)
-    vcf_tasks.finalise_vcf(concat_snvs, strelka_snv_vcf, docker_image=vcftools_docker_image)
-
-    vcf_files = [os.path.join(tempdir, 'chrs', chrom, 'indel.vcf') for chrom in chromosomes]
-    vcf_files = [fpath for fpath in vcf_files if os.stat(fpath).st_size]
-    concat_indels = os.path.join(tempdir, 'concat_indels.vcf')
-    vcfutils.concatenate_vcf(vcf_files, concat_indels)
-    vcf_tasks.finalise_vcf(concat_indels, strelka_indel_vcf, docker_image=vcftools_docker_image)
-
-
-# =======================================================================================================================
-# SNV filtering
-# =======================================================================================================================
-def filter_snv_file_list(
-        in_files,
-        stats_files,
-        out_file,
-        chrom,
-        known_chrom_size,
-        intervals,
-        depth_filter_multiple=3.0,
-        max_filtered_basecall_frac=0.4,
-        max_spanning_deletion_frac=0.75,
-        quality_lower_bound=15,
-        use_depth_filter=True):
-    known_chrom_size = known_chrom_size[chrom]
-
-    in_files = _get_files_for_chrom(in_files, intervals, chrom)
-    stats_files = _get_files_for_chrom(stats_files, intervals, chrom)
-
-    max_normal_coverage = _get_max_normal_coverage(chrom, depth_filter_multiple, known_chrom_size, stats_files)
-
-    writer = None
-
-    with open(out_file, 'wt') as out_fh:
-        for key in sorted(in_files):
-            reader = vcf.Reader(filename=in_files[key])
-
-            if writer is None:
-                # Add filters to header
-                if use_depth_filter:
-                    reader.filters[FILTER_ID_DEPTH] = vcf.parser._Filter(
-                        id=FILTER_ID_DEPTH,
-                        desc='Greater than {0}x chromosomal mean depth in Normal sample'.format(depth_filter_multiple)
-                    )
-
-                reader.filters[FILTER_ID_BASE] = vcf.parser._Filter(
-                    id=FILTER_ID_BASE,
-                    desc='Fraction of basecalls filtered at this site in either sample is at or above {0}'.format(
-                        max_filtered_basecall_frac)
-                )
-
-                reader.filters[FILTER_ID_SPANNING_DELETION] = vcf.parser._Filter(
-                    id=FILTER_ID_SPANNING_DELETION,
-                    desc='Fraction of reads crossing site with spanning deletions in either sample exceeeds {0}'.format(
-                        max_spanning_deletion_frac)
-                )
-
-                reader.filters[FILTER_ID_QSS] = vcf.parser._Filter(
-                    id=FILTER_ID_QSS,
-                    desc='Normal sample is not homozygous ref or ssnv Q-score < {0}, ie calls with NT!=ref or QSS_NT < {0}'.format(
-                        quality_lower_bound)
-                )
-
-                writer = vcf.Writer(out_fh, reader)
-
-            for record in reader:
-                normal = record.genotype('NORMAL')
-
-                tumour = record.genotype('TUMOR')
-
-                # Normal depth filter
-                if use_depth_filter and (normal.data.DP > max_normal_coverage):
-                    record.add_filter(FILTER_ID_DEPTH)
-
-                # Filtered basecall fraction
-                normal_filtered_base_call_fraction = _get_filtered_base_call_fraction(normal.data)
-
-                tumour_filtered_base_call_fraction = _get_filtered_base_call_fraction(tumour.data)
-
-                if (normal_filtered_base_call_fraction >= max_filtered_basecall_frac) or \
-                        (tumour_filtered_base_call_fraction >= max_filtered_basecall_frac):
-                    record.add_filter(FILTER_ID_BASE)
-
-                # Spanning deletion fraction
-                normal_spanning_deletion_fraction = _get_spanning_deletion_fraction(normal.data)
-
-                tumour_spanning_deletion_fraction = _get_spanning_deletion_fraction(tumour.data)
-
-                if (normal_spanning_deletion_fraction > max_spanning_deletion_frac) or \
-                        (tumour_spanning_deletion_fraction > max_spanning_deletion_frac):
-                    record.add_filter(FILTER_ID_SPANNING_DELETION)
-
-                # Q-val filter
-                if (record.INFO['NT'] != 'ref') or (record.INFO['QSS_NT'] < quality_lower_bound):
-                    record.add_filter(FILTER_ID_QSS)
-
-                writer.write_record(record)
-
-        if writer:
-            writer.close()
-
-
-def _get_max_normal_coverage(chrom, depth_filter_multiple, known_chrom_size, stats_files):
-    normal_coverage = _get_normal_coverage(stats_files.values())
-
-    normal_mean_coverage = normal_coverage / known_chrom_size
-
-    max_normal_coverage = normal_mean_coverage * depth_filter_multiple
-
-    return max_normal_coverage
-
-
-def _get_normal_coverage(stats_files):
-    total_coverage = 0
-
-    for file_name in stats_files:
-        mean_matcher = re.compile('mean:\s(.*?)\s')
-
-        sample_size_matcher = re.compile('sample_size:\s(.*?)\s')
-
-        with open(file_name) as fh:
-            for line in fh:
-                if line.startswith('NORMAL_NO_REF_N_COVERAGE '):
-                    mean = float(mean_matcher.search(line).group(1))
-
-                    sample_size = float(sample_size_matcher.search(line).group(1))
-
-                    if math.isnan(mean) or math.isnan(sample_size):
-                        continue
-
-                    total_coverage += mean * sample_size
-
-    return total_coverage
-
-
-def _get_filtered_base_call_fraction(data):
-    frac = 0
-
-    if data.DP > 0:
-        frac = data.FDP / data.DP
-
-    return frac
-
-
-def _get_spanning_deletion_fraction(data):
-    total = data.DP + data.SDP
-
-    frac = 0
-
-    if total > 0:
-        frac = data.SDP / total
-
-    return frac
-
-
-# =======================================================================================================================
-# Indel filtering
-# =======================================================================================================================
-
-
-def filter_indel_file_list(
-        vcf_files,
-        stats_files,
-        window_files,
-        out_file,
-        chrom,
-        known_chrom_size,
-        intervals,
-        depth_filter_multiple=3.0,
-        max_int_hpol_length=14,
-        max_ref_repeat=8,
-        max_window_filtered_basecall_frac=0.3,
-        quality_lower_bound=30,
-        use_depth_filter=True):
-    window_cols = (
-        'chrom',
-        'coord',
-        'normal_window_used',
-        'normal_window_filtered',
-        'normal_window_submap',
-        'tumour_window_used',
-        'tumour_window_filtered',
-        'tumour_window_submap'
-    )
-
-    known_chrom_size = known_chrom_size[chrom]
-
-    vcf_files = _get_files_for_chrom(vcf_files, intervals, chrom)
-    stats_files = _get_files_for_chrom(stats_files, intervals, chrom)
-    window_files = _get_files_for_chrom(window_files, intervals, chrom)
-
-    max_normal_coverage = _get_max_normal_coverage(chrom, depth_filter_multiple, known_chrom_size, stats_files)
-
-    writer = None
-
-    with open(out_file, 'wt') as out_fh:
-        for key in sorted(vcf_files):
-            window = pd.read_csv(
-                window_files[key],
-                comment='#',
-                converters={'chrom': str},
-                header=None,
-                names=window_cols,
-                sep='\t')
-
-            reader = vcf.Reader(filename=vcf_files[key])
-
-            if writer is None:
-                # Add format to header
-                reader.formats['DP50'] = vcf.parser._Format(
-                    id='DP50',
-                    num=1,
-                    type='Float',
-                    desc='Average tier1 read depth within 50 bases'
-                )
-
-                reader.formats['FDP50'] = vcf.parser._Format(
-                    id='FDP50',
-                    num=1,
-                    type='Float',
-                    desc='Average tier1 number of basecalls filtered from original read depth within 50 bases'
-                )
-
-                reader.formats['SUBDP50'] = vcf.parser._Format(
-                    id='SUBDP50',
-                    num=1,
-                    type='Float',
-                    desc='Average number of reads below tier1 mapping quality threshold aligned across sites within 50 bases'
-                )
-
-                # Add filters to header
-                if use_depth_filter:
-                    reader.filters[FILTER_ID_DEPTH] = vcf.parser._Filter(
-                        id=FILTER_ID_DEPTH,
-                        desc='Greater than {0}x chromosomal mean depth in Normal sample'.format(depth_filter_multiple)
-                    )
-
-                reader.filters[FILTER_ID_REPEAT] = vcf.parser._Filter(
-                    id=FILTER_ID_REPEAT,
-                    desc='Sequence repeat of more than {0}x in the reference sequence'.format(max_ref_repeat)
-                )
-
-                reader.filters[FILTER_ID_INDEL_HPOL] = vcf.parser._Filter(
-                    id=FILTER_ID_INDEL_HPOL,
-                    desc='Indel overlaps an interrupted homopolymer longer than {0}x in the reference sequence'.format(
-                        max_int_hpol_length)
-                )
-
-                reader.filters[FILTER_ID_BASE] = vcf.parser._Filter(
-                    id=FILTER_ID_BASE,
-                    desc='Average fraction of filtered basecalls within 50 bases of the indel exceeds {0}'.format(
-                        max_window_filtered_basecall_frac)
-                )
-
-                reader.filters[FILTER_ID_QSI] = vcf.parser._Filter(
-                    id=FILTER_ID_QSI,
-                    desc='Normal sample is not homozygous ref or sindel Q-score < {0}, ie calls with NT!=ref or QSI_NT < {0}'.format(
-                        quality_lower_bound)
-                )
-
-                writer = vcf.Writer(out_fh, reader)
-
-            for record in reader:
-                window_row = window.loc[
-                    (window['chrom'] == str(record.CHROM)) & (window['coord'] == record.POS)].iloc[0]
-
-                normal = record.genotype('NORMAL')
-
-                tumour = record.genotype('TUMOR')
-
-                normal_data = normal.data._asdict()
-
-                tumour_data = tumour.data._asdict()
-
-                # Add window data to vcf record
-                record.add_format('DP50')
-
-                record.add_format('FDP50')
-
-                record.add_format('SUBDP50')
-
-                normal_data['DP50'] = window_row['normal_window_used'] + window_row['normal_window_filtered']
-
-                normal_data['FDP50'] = window_row['normal_window_filtered']
-
-                normal_data['SUBDP50'] = window_row['normal_window_submap']
-
-                tumour_data['DP50'] = window_row['tumour_window_used'] + window_row['tumour_window_filtered']
-
-                tumour_data['FDP50'] = window_row['tumour_window_filtered']
-
-                tumour_data['SUBDP50'] = window_row['tumour_window_submap']
-
-                normal.data = _convert_dict_to_call(normal_data)
-
-                tumour.data = _convert_dict_to_call(tumour_data)
-
-                # Add filters
-
-                # Normal depth filter
-                if use_depth_filter and (normal.data.DP > max_normal_coverage):
-                    record.add_filter(FILTER_ID_DEPTH)
-
-                # Ref repeat
-                if 'RC' in record.INFO:
-                    ref_repeat = record.INFO['RC']
-
-                    if ref_repeat > max_ref_repeat:
-                        record.add_filter(FILTER_ID_REPEAT)
-
-                # Indel homopolymer
-                if 'IHP' in record.INFO:
-                    indel_homopolymer = record.INFO['IHP']
-
-                    if indel_homopolymer > max_int_hpol_length:
-                        record.add_filter(FILTER_ID_INDEL_HPOL)
-
-                # Base filter
-                normal_filtered_base_call_fraction = _get_filtered_base_call_fraction_indel(normal.data)
-
-                tumour_filtered_base_call_fraction = _get_filtered_base_call_fraction_indel(tumour.data)
-
-                if (normal_filtered_base_call_fraction >= max_window_filtered_basecall_frac) or \
-                        (tumour_filtered_base_call_fraction >= max_window_filtered_basecall_frac):
-                    record.add_filter(FILTER_ID_BASE)
-
-                # Q-val filter
-                if (record.INFO['NT'] != 'ref') or (record.INFO['QSI_NT'] < quality_lower_bound):
-                    record.add_filter(FILTER_ID_QSI)
-
-                writer.write_record(record)
-
-        if writer:
-            writer.close()
-
-
-def _convert_dict_to_call(data_dict):
-    call_data_class = vcf.model.make_calldata_tuple(list(data_dict.keys()))
-
-    return call_data_class(**data_dict)
-
-
-def _get_filtered_base_call_fraction_indel(data):
-    frac = 0
-
-    if data.DP50 > 0:
-        frac = data.FDP50 / data.DP50
-
-    return frac
-
-
-# =======================================================================================================================
-# Indel and SNV Flagging
-# =======================================================================================================================
-
-def run_snpeff(infile, output, config):
-    '''
-    Run snpEff script on the input VCF file
-
-    :param infile: temporary input VCF file
-    :param output: temporary output VCF file
-    :param config: path to the config YAML file
-    '''
-
-    snpeff_config = config['snpeff_params']['snpeff_config']
-    genome_version = config['snpeff_params']['genome_version']
-
-    cmd = ['snpEff', '-Xmx5G', '-Xms5G', '-XX:ParallelGCThreads=1',
-           '-c', snpeff_config, genome_version, '-noStats', infile, '>',
-           output]
-
-    pypeliner.commandline.execute(*cmd)
-
-
-def run_mutation_assessor(infile, output, config):
-    '''
-    Run Mutation Assessor script on the input VCF file
-
-    :param infile: temporary input VCF file
-    :param output: temporary output VCF file
-    '''
-
-    mutation_assessor_script = os.path.join(scripts_directory, 'annotate_mutation_assessor.py')
-    db = config['mutation_assessor_params']['db']
-
-    cmd = ['python', mutation_assessor_script, '--vcf', infile, '--output',
-           output, '--db', db]
-
-    pypeliner.commandline.execute(*cmd)
-
-
-def run_DBSNP(infile, output, config):
-    '''
-    Run DBSNP script on the input VCF file
-
-    :param infile: temporary input VCF file
-    :param output: temporary output VCF file
-    '''
-
-    script = os.path.join(scripts_directory, 'flagPos.py')
-    db = config['dbsnp_params']['db']
-
-    cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
-           '--label', 'DBSNP', '--input_type', 'snv', '--flag_with_id', 'True']
-
-    pypeliner.commandline.execute(*cmd)
-
-
-def run_1000gen(infile, output, config):
-    '''
-    Run 1000Gen script on the input VCF file
-
-    :param infile: temporary input VCF file
-    :param output: temporary output VCF file
-    '''
-
-    script = os.path.join(scripts_directory, 'flagPos.py')
-    db = config['1000gen_params']['db']
-
-    cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
-           '--label', '1000Gen', '--input_type', 'snv']
-
-    pypeliner.commandline.execute(*cmd)
-
-
-def run_cosmic(infile, output, config):
-    '''
-    Run Cosmic script on the input VCF file
-
-    :param infile: temporary input VCF file
-    :param output: temporary output VCF file
-    '''
-
-    script = os.path.join(scripts_directory, 'flagPos.py')
-    db = config['cosmic_params']['db']
-
-    cmd = ['python', script, '--infile', infile, '--db', db, '--out', output,
-           '--label', 'Cosmic', '--input_type', 'snv', '--flag_with_id', 'True']
-
-    pypeliner.commandline.execute(*cmd)
-
-
-# =======================================================================================================================
-# Parse strelka vcf into csv format
-# =======================================================================================================================
-
-def parse_strelka(infile, output):
-    parser = ParseStrelka(infile=infile, tid='NA', nid='NA', output=output,
-                          keep_dbsnp=True, keep_1000gen=True,
-                          remove_duplicates=True)
-
-    parser.main()
+    index_vcf(filtered_vcf, docker_image=docker_image)
+    index_bcf(filtered_vcf, docker_image=docker_image)

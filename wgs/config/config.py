@@ -160,7 +160,7 @@ def containers(container_name):
         'samtools': 'samtools:v0.0.2',
         'picard': 'picard:v0.0.1',
         'wgs': 'wgs:v{}'.format(version),
-        'strelka': 'strelka:v0.0.1',
+        'strelka': 'strelka:v0.0.2',
         'mutationseq': 'mutationseq:v0.0.1',
         'vcftools': 'vcftools:v0.0.1',
         'snpeff': 'vcftools:v0.0.1',
