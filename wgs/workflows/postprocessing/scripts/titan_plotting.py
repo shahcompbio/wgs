@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import gene_annotation_plotting
-
+from matplotlib.lines import Line2D
 
 def read(copy_number):
     """
@@ -39,8 +39,24 @@ def prepare_at_chrom(copy_number, chrom):
 
     return copy_number[copy_number["Chr"] == chrom][["Position", "LogRatio", "color"]]
 
+def add_titan_legend(axis):
+    labels = ["1", "2", "3", "4", "5",
+              "6", "7", "8", "9+"]
 
-def plot(prepped_copy_number, anno_genes, axis):
+    colors = ["#00FF00", "#006400", "#0000FF", "#880000",
+             "#BB0000", "#CC0000", "#DD0000", "#EE0000", "#FF0000"]
+
+    lines = [Line2D([0], [0], marker='o', color='w', label='major axis',
+                    markerfacecolor=c, markersize=10) for c, _ in zip(colors, labels)]
+
+    axis.legend(lines, labels, ncol=3, columnspacing=0.02,
+                loc="center left", title="Titan", frameon=False,
+                borderpad=0, borderaxespad=0)
+
+    return axis
+
+
+def plot(prepped_copy_number, anno_genes, axis, chrom_max):
     """
     plot prepped copy number data on axis
     :param prepped_copy_number: prepped copy number data (read->prepare_at_chrom->
@@ -51,15 +67,29 @@ def plot(prepped_copy_number, anno_genes, axis):
     '''
     plot copy number data on axis
     '''
-    axis.scatter(prepped_copy_number.Position / 1000000,
-                 prepped_copy_number.LogRatio, s=0.1, color=prepped_copy_number.color, zorder=2)
-
-    axis.set_ylabel("Copy Number", fontsize=14, fontname="Arial")
     axis.set_ylim(-4, 6)
+    axis.set_xlim(0, chrom_max)
+    axis.grid(True, linestyle=':')
+    axis.spines['left'].set_position(('outward', 5))
+    axis.spines['bottom'].set_position(('outward', 5))
+    axis.spines['top'].set_visible(False)
+    axis.spines['right'].set_visible(False)
+
+    axis.set_yticks(np.arange(-4, 6, 1))
+    axis.set_xticks(np.arange(0, prepped_copy_number.Position.max() / 1000000, 25))
+
+    axis.set_xticklabels([])
+    for tic in axis.xaxis.get_major_ticks():
+        tic.tick1On = tic.tick2On = False
+
+    axis.scatter(prepped_copy_number.Position / 1000000,
+                 prepped_copy_number.LogRatio, s=0.1, color=prepped_copy_number.color)
+
+    axis.set_ylabel("Titan", fontsize=14, fontname="Arial")
 
     if not anno_genes.empty:
         axis = gene_annotation_plotting.plot_anno_genes(anno_genes, *axis.get_ylim(), axis)
-        axis = gene_annotation_plotting.make_annotation_legend(anno_genes, axis)
+
 
     return axis
 
