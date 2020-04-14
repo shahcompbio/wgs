@@ -10,7 +10,7 @@ def run_destruct_local(
         tempdir, tumour_bam, normal_bam,
         sample_id, raw_breakpoints, raw_library,
         reads, destruct_config, refdata_destruct,
-        ncpus=None, docker_image=None
+        ncpus=None, docker_image=None, context_config=None
 ):
     pipelinedir = os.path.join(tempdir, 'pipeline')
     tmpdir = os.path.join(tempdir, 'tmp')
@@ -25,7 +25,6 @@ def run_destruct_local(
 
     pyp = pypeliner.app.Pypeline(config=config)
 
-    context_config = pypeliner.helpers.GlobalState.get_all()['context_config']
     pypeliner.helpers.GlobalState.set('context_config', context_config)
 
     workflow = pypeliner.workflow.Workflow(ctx={'docker_image': docker_image})

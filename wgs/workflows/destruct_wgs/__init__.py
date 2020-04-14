@@ -57,7 +57,11 @@ def create_destruct_wgs_workflow(
                 mgd.TempInputObj("destruct_config"),
                 destruct_refdata,
             ),
-            kwargs={'ncpus': 16, 'docker_image': config.containers('destruct')}
+            kwargs={
+                'ncpus': 16,
+                'docker_image': config.containers('destruct'),
+                'context_config': pypeliner.helpers.GlobalState.get_all()['context_config']
+                }
         )
     else:
         workflow.subworkflow(
