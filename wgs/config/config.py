@@ -1,7 +1,8 @@
 import os
 
-import wgs
 import yaml
+
+import wgs
 
 
 def default_params(mode='all'):
@@ -112,6 +113,9 @@ def default_params(mode='all'):
             'genes': None,
             'types': None,
         },
+        'remixt': {
+            'min_num_reads': 5
+        }
     }
 
     alignment = {
@@ -132,7 +136,7 @@ def default_params(mode='all'):
         'alignment': alignment
     }
 
-    if not mode=='all':
+    if not mode == 'all':
         return config[mode]
 
     return config
@@ -171,6 +175,7 @@ def containers(container_name):
         'hmmcopy': 'hmmcopy:v0.0.1',
         'circos': 'circos:v0.0.1',
         'igvtools': 'igvtools:v0.0.1',
+        'remixt': 'remixt:v0.0.2'
     }
 
     return docker_images[container_name]

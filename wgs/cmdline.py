@@ -101,6 +101,12 @@ def parse_args():
         action='store_true',
         help='''hmmcopy'''
     )
+    cna_calling.add_argument(
+        "--remixt",
+        default=False,
+        action='store_true',
+        help='''remixt'''
+    )
 
 
 

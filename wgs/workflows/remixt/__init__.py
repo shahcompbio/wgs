@@ -7,25 +7,35 @@ import pypeliner
 import pypeliner.managed as mgd
 
 from wgs.utils import helpers
+from wgs.config import config
+
 
 def create_remixt_workflow(
         tumour_path,
         normal_path,
         breakpoints,
         sample_id,
-        remixt_refdata,
         remixt_results_filename,
-        remixt_raw_dir,
-        min_num_reads,
-        global_config,
-        config,
+        remixt_brk_cn_csv,
+        remixt_cn_csv,
+        remixt_minor_modes_csv,
+        remixt_mix_csv,
+        remixt_read_depth_csv,
+        remixt_stats_csv,
+        remixt_refdata,
+        reference,
         single_node=False,
 ):
-    ctx = {'docker_image': config['docker']['wgs']}
+    ctx = {'docker_image': config.containers('wgs')}
+
+    params = config.default_params('copynumber_calling')['remixt']
 
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
-    remixt_config = {}
+    remixt_config = {
+        'genome_fasta': reference,
+        'genome_fai': reference + '.fai',
+    }
 
     if breakpoints is None:
         workflow.setobj(
@@ -52,6 +62,7 @@ def create_remixt_workflow(
             args=(
                 mgd.InputFile(breakpoints),
                 mgd.TempOutputFile('filtered_breakpoints.csv'),
+                params['min_num_reads']
             )
         )
 
@@ -60,9 +71,9 @@ def create_remixt_workflow(
             name='remixt',
             func='wgs.workflows.remixt.tasks.run_remixt_local',
             ctx=helpers.get_default_ctx(
-                memory=global_config['memory']['high'],
+                memory=15,
                 walltime='120:00',
-                ncpus=global_config['threads']),
+                ncpus=8),
             args=(
                 mgd.TempSpace("remixt_temp"),
                 mgd.TempInputFile('filtered_breakpoints.csv'),
@@ -70,7 +81,7 @@ def create_remixt_workflow(
                 mgd.InputFile(normal_path, extensions=['.bai']),
                 sample_id,
                 mgd.OutputFile(remixt_results_filename),
-                remixt_raw_dir,
+                mgd.TempSpace('remixt_raw_dir'),
                 remixt_config,
                 remixt_refdata,
             ),
@@ -79,14 +90,14 @@ def create_remixt_workflow(
         workflow.subworkflow(
             name='remixt',
             func="remixt.workflow.create_remixt_bam_workflow",
-            ctx={'docker_image': config['docker']['remixt'],
+            ctx={'docker_image': config.containers('remixt'),
                  'walltime': '48:00'},
             args=(
                 mgd.TempInputFile('filtered_breakpoints.csv'),
                 {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),
                  sample_id + 'N': mgd.InputFile(normal_path, extensions=['.bai'])},
                 {sample_id: mgd.OutputFile(remixt_results_filename)},
-                remixt_raw_dir,
+                mgd.TempSpace('remixt_raw_dir'),
                 remixt_config,
                 remixt_refdata,
             ),
@@ -94,5 +105,25 @@ def create_remixt_workflow(
                 'normal_id': sample_id + 'N',
             }
         )
+
+    workflow.transform(
+        name='parse_remixt',
+        func='wgs.workflows.remixt.tasks.parse_remixt_file',
+        args=(
+            mgd.InputFile(remixt_results_filename),
+            [
+                mgd.OutputFile(remixt_brk_cn_csv, extensions=['.yaml']),
+                mgd.OutputFile(remixt_cn_csv, extensions=['.yaml']),
+                mgd.OutputFile(remixt_minor_modes_csv, extensions=['.yaml']),
+                mgd.OutputFile(remixt_mix_csv, extensions=['.yaml']),
+                mgd.OutputFile(remixt_read_depth_csv, extensions=['.yaml']),
+                mgd.OutputFile(remixt_stats_csv, extensions=['.yaml']),
+            ],
+            [
+                '/brk_cn', '/cn', '/minor_modes', '/mix', '/read_depth', '/stats'
+            ],
+            mgd.TempSpace('tempdir_parse')
+        )
+    )
 
     return workflow
