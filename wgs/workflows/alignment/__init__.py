@@ -37,7 +37,7 @@ def collect_bam_metrics(
     workflow.transform(
         name="calc_picard_insert_metrics",
         ctx=helpers.get_default_ctx(
-            memory=10,
+            memory=20,
             walltime='72:00',
             disk=400
         ),
@@ -52,7 +52,7 @@ def collect_bam_metrics(
         kwargs={
             'picard_docker': config.containers('picard'),
             'samtools_docker': config.containers('samtools'),
-            'mem': '8G'
+            'mem': '16G'
         }
     )
 
@@ -60,7 +60,7 @@ def collect_bam_metrics(
         name="calc_picard_gc_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_gc_metrics',
         ctx=helpers.get_default_ctx(
-            memory=10,
+            memory=20,
             walltime='72:00',
             disk=400
         ),
@@ -72,14 +72,14 @@ def collect_bam_metrics(
             mgd.OutputFile(picard_gc_pdf),
             mgd.TempSpace('picard_gc')
         ),
-        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
+        kwargs={'docker_image': config.containers('picard'), 'mem': '16G'}
     )
 
     workflow.transform(
         name="calc_picard_wgs_metrics",
         func='wgs.workflows.alignment.tasks.bam_collect_wgs_metrics',
         ctx=helpers.get_default_ctx(
-            memory=10,
+            memory=20,
             walltime='72:00',
             disk=400
         ),
@@ -90,7 +90,7 @@ def collect_bam_metrics(
             picard_wgs_params,
             mgd.TempSpace('picard_wgs')
         ),
-        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
+        kwargs={'docker_image': config.containers('picard'), 'mem': '16G'}
     )
 
     workflow.transform(
@@ -267,7 +267,7 @@ def align_samples(
     workflow.transform(
         name='markdups',
         ctx=helpers.get_default_ctx(
-            memory=12,
+            memory=20,
             walltime='24:00',
             ncpus=1,
             disk=300
@@ -283,7 +283,7 @@ def align_samples(
         kwargs={
             'picard_docker': config.containers('picard'),
             'samtools_docker': config.containers('samtools'),
-            'mem': '8G'
+            'mem': '16G'
         }
     )
 
