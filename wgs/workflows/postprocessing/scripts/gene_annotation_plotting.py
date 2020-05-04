@@ -1,6 +1,5 @@
 import pandas as pd
 from matplotlib.lines import Line2D
-from matplotlib.legend import Legend
 
 
 def add_gene_annotation_legend(anno_genes, axis):

@@ -4,21 +4,39 @@ import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
-from scripts import plot
+
+from .scripts import genome_wide_plot
+from .scripts import titan_plotting
+from .scripts import remixt_plotting
+from .scripts import gene_annotation_plotting
+from .scripts import coverage_plotting
 from wgs.utils import helpers
 
-from wgs.utils import helpers
 
-def circos(cn_calls, sv_calls, circos_plot, tempdir, annotations, docker_image=None):
+def get_gene_annotations( outfile):
+
+    chroms = list(map(str, range(1, 22))) + ["X"]
+    annotations = pd.concat([gene_annotation_plotting.get_gene_annotation_data(chrom) for chrom in chroms])
+    annotations.to_csv(outfile, sep="\t", index=False)
+
+
+def circos(titan_calls, remixt_calls, sample_id, sv_calls,
+           circos_plot_remixt, circos_plot_titan, tempdir, docker_image=None):
+
     helpers.makedirs(tempdir)
 
-    prepped_cn_calls = os.path.join(tempdir, 'prepped_cn_calls.csv')
-    prep_cn_for_circos(cn_calls, prepped_cn_calls)
+    ann_file = os.path.join(tempdir, "gene_annotations.tsv")
+    get_gene_annotations(ann_file)
 
-    prepped_sv_calls = os.path.join(tempdir, 'prepped_sv_calls.csv')
-    prep_sv_for_circos(sv_calls, prepped_sv_calls)
+    prepped_titan_calls = os.path.join(tempdir, 'prepped_titan_calls.csv')
+    titan_plotting.make_for_circos(titan_calls, prepped_titan_calls)
 
-    cmd = ['circos.R', annotations, prepped_cn_calls, prepped_sv_calls, circos_plot]
+    prepped_remixt_calls = os.path.join(tempdir, 'prepped_remixt_calls.csv')
+    remixt_plotting.make_for_circos(remixt_calls, sample_id, prepped_remixt_calls)
+
+    cmd = ['circos.R', prepped_titan_calls, prepped_remixt_calls, ann_file, sv_calls,
+           circos_plot_remixt, circos_plot_titan, sample_id]
+    # cmd = ['ls']
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
@@ -36,32 +54,6 @@ def bin_data(positions, copy_number, state, n_bins, start, extent):
     return pd.DataFrame({"Position": position,
                          "LogRatio": lr,
                          "state": state})
-
-
-def prep_cn_for_circos(copy_number, outfile):
-    '''
-    prep copy number data to be used by circos.r
-    :param copy_number: input copy_number file
-    :param outfile: path to prepped copy_number csv
-    :return:
-    '''
-    copy_number = pd.read_csv(copy_number, sep="\t", dtype={'Chr': str})
-
-    output = []
-    chroms = copy_number.Chr.unique()
-
-    for chrom in chroms:
-        prepped = copy_number[copy_number["Chr"] == chrom]
-        prepped = bin_data(prepped.Position, prepped.LogRatio, prepped.TITANstate, 200,
-                           prepped.Position.min(), prepped.Position.max())
-        prepped["Chr"] = [chrom] * len(prepped.index)
-        output.append(prepped)
-
-    output = pd.concat(output)
-    # the NaNs over centromere breaks the R code
-    output = output[~output.Position.isna()]
-    output.to_csv(outfile, index=False, header=True, sep="\t")
-
 
 def prep_sv_for_circos(sv_calls, outfile):
     svs = pd.read_csv(sv_calls, sep=",", dtype={'chromosome_1': str, 'chromosome_2': str})
@@ -90,27 +82,31 @@ def count_depth(regions, input):
     """
     bamfile = pysam.AlignmentFile(input, 'rb')
 
-    output_values = []
+    output_values = [None] * len(regions)
 
-    for region in regions:
+    for i, region in enumerate(regions):
         chrom, start, stop = region.split('_')
 
         start = int(start)
         stop = int(stop)
-
         size = stop - start
 
         running_count = 0
 
         for pileupcolumn in bamfile.pileup(chrom, start, stop, stepper='nofilter'):
+
             running_count += pileupcolumn.nsegments
 
-        output_values.append((chrom, start, stop, running_count / size))
+        output_values[i] = (chrom, start, stop, running_count / size)
 
     return output_values
 
 
 def samtools_coverage(bam_file, output, chromosomes, reference, bins_per_chrom=2000):
+    # out = coverage_plotting.read("/juno/work/shah/abramsd/CODE/inputs/merged007_TT")
+    # cov = coverage_plotting.prepare_at_chrom(out, chromosomes)
+    #
+    # cov.to_csv(output, sep="\t", index=False)
     intervals = generate_intervals(reference, chromosomes, bins_per_chrom=bins_per_chrom)
 
     counts = count_depth(intervals, bam_file)
@@ -122,32 +118,30 @@ def samtools_coverage(bam_file, output, chromosomes, reference, bins_per_chrom=2
             outfile.write(value)
 
 
-def generate_intervals(ref, chromosomes, bins_per_chrom=2000):
+def generate_intervals(ref, chromosome, bins_per_chrom=2000):
     fasta = pysam.FastaFile(ref)
-    lengths = fasta.lengths
-    names = fasta.references
+    chrom_lengths = dict(zip(fasta.references, fasta.lengths))
+    assert chromosome in chrom_lengths.keys()
 
-    intervals = []
+    length = chrom_lengths[chromosome]
 
-    for name, length in zip(names, lengths):
-        if name not in chromosomes:
-            continue
+    intervals = [None] * bins_per_chrom
 
-        step_size = int(length / bins_per_chrom)
+    step_size = int(length / bins_per_chrom)
 
-        for i in range(bins_per_chrom):
-            start = str(int(i * step_size) + 1)
-            end = str(int((i + 1) * step_size))
-            intervals.append(name + "_" + start + "_" + end)
-
+    for i in range(bins_per_chrom):
+        start = str(int(i * step_size) + 1)
+        end = str(int((i + 1) * step_size))
+        intervals[i] = str(chromosome) + "_" + start + "_" + end
     return intervals
 
 
-def genome_wide_plot(
-        cn_markers, roh_calls, germline_vcf, somatic_vcf,
-        tumour_coverage, normal_coverage, pdf_output
+def genome_wide(
+        remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
+        tumour_coverage, normal_coverage, breakpoints, ideogram, chromosomes, pdf
 ):
-    plot.main(
-        cn_markers, roh_calls, germline_vcf, somatic_vcf,
-        tumour_coverage, normal_coverage, pdf_output
+
+    genome_wide_plot.genome_wide_plot(
+        remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
+        tumour_coverage, normal_coverage, breakpoints, ideogram, chromosomes, pdf
     )

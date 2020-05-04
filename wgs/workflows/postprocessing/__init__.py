@@ -27,6 +27,7 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
         )
 
     else:
+
         workflow.setobj(
             obj=mgd.OutputChunks('chromosome'),
             value=chromosomes
@@ -65,26 +66,32 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
 def create_postprocessing_workflow(
         normal_bam,
         tumour_bam,
-        variant_dir,
-        copynumber_dir,
-        breakpoint_dir,
-        circos_plot,
+        titan,
+        remixt,
+        breakpoints_consensus,
+        roh,
+        germline_calls,
+        somatic_calls,
+        circos_plot_remixt,
+        circos_plot_titan,
         genome_wide_plot,
         refdir,
         sample_id,
         single_node=False
 ):
+
     refdir_paths = config.refdir_data(refdir)['paths']
+    refdir_params = config.refdir_data(refdir)['params']
 
-    variant_dir = variant_dir[sample_id]
-    breakpoint_dir = breakpoint_dir[sample_id]
-    copynumber_dir = copynumber_dir[sample_id]
+    ideogram = refdir_paths["ideogram"]
 
-    cn_calls = os.path.join(copynumber_dir, 'titan', '{}_titan_markers.csv.gz'.format(sample_id))
-    sv_calls = os.path.join(breakpoint_dir, '{}_filtered_consensus_calls.csv.gz'.format(sample_id))
-    roh_calls = os.path.join(variant_dir, '{}_roh.csv.gz'.format(sample_id))
-    germline_vcf = os.path.join(variant_dir, '{}_samtools_germline.vcf.gz'.format(sample_id))
-    snv_calls = os.path.join(variant_dir, '{}_museq_paired_annotated.vcf.gz'.format(sample_id))
+    titan_calls = titan[sample_id]
+    remixt_calls = remixt[sample_id]
+    sv_calls = breakpoints_consensus[sample_id]
+    roh_calls = roh[sample_id]
+    germline_vcf = germline_calls[sample_id]
+    somatic_calls = somatic_calls[sample_id]
+    chromosomes = refdir_params['chromosomes']
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -119,12 +126,15 @@ def create_postprocessing_workflow(
         ),
         func="wgs.workflows.postprocessing.tasks.circos",
         args=(
-            mgd.InputFile(cn_calls),
+            mgd.InputFile(titan_calls),
+            mgd.InputFile(remixt_calls),
+            sample_id,
             mgd.InputFile(sv_calls),
-            mgd.TempOutputFile(circos_plot),
+            mgd.TempOutputFile(circos_plot_remixt),
+            mgd.TempOutputFile(circos_plot_titan),
             mgd.TempSpace('circos'),
-            refdir_paths['annotation_genes'],
         ),
+
         kwargs={
             'docker_image': config.containers('circos'),
         }
@@ -135,14 +145,19 @@ def create_postprocessing_workflow(
         ctx=helpers.get_default_ctx(
             memory=10,
         ),
-        func="wgs.workflows.postprocessing.tasks.genome_wide_plot",
+        func="wgs.workflows.postprocessing.tasks.genome_wide",
         args=(
-            mgd.InputFile(cn_calls),
+            mgd.InputFile(remixt_calls),
+            sample_id,
+            mgd.InputFile(titan_calls),
             mgd.InputFile(roh_calls),
             mgd.InputFile(germline_vcf),
-            mgd.InputFile(snv_calls),
+            mgd.InputFile(somatic_calls),
             mgd.TempInputFile('tumour_coverage'),
-            mgd.TempInputFile('tumour_coverage'),
+            mgd.TempInputFile('normal_coverage'),
+            mgd.InputFile(sv_calls),
+            mgd.InputFile(ideogram),
+            chromosomes,
             mgd.OutputFile(genome_wide_plot),
         ),
     )

@@ -1,7 +1,8 @@
-import matplotlib.pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 import pandas as pd
 import numpy as np
+
+
 def read(ideo_file):
     # read things in
     ideogram = pd.read_csv(ideo_file, sep="\t", names=["chrom", "start", "end", "name", "stain"])

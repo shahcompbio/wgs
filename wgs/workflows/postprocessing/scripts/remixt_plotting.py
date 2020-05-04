@@ -62,8 +62,8 @@ def add_remixt_legend(axis):
                     markerfacecolor='r', markersize=10, alpha=0.4),
              Line2D([0], [0], marker='o', color='w',
                     markerfacecolor='b', markersize=10, alpha=0.4),
-             Line2D([0], [0], marker='<', color='w',
-                    markerfacecolor='black', markersize=10, alpha=0.4)]
+             Line2D([0], [0], marker='o', color='w',
+                    markerfacecolor='black', markersize=5, alpha=1)]
 
     axis.legend(lines, labels, ncol=1, loc="center left", title="Remixt",
                 frameon=False, borderpad=0, borderaxespad=0)
@@ -104,6 +104,11 @@ def plot(prepped_remixt, axis, chrom_max):
     axis.set_ylabel("Remixt", fontsize=14, fontname="Arial")
 
     return axis
+
+
+def make_for_circos(remixt, sample_id, prepped_remixt):
+    remixt = read(remixt, sample_id)
+    remixt.to_csv(prepped_remixt, sep="\t", index=False, header=True)
 
 # import matplotlib.pyplot as plt
 # f, ax = plt.subplots()
