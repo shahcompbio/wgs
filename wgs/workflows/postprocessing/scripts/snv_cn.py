@@ -61,7 +61,7 @@ def prepare_at_chrom(transformed_snv, chrom):
 
 
 def plot_scatter(data, axis):
-    axis.scatter(data.pos/1000000, data.frac_cn, color="black", s=20, marker="<", alpha=0.4)
+    axis.scatter(data.pos/1000000, data.frac_cn, color="black", s=2.5, marker="o", alpha=1)
     return axis
 
 

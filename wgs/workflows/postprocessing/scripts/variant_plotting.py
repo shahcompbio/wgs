@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import gzip
 
 
 def plot_bar(variants, axis, name, chrom_max):
@@ -82,6 +83,7 @@ def prepare_at_chrom(variants, chrom, n_bins=200):
     '''
     prepare variants data to be plotted at a chrom
     '''
+
     variants = variants[variants["chr"] == str(chrom)]
     return bin_frequencies(variants.pos, n_bins, variants.pos.min(),
                            variants.pos.max())
@@ -127,7 +129,7 @@ def read(f):
     read in
     '''
 
-    data = pd.DataFrame(parse(open(f), "\t", 2), columns=["chr", "pos"])
+    data = pd.DataFrame(parse(f, "\t", 2), columns=["chr", "pos"])
     data = data.astype({"pos": np.int64, "chr": str})
     return data[["chr", "pos"]]
 
@@ -140,5 +142,10 @@ def parse(f, sep, n):
     :param n: number of elements to take per line
     :return: parsed vcf file as list of lists
     """
-    return [line.split(sep)[:n] for line in f
-            if not line.startswith('#')]
+    if f.endswith(".gz"):
+        with gzip.open(f, 'rt') as f:
+            return [line.split(sep)[:n] for line in f
+                    if not line.startswith('#')]
+    else:
+        return [line.split(sep)[:n] for line in open(f)
+                if not line.startswith('#')]

@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
-import gene_annotation_plotting
 from matplotlib.lines import Line2D
+
+from . import gene_annotation_plotting
+
 
 def read(copy_number):
     """

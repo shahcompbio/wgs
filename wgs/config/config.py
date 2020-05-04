@@ -144,7 +144,6 @@ def default_params(mode='all'):
 
 def refdir_data(refdir):
     yamlpath = os.path.join(refdir, 'metadata.yaml')
-
     with open(yamlpath) as yamlfile:
         yamldata = yaml.safe_load(yamlfile)
 

@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def prepare_at_chrom(coverage, chrom, bin=False, n_bins=200):
@@ -62,7 +61,6 @@ def read(coverage):
 
     cov = pd.read_csv(coverage, na_values="nan",
                            sep="\t")
-
     cov = cov.astype({"chrom": str})
     return cov
 

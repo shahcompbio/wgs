@@ -1,14 +1,16 @@
 import pandas as pd
-import roh_plotting
-import variant_plotting
-import coverage_plotting
-import titan_plotting
 import matplotlib.pyplot as plt
-import remixt_plotting
-import gene_annotation_plotting
 import matplotlib.gridspec as gridspec
-import ideogram_plotting
-import snv_cn
+import matplotlib.backends.backend_pdf
+
+from . import roh_plotting
+from . import variant_plotting
+from . import coverage_plotting
+from . import titan_plotting
+from . import ideogram_plotting
+from . import snv_cn
+from . import remixt_plotting
+from . import gene_annotation_plotting
 
 
 def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
@@ -40,11 +42,13 @@ def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
 
     coverage_ylim_max = prepped_tumour_coverage.coverage.max() + 10
     coverage_ylim_min = prepped_normal_coverage.coverage.min() - 10
-
+    if pd.isnull(coverage_ylim_max):
+        coverage_ylim_max = 250
+    if pd.isnull(coverage_ylim_max):
+        coverage_ylim_min = 250
     anno_genes = gene_annotation_plotting.get_gene_annotation_data(chrom)
 
     chrom_max = prepped_ideogram.start.max()
-
     axes[0] = variant_plotting.plot_fill(prepped_somatic_calls, axes[0], "Somatic \n Alteration \n Frequency", chrom_max)
     axes[1] = variant_plotting.plot_fill(prepped_germline_calls, axes[1], "Germline \n Alteration \n Frequency", chrom_max)
     axes[2] = coverage_plotting.plot(prepped_tumour_coverage,
@@ -53,7 +57,7 @@ def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
     axes[3] = coverage_plotting.plot(prepped_normal_coverage,
                                      coverage_ylim_min, coverage_ylim_max,
                                      axes[3], "Normal \n Coverage", chrom_max)
-    axes[4] = variant_plotting.plot_bar(prepped_breakpoints, axes[4], "Breakpoint \n Frequency", chrom_max, bar=True)
+    axes[4] = variant_plotting.plot_bar(prepped_breakpoints, axes[4], "Breakpoint \n Frequency", chrom_max)
 
 
     axes[5] = remixt_plotting.plot(prepped_remxit, axes[5], chrom_max)
@@ -87,7 +91,7 @@ def rasturize_axes(axes):
 
 
 def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
-                     tumour_coverage, normal_coverage, breakpoints, ideogram, pdf):
+                     tumour_coverage, normal_coverage, breakpoints, ideogram, chromosomes, pdf):
 
     """
     make a genome wide plot
@@ -101,27 +105,28 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
     :param plot_name: name for plot pdf
     :param remixt: remixt data
     """
-
+    pdf = matplotlib.backends.backend_pdf.PdfPages(pdf)
     remixt = remixt_plotting.read(remixt, remixt_label)
     titan = titan_plotting.read(titan)
     roh = roh_plotting.read(roh)
     germline_calls = variant_plotting.read(germline_calls)
     tumour_coverage = coverage_plotting.read(tumour_coverage)
+
     normal_coverage = coverage_plotting.read(normal_coverage)
     breakpoints = pd.read_csv(breakpoints)[["chromosome_1", "chromosome_2", "position_1", "position_2"]]
-    breakpoints.astype({"chromosome_1": str, "chromosome_2": str})
+    breakpoints = breakpoints.astype({"chromosome_1": str, "chromosome_2": str})
 
     breakpoints = pd.DataFrame({"chr": breakpoints["chromosome_1"].append(breakpoints["chromosome_2"]),
                                 "pos": breakpoints["position_1"].append(breakpoints["position_2"])})
+
     somatic_calls = variant_plotting.read_consensus(somatic_calls)
 
     vaf_data = snv_cn.parse(somatic_calls, remixt)
     ideogram = ideogram_plotting.read(ideogram)
     # get chroms to plot on and make sure all data contains those chroms
 
-    for chrom in map(str, list(range(1,23)) + ["X"]):
-    # for chrom in ["1"]:
-
+    # for chrom in map(str, list(range(1,23)) + ["X"]):
+    for chrom in chromosomes:
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
         ref = 250
@@ -158,4 +163,6 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
 
         plt.tight_layout()
         # write out
+        print(pdf)
         pdf.savefig(fig)
+    pdf.close()

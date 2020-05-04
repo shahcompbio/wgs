@@ -9,7 +9,7 @@ germ_7 = "/Users/abramsd/work/DATA/QC/germline/007/Sample_007_samtools_germline.
 som_7 = "/Users/abramsd/work/DATA/QC/somatic/Sample_007_somatic.csv.gz"
 cov_7 = "/Users/abramsd/work/DATA/QC/coverage/merged007_TT"
 cov_norm_7 = "/Users/abramsd/work/DATA/QC/normal_bam_coverage/7.bins"
-remixt_7 = "/Users/abramsd/work/CODE/wgs/wgs/workflows/postprocessing/results_files_007.h5"
+remixt_7 = "/Users/abramsd/work/DATA/QC/remixt/results_files_007.h5"
 breakpoints_7 = "/Users/abramsd/work/DATA/QC/SVs/Sample_007_filtered_consensus_calls_final.csv.gz"
 
 
