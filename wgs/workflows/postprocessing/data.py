@@ -1,5 +1,6 @@
 from genome_wide_plot import genome_wide_plot
 import matplotlib.backends.backend_pdf
+
 # testdata
 ideo = "/Users/abramsd/Downloads/cytoBandIdeo.txt"
 
@@ -195,8 +196,9 @@ breakpoints_054 = "/Users/abramsd/work/DATA/QC/SVs/054IO_T_IGO_09443_AQ_13_filte
 
 
 # pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_007.pdf")
-# genome_wide_plot(remixt_7, "007", titan_7, roh_7, germ_7, som_7, cov_7, cov_norm_7, breakpoints_7, ideo, pdf)
-# pdf.close()
+# genome_wide_plot(remixt_7, "007", titan_7, roh_7, germ_7, som_7, cov_7, cov_norm_7, breakpoints_7, ideo,["1", "4"],
+#                  "/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_007.pdf")
+# # pdf.close()
 #
 # pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_009.pdf")
 # genome_wide_plot(remixt_9, "009", titan_9, roh_9, germ_9, som_9, cov_9, cov_norm_9, breakpoints_9, ideo, pdf)
@@ -217,65 +219,74 @@ breakpoints_054 = "/Users/abramsd/work/DATA/QC/SVs/054IO_T_IGO_09443_AQ_13_filte
 # pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_044.pdf")
 # genome_wide_plot(remixt_44, "044", titan_44, roh_44, germ_44, som_44, cov_44, cov_norm_44, breakpoints_44, ideo, pdf)
 # pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T1.pdf")
-genome_wide_plot(remixt_t1, "T1", titan_t1, roh_t1, germ_t1, som_t1, cov_t1, cov_norm_t1, breakpoints_t1, ideo, pdf)
-pdf.close()
 #
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T2-A.pdf")
-genome_wide_plot(remixt_t2a, "T2-A", titan_t2a, roh_t2a, germ_t2a, som_t2a, cov_t2a, cov_norm_t2a, breakpoints_t2a, ideo, pdf)
-pdf.close()
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T1.pdf")
+# genome_wide_plot(remixt_t1, "T1", titan_t1, roh_t1, germ_t1, som_t1, cov_t1, cov_norm_t1, breakpoints_t1, ideo, pdf)
+# pdf.close()
+# #
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T2-A.pdf")
+# genome_wide_plot(remixt_t2a, "T2-A", titan_t2a, roh_t2a, germ_t2a, som_t2a, cov_t2a, cov_norm_t2a, breakpoints_t2a, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T2-E.pdf")
+# genome_wide_plot(remixt_t2e, "T2-E", titan_t2e, roh_t2e, germ_t2e, som_t2e, cov_t2e, cov_norm_t2e, breakpoints_t2e, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_002.pdf")
+# genome_wide_plot(remixt_002, "002", titan_002, roh_002, germ_002, som_002, cov_002, cov_norm_002, breakpoints_002, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_008.pdf")
+# genome_wide_plot(remixt_008, "008", titan_008, roh_008, germ_008, som_008, cov_008, cov_norm_008, breakpoints_008, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_022.pdf")
+# genome_wide_plot(remixt_022, "022", titan_022, roh_022, germ_022, som_022, cov_022, cov_norm_022, breakpoints_022, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_025.pdf")
+# genome_wide_plot(remixt_025, "025", titan_025, roh_025, germ_025, som_025, cov_025, cov_norm_025, breakpoints_025, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_titan_037.pdf")
+# genome_wide_plot(remixt_037, "037", titan_037, roh_037, germ_037, som_037,
+#                  cov_037, cov_norm_037, breakpoints_037, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_041.pdf")
+# genome_wide_plot(remixt_041, "041", titan_041, roh_041, germ_041, som_041, cov_041, cov_norm_041, breakpoints_041, ideo, pdf)
+# pdf.close()
+#
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_045.pdf")
+# genome_wide_plot(remixt_045, "045", titan_045, roh_045, germ_045, som_045, cov_045, cov_norm_045, breakpoints_045, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_049.pdf")
+# genome_wide_plot(remixt_049, "049", titan_049, roh_049, germ_049, som_049, cov_049, cov_norm_049, breakpoints_049, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_050.pdf")
+# genome_wide_plot(remixt_050, "050", titan_050, roh_050, germ_050, som_050, cov_050, cov_norm_050, breakpoints_050, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_051.pdf")
+# genome_wide_plot(remixt_051, "051", titan_051, roh_051, germ_051, som_051, cov_051, cov_norm_051, breakpoints_051, ideo, pdf)
+# pdf.close()
+#
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_053.pdf")
+# genome_wide_plot(remixt_053, "053", titan_053, roh_053, germ_053, som_053, cov_053, cov_norm_053, breakpoints_053, ideo, pdf)
+# pdf.close()
 
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_T2-E.pdf")
-genome_wide_plot(remixt_t2e, "T2-E", titan_t2e, roh_t2e, germ_t2e, som_t2e, cov_t2e, cov_norm_t2e, breakpoints_t2e, ideo, pdf)
-pdf.close()
+# pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_054.pdf")
+genome_wide_plot(remixt_054, "054", titan_054, roh_054, germ_054, som_054, cov_054, cov_norm_054, breakpoints_054, ideo, ["8"], "/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_054.pdf")
+# pdf.close()
 
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_002.pdf")
-genome_wide_plot(remixt_002, "002", titan_002, roh_002, germ_002, som_002, cov_002, cov_norm_002, breakpoints_002, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_008.pdf")
-genome_wide_plot(remixt_008, "008", titan_008, roh_008, germ_008, som_008, cov_008, cov_norm_008, breakpoints_008, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_022.pdf")
-genome_wide_plot(remixt_022, "022", titan_022, roh_022, germ_022, som_022, cov_022, cov_norm_022, breakpoints_022, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_025.pdf")
-genome_wide_plot(remixt_025, "025", titan_025, roh_025, germ_025, som_025, cov_025, cov_norm_025, breakpoints_025, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_titan_037.pdf")
-genome_wide_plot(remixt_037, "037", titan_037, roh_037, germ_037, som_037,
-                 cov_037, cov_norm_037, breakpoints_037, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_041.pdf")
-genome_wide_plot(remixt_041, "041", titan_041, roh_041, germ_041, som_041, cov_041, cov_norm_041, breakpoints_041, ideo, pdf)
-pdf.close()
-
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_045.pdf")
-genome_wide_plot(remixt_045, "045", titan_045, roh_045, germ_045, som_045, cov_045, cov_norm_045, breakpoints_045, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_049.pdf")
-genome_wide_plot(remixt_049, "049", titan_049, roh_049, germ_049, som_049, cov_049, cov_norm_049, breakpoints_049, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_050.pdf")
-genome_wide_plot(remixt_050, "050", titan_050, roh_050, germ_050, som_050, cov_050, cov_norm_050, breakpoints_050, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_051.pdf")
-genome_wide_plot(remixt_051, "051", titan_051, roh_051, germ_051, som_051, cov_051, cov_norm_051, breakpoints_051, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_053.pdf")
-genome_wide_plot(remixt_053, "053", titan_053, roh_053, germ_053, som_053, cov_053, cov_norm_053, breakpoints_053, ideo, pdf)
-pdf.close()
-
-pdf = matplotlib.backends.backend_pdf.PdfPages("/Users/abramsd/work/OUTPUTS/QC/genome_wide_remixt/genome_wide_remixt_054.pdf")
-genome_wide_plot(remixt_054, "054", titan_054, roh_054, germ_054, som_054, cov_054, cov_norm_054, breakpoints_054, ideo, pdf)
-pdf.close()
+# from wgs_qc_utils.reader import read_remixt
+# from wgs_qc_utils.plotter import remixt_plotting
+# import matplotlib.pyplot as plt
+# remixt = read_remixt.read(remixt_054, "054")
+# remixt = remixt_plotting.prepare_at_chrom(remixt, "1")
+# fig, ax = plt.subplots()
+# ax = remixt_plotting.plot(remixt, ax, remixt.start.max()/1000000)
+# plt.show()

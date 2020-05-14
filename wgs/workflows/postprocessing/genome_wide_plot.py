@@ -3,14 +3,11 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.backends.backend_pdf
 
-from . import roh_plotting
-from . import variant_plotting
-from . import coverage_plotting
-from . import titan_plotting
-from . import ideogram_plotting
-from . import snv_cn
-from . import remixt_plotting
-from . import gene_annotation_plotting
+from wgs_qc_utils.plotter import variant_plotting, coverage_plotting, \
+    ideogram_plotting, remixt_plotting, roh_plotting, snv_cn, \
+    titan_plotting, gene_annotation_plotting
+from wgs_qc_utils.reader import read_remixt, read_roh, read_variant_calls, \
+    read_titan, read_coverage, parse_snv_cn, read_ideogram
 
 
 def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
@@ -29,16 +26,16 @@ def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
     :param remixt: T/F: true if copy number data is Remixt, false if Titan
     :return: axes with plots added
     """
-    prepped_remxit = remixt_plotting.prepare_at_chrom(remixt, chrom)
-    prepped_titan = titan_plotting.prepare_at_chrom(titan, chrom)
-    prepped_roh = roh_plotting.prepare_at_chrom(roh, chrom)
-    prepped_somatic_calls = variant_plotting.prepare_at_chrom(somatic_calls, chrom, n_bins=2000)
-    prepped_germline_calls = variant_plotting.prepare_at_chrom(germline_calls, chrom, n_bins=2000)
-    prepped_tumour_coverage = coverage_plotting.prepare_at_chrom(tumour_coverage, chrom, bin=True, n_bins=2000)
-    prepped_normal_coverage = coverage_plotting.prepare_at_chrom(normal_coverage, chrom, bin=True, n_bins=2000)
-    prepped_breakpoints = variant_plotting.prepare_at_chrom(breakpoints, chrom, n_bins=2000)
-    prepped_vaf = snv_cn.prepare_at_chrom(vaf_data, chrom)
-    prepped_ideogram = ideogram_plotting.prepare_at_chrom(ideogram, chrom)
+    prepped_remxit = read_remixt.prepare_at_chrom(remixt, chrom)
+    prepped_titan = read_titan.prepare_at_chrom(titan, chrom)
+    prepped_roh = read_roh.prepare_at_chrom(roh, chrom)
+    prepped_somatic_calls = read_variant_calls.prepare_at_chrom(somatic_calls, chrom, n_bins=2000)
+    prepped_germline_calls = read_variant_calls.prepare_at_chrom(germline_calls, chrom, n_bins=2000)
+    prepped_tumour_coverage = read_coverage.prepare_at_chrom(tumour_coverage, chrom, bin=True, n_bins=2000)
+    prepped_normal_coverage = read_coverage.prepare_at_chrom(normal_coverage, chrom, bin=True, n_bins=2000)
+    prepped_breakpoints = read_variant_calls.prepare_at_chrom(breakpoints, chrom, n_bins=2000)
+    prepped_snv_cn = parse_snv_cn.prepare_at_chrom(vaf_data, chrom)
+    prepped_ideogram = read_ideogram.prepare_at_chrom(ideogram, chrom)
 
     coverage_ylim_max = prepped_tumour_coverage.coverage.max() + 10
     coverage_ylim_min = prepped_normal_coverage.coverage.min() - 10
@@ -49,29 +46,37 @@ def plot_chrom_on_axes(remixt, titan, roh, germline_calls, somatic_calls,
     anno_genes = gene_annotation_plotting.get_gene_annotation_data(chrom)
 
     chrom_max = prepped_ideogram.start.max()
-    axes[0] = variant_plotting.plot_fill(prepped_somatic_calls, axes[0], "Somatic \n Alteration \n Frequency", chrom_max)
-    axes[1] = variant_plotting.plot_fill(prepped_germline_calls, axes[1], "Germline \n Alteration \n Frequency", chrom_max)
-    axes[2] = coverage_plotting.plot(prepped_tumour_coverage,
+    axes[0] = variant_plotting.plot_fill(prepped_somatic_calls.location, prepped_somatic_calls.n_events,
+                                         axes[0], "Somatic \n Alteration \n Frequency", chrom_max)
+    axes[1] = variant_plotting.plot_fill(prepped_germline_calls.location, prepped_germline_calls.n_events,
+                                         axes[1], "Germline \n Alteration \n Frequency", chrom_max)
+    axes[2] = coverage_plotting.plot(prepped_tumour_coverage.start, prepped_tumour_coverage.coverage,
                                      coverage_ylim_min, coverage_ylim_max,
                                      axes[2], "Tumour \n Coverage", chrom_max)
-    axes[3] = coverage_plotting.plot(prepped_normal_coverage,
+    axes[3] = coverage_plotting.plot(prepped_normal_coverage.start, prepped_normal_coverage.coverage,
                                      coverage_ylim_min, coverage_ylim_max,
                                      axes[3], "Normal \n Coverage", chrom_max)
-    axes[4] = variant_plotting.plot_bar(prepped_breakpoints, axes[4], "Breakpoint \n Frequency", chrom_max)
+
+    axes[4] = variant_plotting.plot_bar(prepped_breakpoints.location, prepped_breakpoints.n_events,
+                                        axes[4], "Breakpoint \n Frequency", chrom_max)
 
 
-    axes[5] = remixt_plotting.plot(prepped_remxit, axes[5], chrom_max)
-    axes[5] = snv_cn.plot_scatter(prepped_vaf, axes[5])
+    axes[5] = remixt_plotting.plot(prepped_remxit.start, prepped_remxit.major_raw,
+                                   prepped_remxit.minor_raw, axes[5], chrom_max)
 
-    axes[6] = titan_plotting.plot(prepped_titan, anno_genes, axes[6], chrom_max)
-    axes[7] = roh_plotting.plot(prepped_roh, axes[7])
+    axes[5] = snv_cn.plot_scatter(prepped_snv_cn.pos,prepped_snv_cn.frac_cn, axes[5])
+
+    axes[6] = titan_plotting.plot(prepped_titan.Position,prepped_titan.LogRatio,
+                                  prepped_titan.color, axes[6], chrom_max, anno_genes=anno_genes)
+
+    axes[7] = roh_plotting.plot(prepped_roh.pos, prepped_roh.state, axes[7], chrom_max)
 
     axes[8] = ideogram_plotting.plot(prepped_ideogram, axes[8])
 
-    axes[14] = snv_cn.plot_hist(prepped_vaf, axes[14])
+    axes[14] = snv_cn.plot_hist(prepped_snv_cn.frac_cn, axes[14])
 
     axes[23] = remixt_plotting.add_remixt_legend(axes[23])
-    axes[15] = titan_plotting.add_titan_legend( axes[15])
+    axes[15] = titan_plotting.add_titan_legend(axes[15])
 
     if not anno_genes.empty:
         axes[24] = gene_annotation_plotting.add_gene_annotation_legend(anno_genes, axes[24])
@@ -106,24 +111,23 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
     :param remixt: remixt data
     """
     pdf = matplotlib.backends.backend_pdf.PdfPages(pdf)
-    remixt = remixt_plotting.read(remixt, remixt_label)
-    titan = titan_plotting.read(titan)
-    roh = roh_plotting.read(roh)
-    germline_calls = variant_plotting.read(germline_calls)
-    tumour_coverage = coverage_plotting.read(tumour_coverage)
 
-    normal_coverage = coverage_plotting.read(normal_coverage)
-    breakpoints = pd.read_csv(breakpoints)[["chromosome_1", "chromosome_2", "position_1", "position_2"]]
-    breakpoints = breakpoints.astype({"chromosome_1": str, "chromosome_2": str})
+    remixt = read_remixt.read(remixt, remixt_label)
 
-    breakpoints = pd.DataFrame({"chr": breakpoints["chromosome_1"].append(breakpoints["chromosome_2"]),
-                                "pos": breakpoints["position_1"].append(breakpoints["position_2"])})
+    titan = read_titan.read(titan)
 
-    somatic_calls = variant_plotting.read_consensus(somatic_calls)
+    roh = read_roh.read(roh)
 
-    vaf_data = snv_cn.parse(somatic_calls, remixt)
-    ideogram = ideogram_plotting.read(ideogram)
-    # get chroms to plot on and make sure all data contains those chroms
+    germline_calls = read_variant_calls.read(germline_calls)
+    somatic_calls = read_variant_calls.read_consensus_csv(somatic_calls)
+
+    tumour_coverage = read_coverage.read(tumour_coverage)
+    normal_coverage = read_coverage.read(normal_coverage)
+
+    breakpoints = read_variant_calls.read_svs(breakpoints)
+
+    snv_copynumber = parse_snv_cn.parse(somatic_calls, remixt)
+    ideogram = read_ideogram.read(ideogram)
 
     # for chrom in map(str, list(range(1,23)) + ["X"]):
     for chrom in chromosomes:
@@ -153,7 +157,7 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
 
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,
-                                  normal_coverage, breakpoints, vaf_data,
+                                  normal_coverage, breakpoints, snv_copynumber,
                                   ideogram, chrom, axes)
 
         fig.suptitle("({}) Sample: {} Chromosome: {}".format("GRCh37", remixt_label, (chrom)))
@@ -163,6 +167,5 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
 
         plt.tight_layout()
         # write out
-        print(pdf)
         pdf.savefig(fig)
     pdf.close()
