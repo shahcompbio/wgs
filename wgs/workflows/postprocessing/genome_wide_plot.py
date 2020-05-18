@@ -134,9 +134,9 @@ def genome_wide_plot(remixt, remixt_label, titan, roh, germline_calls, somatic_c
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
         ref = 250
-        MAX = ideogram[ideogram.chrom == chrom].start.max()
-        perc_off = MAX
-        outer = fig.add_gridspec(1, 4, width_ratios=[MAX/ref, 0.15, 0.15, 1-MAX/ref])
+        max = ideogram[ideogram.chrom == chrom].start.max()
+
+        outer = fig.add_gridspec(1, 4, width_ratios=[max/ref, 0.15, 0.15, 1-max/ref])
         gs1 = gridspec.GridSpecFromSubplotSpec(9,1, height_ratios=[0.5, 0.5, 0.5, 0.5, 0.5, 1, 1, 0.25, 0.25], hspace=0.25,
                                                subplot_spec=outer[0])
         gs2 = gridspec.GridSpecFromSubplotSpec(9, 1, height_ratios=[0.5, 0.5, 0.5, 0.5, 0.5, 1, 1, 0.25, 0.25], hspace=0.25,
