@@ -57,12 +57,13 @@ def call_germlines_only(
         func='wgs.workflows.samtools_germline.create_samtools_germline_workflow',
         axes=('sample_id',),
         args=(
-            mgd.OutputFile("samtools_germlines.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
-                           fnames=samtools_germline_vcf),
+            mgd.TempOutputFile("samtools_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile("roh_calls.csv", 'sample_id',
                            fnames=roh_calls),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
+            paths_refdir['reference'],
+            chromosomes
         ),
         kwargs={
             'single_node': single_node,
@@ -89,6 +90,27 @@ def call_germlines_only(
                 }
     )
 
+    workflow.subworkflow(
+        name="annotate_germline_samtools",
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
+        axes=('sample_id',),
+        args=(
+            mgd.TempInputFile("samtools_germlines.vcf.gz", 'sample_id'),
+            mgd.OutputFile("samtools_germlines_anno.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
+                           fnames=samtools_germline_vcf),
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
+        ),
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
+                }
+    )
+
+
     return workflow
 
 
@@ -100,7 +122,7 @@ def call_variants(
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
         museq_paired_pdf, museq_single_pdf, refdir,
-        single_node=False, strelka_depth_filter=True
+        single_node=False, is_exome=False
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
                             for sampid in samples])
@@ -203,8 +225,7 @@ def call_variants(
         func='wgs.workflows.samtools_germline.create_samtools_germline_workflow',
         axes=('sample_id',),
         args=(
-            mgd.OutputFile("samtools_germlines.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
-                           fnames=samtools_germlines_vcf),
+            mgd.TempOutputFile("samtools_germlines.vcf.gz", 'sample_id'),
             mgd.OutputFile("roh_calls.csv.gz", 'sample_id',
                            fnames=roh_calls),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
@@ -231,7 +252,7 @@ def call_variants(
         ),
         kwargs={
             'single_node': single_node,
-            'use_depth_thresholds': strelka_depth_filter
+            'is_exome': is_exome
         },
 
     )
@@ -275,6 +296,29 @@ def call_variants(
                 'snpeff_docker': config.containers('vcftools'),
                 }
     )
+
+
+    workflow.subworkflow(
+        name="annotate_germline_samtools",
+        func='wgs.workflows.vcf_annotation.create_annotation_workflow',
+        axes=('sample_id',),
+        args=(
+            mgd.TempInputFile("samtools_germlines.vcf.gz", 'sample_id'),
+            mgd.OutputFile("samtools_germlines_ann.vcf.gz", 'sample_id', extensions=['.csi', '.tbi'],
+                           fnames=samtools_germlines_vcf),
+            paths_refdir['snpeff_config'],
+            paths_refdir['mutation_assessor'],
+            paths_refdir['dbsnp'],
+            paths_refdir['thousand_genomes'],
+            paths_refdir['cosmic'],
+            paths_refdir['blacklist']
+        ),
+        kwargs={'vcftools_docker': config.containers('vcftools'),
+                'snpeff_docker': config.containers('vcftools'),
+                }
+    )
+
+
 
     workflow.subworkflow(
         name="annotate_strelka",
@@ -442,7 +486,7 @@ def variant_calling_workflow(args):
             ),
             kwargs={
                 'single_node': args['single_node'],
-                'strelka_depth_filter': not args['remove_strelka_depth_filter'],
+                'is_exome': args['is_exome'],
             }
         )
 

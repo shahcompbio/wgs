@@ -70,7 +70,7 @@ def parse_args():
     variant_calling.set_defaults(which='variant_calling')
     variant_calling = add_global_args(variant_calling)
     variant_calling.add_argument(
-        "--remove_strelka_depth_filter",
+        "--is_exome",
         default=False,
         action='store_true',
         help='''strelka filter'''
@@ -100,6 +100,12 @@ def parse_args():
         default=False,
         action='store_true',
         help='''hmmcopy'''
+    )
+    cna_calling.add_argument(
+        "--remixt",
+        default=False,
+        action='store_true',
+        help='''remixt'''
     )
 
 

@@ -6,6 +6,7 @@ import pypeliner.managed as mgd
 from wgs.config import config
 from wgs.utils import helpers
 from wgs.workflows import hmmcopy
+from wgs.workflows import remixt
 from wgs.workflows import titan
 
 
@@ -14,10 +15,12 @@ def copynumber_calling_workflow(args):
 
     run_hmmcopy = args['hmmcopy']
     run_titan = args['titan']
+    run_remixt = args['remixt']
 
-    if not run_hmmcopy and not run_titan:
+    if not run_hmmcopy and not run_titan and not run_remixt:
         run_hmmcopy = True
         run_titan = True
+        run_remixt = True
 
     inputs = helpers.load_yaml(args['input_yaml'])
 
@@ -28,6 +31,7 @@ def copynumber_calling_workflow(args):
     tumours = helpers.get_values_from_input(inputs, 'tumour')
     normals = helpers.get_values_from_input(inputs, 'normal')
     targets = helpers.get_values_from_input(inputs, 'target_list')
+    breakpoints = helpers.get_values_from_input(inputs, 'breakpoints')
     samples = list(tumours.keys())
 
     cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
@@ -57,6 +61,16 @@ def copynumber_calling_workflow(args):
     tumour_correction_table = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_correctreads_with_state.txt')
     tumour_pygenes = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
+    remixt_outdir = os.path.join(args['out_dir'], 'remixt', '{sample_id}')
+    remixt_outfile = os.path.join(remixt_outdir, '{sample_id}_remixt.h5')
+
+    remixt_brk_cn_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_brk_cn.csv.gz')
+    remixt_cn_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_cn.csv.gz')
+    remixt_minor_modes_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_minor_modes.csv.gz')
+    remixt_mix_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_mix.csv.gz')
+    remixt_read_depth_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_read_depth.csv.gz')
+    remixt_stats_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_stats.csv.gz')
+
     refdir_paths = config.refdir_data(args['refdir'])['paths']
     chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
@@ -67,6 +81,31 @@ def copynumber_calling_workflow(args):
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
+
+    if run_remixt:
+        workflow.subworkflow(
+            name='remixt',
+            func=remixt.create_remixt_workflow,
+            axes=('sample_id',),
+            args=(
+                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
+                              extensions=['.bai']),
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
+                              extensions=['.bai']),
+                mgd.InputFile("breakpoints", 'sample_id', fnames=breakpoints),
+                mgd.InputInstance('sample_id'),
+                mgd.OutputFile('remixt.h5', 'sample_id', template=remixt_outfile),
+                mgd.OutputFile('remixt_brk_cn.csv', 'sample_id', template=remixt_brk_cn_csv),
+                mgd.OutputFile('remixt_cn.csv', 'sample_id', template=remixt_cn_csv),
+                mgd.OutputFile('remixt_minor_modes.csv', 'sample_id', template=remixt_minor_modes_csv),
+                mgd.OutputFile('remixt_mix.csv', 'sample_id', template=remixt_mix_csv),
+                mgd.OutputFile('remixt_read_depth.csv', 'sample_id', template=remixt_read_depth_csv),
+                mgd.OutputFile('remixt_stats.csv', 'sample_id', template=remixt_stats_csv),
+                refdir_paths['refdata_remixt'],
+                refdir_paths['reference'],
+            ),
+            kwargs={'single_node': args['single_node']}
+        )
 
     if run_titan:
         workflow.subworkflow(

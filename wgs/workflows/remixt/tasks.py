@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.utils import csvutils
+from wgs.utils import helpers
 
 breakpoint_columns = [
     'prediction_id',
@@ -68,3 +70,19 @@ def run_remixt_local(
     )
 
     pyp.run(workflow)
+
+
+def parse_remixt_file(input, outputs, tables, tempdir):
+    helpers.makedirs(tempdir)
+
+    with pd.HDFStore(input) as data_store:
+        for output, table in zip(outputs, tables):
+            tempout = os.path.join(tempdir, '{}.csv'.format(table.replace('/', '_')))
+
+            df = data_store[table]
+
+            if isinstance(df, pd.Series):
+                df = pd.DataFrame({table: df})
+
+            df.to_csv(tempout, index=False)
+            csvutils.finalize_csv(tempout, output, sep=',')

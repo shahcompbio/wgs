@@ -54,14 +54,14 @@ def run_samtools_germline_one_job(
     for i, interval in enumerate(intervals):
         ival_temp_dir = os.path.join(tempdir, str(i))
         helpers.makedirs(ival_temp_dir)
-        output = os.path.join(ival_temp_dir, 'germline.vcf')
+        output = os.path.join(ival_temp_dir, 'germline.vcf.gz')
         cmd = samtools_germline_command(output, reference, interval, bam_file)
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
     helpers.run_in_gnu_parallel(commands, parallel_temp_dir, samtools_docker_image)
 
-    vcf_files = [os.path.join(tempdir, str(i), 'germline.vcf') for i in range(len(intervals))]
+    vcf_files = [os.path.join(tempdir, str(i), 'germline.vcf.gz') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'germline_merge')
     helpers.makedirs(merge_tempdir)
     merge_vcfs(vcf_files, vcf, merge_tempdir, docker_image=vcftools_docker_image)

@@ -1,7 +1,8 @@
 import os
 
-import wgs
 import yaml
+
+import wgs
 
 
 def default_params(mode='all'):
@@ -112,6 +113,9 @@ def default_params(mode='all'):
             'genes': None,
             'types': None,
         },
+        'remixt': {
+            'min_num_reads': 5
+        }
     }
 
     alignment = {
@@ -132,7 +136,7 @@ def default_params(mode='all'):
         'alignment': alignment
     }
 
-    if not mode=='all':
+    if not mode == 'all':
         return config[mode]
 
     return config
@@ -140,7 +144,6 @@ def default_params(mode='all'):
 
 def refdir_data(refdir):
     yamlpath = os.path.join(refdir, 'metadata.yaml')
-
     with open(yamlpath) as yamlfile:
         yamldata = yaml.safe_load(yamlfile)
 
@@ -160,7 +163,7 @@ def containers(container_name):
         'samtools': 'samtools:v0.0.2',
         'picard': 'picard:v0.0.1',
         'wgs': 'wgs:v{}'.format(version),
-        'strelka': 'strelka:v0.0.1',
+        'strelka': 'strelka:v0.0.2',
         'mutationseq': 'mutationseq:v0.0.1',
         'vcftools': 'vcftools:v0.0.1',
         'snpeff': 'vcftools:v0.0.1',
@@ -171,6 +174,7 @@ def containers(container_name):
         'hmmcopy': 'hmmcopy:v0.0.1',
         'circos': 'circos:v0.0.1',
         'igvtools': 'igvtools:v0.0.1',
+        'remixt': 'remixt:v0.0.2'
     }
 
     return docker_images[container_name]

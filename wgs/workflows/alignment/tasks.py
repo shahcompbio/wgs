@@ -2,9 +2,9 @@ import logging
 import os
 import shutil
 
-from wgs.workflows.alignment.collect_metrics import CollectMetrics
 import pypeliner
 from wgs.utils import helpers
+from wgs.workflows.alignment.collect_metrics import CollectMetrics
 
 
 def produce_fastqc_report(fastq_filename, output_html, output_plots, temp_dir,
@@ -70,7 +70,32 @@ def index(bamfile, indexfile, docker_image=None):
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None):
+def cleanup_header(current_header, fixed_header):
+    current_header = open(current_header, 'rt').readlines()
+
+    fixed_data = []
+    written = set()
+
+    for line in current_header:
+        line = line.strip()
+        if '@RG' in line or '@HD' in line or '@SQ' in line:
+            fixed_data.append(line)
+        elif line.startswith('@PG'):
+            assert 'CL' in line
+            caller = line[line.index('CL:'):]
+            caller = tuple(caller.split()[:2])
+            if caller not in written:
+                fixed_data.append(line)
+                written.add(caller)
+        else:
+            raise Exception(line)
+
+    with open(fixed_header, 'wt') as outwriter:
+        for line in fixed_data:
+            outwriter.write(line)
+
+
+def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None, reheader=False):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
@@ -87,6 +112,19 @@ def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samt
     pypeliner.commandline.execute(*cmd, docker_image=picard_docker)
 
     index(output, output + '.bai', docker_image=samtools_docker)
+
+    if reheader:
+        header_sam = os.path.join(tempdir, 'header.sam')
+        cmd = ['samtools', 'view', '-H', output, '>', header_sam]
+        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
+
+        header_fixed = os.path.join(tempdir, 'fixed_header.sam')
+        cleanup_header(header_sam, header_fixed)
+
+        cmd = ['samtools', 'reheader', header_fixed, output]
+
+        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
+
 
 
 def picard_merge_bams(inputs, output, mem="2G", **kwargs):
@@ -168,7 +206,7 @@ def get_readgroup(sample_info, sample_id, lane_id):
         raise Exception('sample and lane ids are required')
 
     id_str = sample_info.pop('ID') if sample_info else 'ID:{0}_{1}'
-    read_group = ['@RG', 'ID:'+id_str.format(sample_id = sample_id, lane_id=lane_id)]
+    read_group = ['@RG', 'ID:' + id_str.format(sample_id=sample_id, lane_id=lane_id)]
 
     if sample_info:
         for key, value in sorted(sample_info.items()):
@@ -192,7 +230,6 @@ def align_bwa_mem(
         read_1, read_2, ref_genome, aligned_bam, threads, sample_info,
         sample_id=None, lane_id=None, docker_image=None
 ):
-
     if lane_id in sample_info:
         sample_info = sample_info[lane_id]
 
@@ -326,7 +363,6 @@ def bam_collect_all_metrics(
 
 
 def get_igvtools_count(input_bam, counts_file, reference, docker_image=None):
-
     counts_file_no_tmp = counts_file[:-4]
 
     cmd = ['igvtools', 'count', input_bam, counts_file_no_tmp, reference]
