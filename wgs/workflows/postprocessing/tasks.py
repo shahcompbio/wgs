@@ -5,11 +5,8 @@ import pandas as pd
 import pypeliner
 import pysam
 
-from .scripts import genome_wide_plot
-from .scripts import titan_plotting
-from .scripts import remixt_plotting
-from .scripts import gene_annotation_plotting
-from .scripts import coverage_plotting
+import genome_wide_plot
+from wgs_qc_utils.plotter import titan_plotting, remixt_plotting, gene_annotation_plotting
 from wgs.utils import helpers
 
 
