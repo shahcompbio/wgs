@@ -17,6 +17,7 @@ def create_annotation_workflow(
         thousand_genomes,
         cosmic,
         mappability,
+        chromosomes,
         vcftools_docker=None,
         snpeff_docker=None
 ):
@@ -31,19 +32,38 @@ def create_annotation_workflow(
 
     workflow = pypeliner.workflow.Workflow()
 
+    workflow.setobj(
+        obj=mgd.OutputChunks('chrom'),
+        value=chromosomes,
+    )
+
+    workflow.transform(
+        name='split_vcf_by_chrom',
+        ctx=helpers.get_default_ctx(
+            memory=15,
+            walltime='8:00', ),
+        func='wgs.workflows.vcf_annotation.tasks.split_by_chrom',
+        axes=('chrom',),
+        args=(
+            mgd.InputFile(input_vcf),
+            mgd.TempOutputFile('split_chrom.vcf', 'chrom'),
+            mgd.InputInstance('chrom')
+        ),
+    )
+
     workflow.transform(
         name='run_snpeff',
         ctx=helpers.get_default_ctx(
             memory=15,
             walltime='8:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_snpeff',
+        axes=('chrom',),
         args=(
-            mgd.InputFile(input_vcf),
-            mgd.TempOutputFile('annotSnpEff.vcf'),
+            mgd.TempInputFile('split_chrom.vcf', 'chrom'),
+            mgd.TempOutputFile('annotSnpEff.vcf', 'chrom'),
             databases,
         ),
         kwargs={'docker_image': snpeff_docker}
-
     )
 
     workflow.transform(
@@ -51,11 +71,13 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=10,
             walltime='8:00', ),
+        axes=('chrom',),
         func='wgs.workflows.vcf_annotation.tasks.run_mutation_assessor',
         args=(
-            mgd.TempInputFile('annotSnpEff.vcf'),
-            mgd.TempOutputFile('annotMA.vcf'),
+            mgd.TempInputFile('annotSnpEff.vcf', 'chrom'),
+            mgd.TempOutputFile('annotMA.vcf', 'chrom'),
             databases,
+            mgd.InputInstance('chrom')
         ),
     )
 
@@ -64,11 +86,13 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=15,
             walltime='8:00', ),
+        axes=('chrom',),
         func='wgs.workflows.vcf_annotation.tasks.run_DBSNP',
         args=(
-            mgd.TempInputFile('annotMA.vcf'),
-            mgd.TempOutputFile('flagDBsnp.vcf'),
+            mgd.TempInputFile('annotMA.vcf', 'chrom'),
+            mgd.TempOutputFile('flagDBsnp.vcf', 'chrom'),
             databases,
+            mgd.InputInstance('chrom'),
         ),
     )
 
@@ -77,11 +101,13 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=15,
             walltime='8:00', ),
+        axes=('chrom',),
         func='wgs.workflows.vcf_annotation.tasks.run_1000gen',
         args=(
-            mgd.TempInputFile('flagDBsnp.vcf'),
-            mgd.TempOutputFile('flag1000gen.vcf'),
+            mgd.TempInputFile('flagDBsnp.vcf', 'chrom'),
+            mgd.TempOutputFile('flag1000gen.vcf', 'chrom'),
             databases,
+            mgd.InputInstance('chrom'),
         ),
     )
 
@@ -90,11 +116,13 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=15,
             walltime='8:00', ),
+        axes=('chrom',),
         func='wgs.workflows.vcf_annotation.tasks.run_cosmic',
         args=(
-            mgd.TempInputFile('flag1000gen.vcf'),
-            mgd.TempOutputFile('cosmic.vcf'),
+            mgd.TempInputFile('flag1000gen.vcf', 'chrom'),
+            mgd.TempOutputFile('cosmic.vcf', 'chrom'),
             databases,
+            mgd.InputInstance('chrom'),
         ),
     )
 
@@ -104,12 +132,26 @@ def create_annotation_workflow(
         ctx=helpers.get_default_ctx(
             memory=15,
             walltime='8:00', ),
+        axes=('chrom',),
         args=(
-            mgd.TempInputFile('cosmic.vcf'),
-            mgd.TempOutputFile('low_mapp.vcf'),
-            databases['mappability_ref']
+            mgd.TempInputFile('cosmic.vcf', 'chrom'),
+            mgd.TempOutputFile('low_mapp.vcf', 'chrom'),
+            databases['mappability_ref'],
+            mgd.InputInstance('chrom')
         ),
     ),
+
+    workflow.transform(
+        name='merge_chroms',
+        ctx=helpers.get_default_ctx(
+            memory=10,
+            walltime='8:00', ),
+        func='wgs.utils.vcfutils.concatenate_vcf',
+        args=(
+            mgd.TempInputFile('low_mapp.vcf', 'chrom'),
+            mgd.TempOutputFile('low_mapp.vcf'),
+        )
+    )
 
     workflow.transform(
         name='finalize',

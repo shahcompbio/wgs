@@ -55,7 +55,7 @@ def generate_low_mappability_annotation(low_mappability_indexes, size):
     return [True if i in low_mappability_indexes else False for i in range(size)]
 
 
-def load_vcf_file(vcf_file):
+def load_vcf_file(vcf_file, chrom):
     vcf_data = []
     with helpers.GetFileHandle(vcf_file) as vcf_file:
         for line in vcf_file:
@@ -63,6 +63,9 @@ def load_vcf_file(vcf_file):
                 continue
 
             line = line.strip().split()
+
+            if not line[0] == chrom:
+                raise Exception('file should only contain {} chromosome'.format(chrom))
 
             vcf_data.append(line)
 
@@ -127,8 +130,9 @@ def annotate_vcf_data(vcf_data, blacklist):
     return annotated_data
 
 
-def main(infile, outfile, mappability_blacklist):
+def main(infile, outfile, mappability_blacklist, chrom):
     blacklist = load_blacklist(mappability_blacklist)
+    blacklist = blacklist[blacklist['chromosome'] == chrom]
 
     vcf_header = get_vcf_header(infile)
     vcf_header = update_vcf_header(vcf_header, mappability_blacklist)
@@ -136,7 +140,7 @@ def main(infile, outfile, mappability_blacklist):
     with helpers.GetFileHandle(outfile, 'wt') as vcf_writer:
         write_to_file(vcf_writer, vcf_header)
 
-        for vcf_data in load_vcf_file(infile):
+        for vcf_data in load_vcf_file(infile,chrom):
             annotated_vcf_data = annotate_vcf_data(vcf_data, blacklist)
 
             write_to_file(vcf_writer, annotated_vcf_data)

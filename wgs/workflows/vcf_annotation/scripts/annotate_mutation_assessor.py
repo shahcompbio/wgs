@@ -98,13 +98,10 @@ def annot_insert(l, a):
     return '\t'.join(l)
 
 
-def write_annot_data(infile, out):
+def write_annot_data(infile, out, chrom):
     ''' write the annotated data to out '''
 
-    ma_table = None
-    chr_seen = []
-    chr_no_table = []
-    chr_table = None
+    ma_table = load_table(chrom)
 
     with open(infile, 'r') as vcf:
         for line in vcf:
@@ -112,33 +109,15 @@ def write_annot_data(infile, out):
                 continue
 
             line = line.rstrip().split('\t')
-            chr_current = line[0]
+            call_chrom = line[0]
 
-            if chr_current in chr_no_table:
-                continue
-
-            if chr_table is None or chr_current != chr_table:
-                if chr_current in chr_seen:
-                    warnings.warn('detected unsorted bam file, annotation could be very slow')
-                    print(chr_current)
-                    print(chr_table)
-                    print(chr_seen)
-
-                try:
-                    ma_table = load_table(chr_current)
-                except IOError:
-                    print ('no matching table found for {}'.format(chr_current))
-                    chr_no_table.append(chr_current)
-                    out.write('\t'.join(line) + '\n')
-                    continue
-
-                chr_table = chr_current
-                chr_seen.append(chr_current)
+            if not call_chrom == chrom:
+                raise Exception('file should only contain {} chromosome'.format(chrom))
 
             pos = line[1]
             ref = line[3]
             alt = line[4]
-            key = '_'.join([chr_current, pos, ref, alt])
+            key = '_'.join([chrom, pos, ref, alt])
             annot = annot_lookup(key, ma_table)
             line = annot_insert(line, annot) + '\n'
 
@@ -150,7 +129,7 @@ def _main():
 
     with open(args.output, 'w') as out:
         write_hdr(args.vcf, out)
-        write_annot_data(args.vcf, out)
+        write_annot_data(args.vcf, out, args.chrom)
 
 
 if __name__ == '__main__':
@@ -165,6 +144,9 @@ if __name__ == '__main__':
                         required=True,
                         help='output vcf file')
     parser.add_argument('--db',
+                        required=True,
+                        help='mutation assessor db directory')
+    parser.add_argument('--chrom',
                         required=True,
                         help='mutation assessor db directory')
 

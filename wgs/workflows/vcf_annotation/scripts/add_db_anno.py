@@ -25,15 +25,19 @@ def resolve_db_position(input_type, pos):
     return pos
 
 
-def load_chromosome(db, chromosome, input_type, flag_with_id):
+def load_chromosome(db, chromosome, input_type, flag_with_id, type_annotation):
     db_dict = defaultdict(list)
 
     f = pysam.Tabixfile(db)
     try:
         fetchdata = f.fetch(chromosome)
-    except:
-        warnings.warn("warning")
-        return db_dict
+    except ValueError:
+        if type_annotation == 'Cosmic' and chromosome in ['X', 'Y']:
+            warnings.warn("warning")
+            return db_dict
+        else:
+            raise
+
     for line in fetchdata:
 
         chrom, pos = line.split('\t')[0:2]
@@ -160,10 +164,10 @@ def add_db_annotation(
                 chrom = chrom.replace('chr', '')
 
                 if chromosome and chrom != chromosome:
-                    continue
+                    raise Exception('file should only contain {} chromosome'.format(chromosome))
 
                 if not db_dict or not db_dict[0] == chrom:
-                    db_dict = (chrom, load_chromosome(database, chromosome, input_type, flag_with_id))
+                    db_dict = (chrom, load_chromosome(database, chromosome, input_type, flag_with_id, label))
 
                 info = line[7]
 
@@ -238,5 +242,5 @@ if __name__ == '__main__':
     args = parse_args()
     add_db_annotation(
         args['db'], args['infile'], args['chrom'], args['out'],
-        args['label'], args['flag_with_id'], args['input_type']
+        args['label'], args['flag_with_id'], args['input_type'],
     )
