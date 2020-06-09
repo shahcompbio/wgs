@@ -83,7 +83,8 @@ def call_germlines_only(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -103,7 +104,8 @@ def call_germlines_only(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -270,7 +272,8 @@ def call_variants(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -290,7 +293,8 @@ def call_variants(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -311,7 +315,8 @@ def call_variants(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -333,7 +338,8 @@ def call_variants(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
@@ -353,7 +359,8 @@ def call_variants(
             paths_refdir['dbsnp'],
             paths_refdir['thousand_genomes'],
             paths_refdir['cosmic'],
-            paths_refdir['blacklist']
+            paths_refdir['blacklist'],
+            chromosomes
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
