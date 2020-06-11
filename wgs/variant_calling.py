@@ -364,6 +364,7 @@ def call_variants(
         ),
         kwargs={'vcftools_docker': config.containers('vcftools'),
                 'snpeff_docker': config.containers('vcftools'),
+                'input_type': 'indel',
                 }
     )
 

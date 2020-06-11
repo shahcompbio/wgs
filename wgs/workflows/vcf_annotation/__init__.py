@@ -19,7 +19,8 @@ def create_annotation_workflow(
         mappability,
         chromosomes,
         vcftools_docker=None,
-        snpeff_docker=None
+        snpeff_docker=None,
+        input_type='snv',
 ):
     databases = {
         'snpeff_params': {'snpeff_config': snpeff, },
@@ -94,6 +95,7 @@ def create_annotation_workflow(
             databases,
             mgd.InputInstance('chrom'),
         ),
+        kwargs={'input_type': input_type},
     )
 
     workflow.transform(
@@ -109,6 +111,7 @@ def create_annotation_workflow(
             databases,
             mgd.InputInstance('chrom'),
         ),
+        kwargs={'input_type': input_type},
     )
 
     workflow.transform(
@@ -124,6 +127,7 @@ def create_annotation_workflow(
             databases,
             mgd.InputInstance('chrom'),
         ),
+        kwargs={'input_type': input_type},
     )
 
     workflow.transform(

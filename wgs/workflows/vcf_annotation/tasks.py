@@ -55,7 +55,7 @@ def run_mutation_assessor(infile, output, config, chrom):
     pypeliner.commandline.execute(*cmd)
 
 
-def run_DBSNP(infile, output, config, chrom):
+def run_DBSNP(infile, output, config, chrom, input_type='snv'):
     """
     Run DBSNP script on the input VCF file
 
@@ -66,13 +66,13 @@ def run_DBSNP(infile, output, config, chrom):
     db = config['dbsnp_params']['db']
     cmd = [
         'python', script, '--infile', infile, '--db', db,
-        '--label', 'DBSNP', '--input_type', 'snv', '--flag_with_id',
+        '--label', 'DBSNP', '--input_type', input_type, '--flag_with_id',
         '--out', output, '--chrom', chrom]
 
     pypeliner.commandline.execute(*cmd)
 
 
-def run_1000gen(infile, output, config, chrom):
+def run_1000gen(infile, output, config, chrom, input_type='snv'):
     """
     Run 1000Gen script on the input VCF file
 
@@ -83,13 +83,13 @@ def run_1000gen(infile, output, config, chrom):
     db = config['thousandgen_params']['db']
     cmd = [
         'python', script, '--infile', infile, '--db', db,
-        '--label', '1000Gen', '--input_type', 'snv',
+        '--label', '1000Gen', '--input_type', input_type,
         '--out', output, '--chrom', chrom]
 
     pypeliner.commandline.execute(*cmd)
 
 
-def run_cosmic(infile, output, config, chrom):
+def run_cosmic(infile, output, config, chrom, input_type='snv'):
     """
     Run Cosmic script on the input VCF file
 
@@ -100,7 +100,7 @@ def run_cosmic(infile, output, config, chrom):
     db = config['cosmic_params']['db']
     cmd = [
         'python', script, '--infile', infile, '--db', db,
-        '--label', 'Cosmic', '--input_type', 'snv', '--flag_with_id',
+        '--label', 'Cosmic', '--input_type', input_type, '--flag_with_id',
         '--out', output, '--chrom', chrom]
 
     pypeliner.commandline.execute(*cmd)
