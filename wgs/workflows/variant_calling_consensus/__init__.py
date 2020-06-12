@@ -189,7 +189,7 @@ def create_consensus_workflow(
              mgd.TempInputFile('museq_ids.csv', extensions=['.yaml'])],
             mgd.OutputFile(somatic_ids, extensions=['.yaml']),
         ),
-        kwargs={'on': ['chrom', 'pos']}
+        kwargs={'on': ['chrom', 'pos', 'value', 'type']}
     )
 
     return workflow
