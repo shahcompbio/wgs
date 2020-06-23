@@ -116,15 +116,6 @@ def parse_args():
     )
 
 
-
-    # ================
-    # postprocessing
-    # ================
-    postprocessing = subparsers.add_parser("postprocessing")
-    postprocessing.set_defaults(which='postprocessing')
-    postprocessing = add_global_args(postprocessing)
-
-
     # ======================================
     # generates pipeline and batch configs
     # ======================================
