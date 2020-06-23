@@ -1,48 +1,49 @@
-class TransformVcfCounts(object):
-    def __init__(self, infile, outfile, positions):
-        self.infile = infile
-        self.outfile = outfile
-        self.positions = positions
+import vcf
 
-    def read_ref_positions(self):
-        if not self.positions:
-            return
 
-        ref_pos = set()
-        freader = open(self.positions)
-        for line in freader:
-            line = line.strip().split(':')
+def read_ref_positions(positions):
+    ref_pos = set()
+    freader = open(positions)
+    for line in freader:
+        line = line.strip().split(':')
 
-            ref_pos.add(tuple(line))
+        chrom = line[0]
+        pos = int(line[1])
 
-        return ref_pos
+        ref_pos.add((chrom, pos))
 
-    def main(self):
-        ref_pos = self.read_ref_positions()
-        with open(self.infile) as inputdata:
-            with open(self.outfile, 'w') as outputdata:
+    return ref_pos
 
-                outputdata.write('chr\tposition\tref\trefCount\tNref\tNrefCount\n')
 
-                for line in inputdata:
-                    if line.startswith("##"):
-                        continue
-                    if line.startswith("#"):
-                        line = line.strip().split()
-                        assert line[-1] == 'NORMAL', 'invalid vcf format'
-                        assert line[-2] == 'TUMOUR', 'invalid vcf format'
-                        continue
-                    line = line.strip().split()
-                    chrom = line[0]
-                    pos = line[1]
-                    ref = line[3]
-                    assert line[8] == "RC:AC:NI:ND:DP:GT:PL", 'invalid vcf format'
-                    tum_info = line[9].split(':')
-                    tr = tum_info[0]
-                    ta = tum_info[1]
+def get_reader(filename):
+    return vcf.Reader(filename=filename)
 
-                    if ref_pos and (chrom, pos) not in ref_pos:
-                        continue
 
-                    outstr = '\t'.join([chrom, pos, ref, tr, 'X', ta]) + '\n'
-                    outputdata.write(outstr)
+def vcf_to_counts(filename, outfile, ref_positions):
+    vcf_reader = get_reader(filename)
+
+    ref_positions = read_ref_positions(ref_positions)
+
+    tumor_sample = vcf_reader.metadata['tumor_sample'][0]
+
+    with open(outfile, 'wt') as writer:
+
+        for record in vcf_reader:
+            chrom = record.CHROM
+            pos = record.POS
+            ref = record.REF
+
+            if (chrom, pos) not in ref_positions:
+                continue
+
+            tumor = [v for v in record.samples if v.sample == tumor_sample]
+            assert len(tumor) == 1
+            tumor = tumor[0]
+
+            tumor_ref = str(tumor['RC'])
+            tumor_alt = str(tumor['AC'])
+            pos = str(pos)
+
+            outstr = '\t'.join([chrom, pos, ref, tumor_ref, 'X', tumor_alt]) + '\n'
+
+            writer.write(outstr)
