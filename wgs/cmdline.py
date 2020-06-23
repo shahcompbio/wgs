@@ -66,15 +66,22 @@ def parse_args():
     # ================
     # variant calling
     # ================
-    variant_calling = subparsers.add_parser("variant_calling")
-    variant_calling.set_defaults(which='variant_calling')
-    variant_calling = add_global_args(variant_calling)
-    variant_calling.add_argument(
+    somatic_calling = subparsers.add_parser("somatic_calling")
+    somatic_calling.set_defaults(which='somatic_calling')
+    somatic_calling = add_global_args(somatic_calling)
+    somatic_calling.add_argument(
         "--is_exome",
         default=False,
         action='store_true',
         help='''strelka filter'''
     )
+
+    # ================
+    # germline calling
+    # ================
+    germline_calling = subparsers.add_parser("germline_calling")
+    germline_calling.set_defaults(which='germline_calling')
+    add_global_args(germline_calling)
 
     # ================
     # breakpoints calling

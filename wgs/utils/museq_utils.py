@@ -1,12 +1,45 @@
+import gzip
 import os
 
 import pypeliner
+import pysam
 from wgs.utils import helpers
 from wgs.utils import vcfutils
 
 
+def get_sample_id(bamfile):
+    bam = pysam.AlignmentFile(bamfile)
+    readgroups = bam.header['RG']
+
+    samples = set()
+
+    for readgroup in readgroups:
+        samples.add(readgroup['SM'])
+
+    assert len(samples) == 1
+
+    return list(samples)[0]
+
+
+def update_header_sample_ids(infile, outfile, tumour_id, normal_id):
+    in_opener = gzip.open if '.gz' in infile else open
+    out_opener = gzip.open if '.gz' in outfile else open
+
+    with in_opener(infile) as indata:
+        with out_opener(outfile, 'wt') as outdata:
+            for line in indata:
+                if line.startswith('#CHROM'):
+                    if tumour_id:
+                        outdata.write('##tumor_sample={}\n'.format(tumour_id))
+                        line = line.replace('TUMOUR', tumour_id)
+                    if normal_id:
+                        outdata.write('##normal_sample={}\n'.format(normal_id))
+                        line = line.replace('NORMAL', normal_id)
+                outdata.write(line)
+
+
 def run_museq(
-        out, log, reference, interval, museq_params,
+        out, log, reference, interval, museq_params, tempdir,
         tumour_bam=None, normal_bam=None, return_cmd=False,
         titan_mode=False, docker_image=False
 ):
@@ -19,6 +52,9 @@ def run_museq(
     :param log: path to the log file
     :param config: path to the config YAML file
     '''
+
+    helpers.makedirs(tempdir)
+    tempout = os.path.join(tempdir, 'museq_output.vcf')
 
     if titan_mode:
         cmd = ['museq_het']
@@ -40,7 +76,7 @@ def run_museq(
     else:
         raise Exception()
 
-    cmd.extend(['reference:' + reference, '--out', out,
+    cmd.extend(['reference:' + reference, '--out', tempout,
                 '--log', log, '--interval', interval, '-v'])
 
     if not tumour_bam or not normal_bam:
@@ -61,6 +97,11 @@ def run_museq(
         return cmd
     else:
         pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    tumour_id = get_sample_id(tumour_bam) if tumour_bam else None
+    normal_id = get_sample_id(normal_bam) if normal_bam else None
+
+    update_header_sample_ids(tempout, out, tumour_id, normal_id)
 
 
 def run_museq_one_job(
@@ -86,7 +127,7 @@ def run_museq_one_job(
         log = os.path.join(ival_temp_dir, 'museq.log')
 
         command = run_museq(
-            output, log, reference, interval, museq_params,
+            output, log, reference, interval, museq_params, ival_temp_dir,
             tumour_bam=tumour_bam, normal_bam=normal_bam,
             return_cmd=True, titan_mode=titan_mode
         )
@@ -99,7 +140,13 @@ def run_museq_one_job(
     vcf_files = [os.path.join(tempdir, str(i), 'museq.vcf') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'museq_merge')
     helpers.makedirs(merge_tempdir)
-    merge_vcfs(vcf_files, museq_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    temp_museq_vcf = os.path.join(merge_tempdir, 'temp_museq_merge.vcf')
+    merge_vcfs(vcf_files, temp_museq_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+
+    tumour_id = get_sample_id(tumour_bam)
+    normal_id = get_sample_id(normal_bam)
+    update_header_sample_ids(temp_museq_vcf, museq_vcf, tumour_id, normal_id)
+
 
 
 def merge_vcfs(inputs, outfile, tempdir, docker_image=None):

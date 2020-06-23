@@ -71,3 +71,15 @@ def sort_vcf(infile, outfile, docker_image=None):
     cmd = ['cat', infile, '|', 'vcf-sort', '>', outfile]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+def update_germline_header_sample_ids(infile, outfile, sample_id):
+    with helpers.GetFileHandle(infile) as indata:
+        with helpers.GetFileHandle(outfile, 'wt') as outdata:
+            for line in indata:
+                if line.startswith('#CHROM'):
+                    outdata.write('##normal_sample={}\n'.format(sample_id))
+                    line = line.replace('NORMA', sample_id)
+                    outdata.write(line)
+                else:
+                    outdata.write(line)
