@@ -5,12 +5,27 @@ from wgs.utils import helpers
 import os
 
 def get_coverage_data(input_bam, output, refdir, single_node=False):
-    refdir_paths = config.refdir_data(refdir)['paths']
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
+    bins = config.refdir_data(refdir)['params']['bins']
+
+    reference = config.refdir_data(refdir)['paths']['reference']
 
     workflow = pypeliner.workflow.Workflow()
 
     if single_node:
+        workflow.transform(
+            name='generate_coverage_bed',
+            func='wgs.workflows.postprocessing.tasks.generate_coverage_bed',
+            ctx=helpers.get_default_ctx(
+                memory=5
+            ),
+            args=(
+                reference,
+                mgd.TempOutputFile('coverage_bed.bed'),
+                chromosomes,
+                bins,
+            )
+        )
         workflow.transform(
             name='samtools_coverage',
             func='wgs.workflows.postprocessing.tasks.samtools_coverage',
@@ -19,19 +34,33 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
             ),
             args=(
                 mgd.InputFile(input_bam),
+                mgd.TempInputFile('coverage_bed.bed'),
                 mgd.TempOutputFile('per_interval.txt', 'chromosome'),
-                chromosomes,
-                refdir_paths['reference'],
+
             ),
-            kwargs={'bins_per_chrom': 2000},
+            kwargs={'docker_image': config.containers('samtools')},
         )
 
     else:
+
         workflow.setobj(
             obj=mgd.OutputChunks('chromosome'),
             value=chromosomes
         )
-
+        workflow.transform(
+            name='generate_coverage_bed',
+            func='wgs.workflows.postprocessing.tasks.generate_coverage_bed',
+            ctx=helpers.get_default_ctx(
+                memory=5
+            ),
+            axes=('chromosome',),
+            args=(
+                reference,
+                mgd.TempOutputFile('coverage_bed.bed', 'chromosome'),
+                mgd.InputInstance('chromosome'),
+                bins,
+            )
+        )
         workflow.transform(
             name='samtools_coverage',
             func='wgs.workflows.postprocessing.tasks.samtools_coverage',
@@ -41,11 +70,11 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
             axes=('chromosome',),
             args=(
                 mgd.InputFile(input_bam),
+                mgd.TempInputFile('coverage_bed.bed', 'chromosome'),
                 mgd.TempOutputFile('per_interval.txt', 'chromosome'),
-                mgd.InputInstance('chromosome'),
-                refdir_paths['reference'],
+
             ),
-            kwargs={'bins_per_chrom': 2000},
+            kwargs={'docker_image': config.containers('samtools')}
         )
         workflow.transform(
             name='merge_data',
@@ -55,7 +84,7 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
             ),
             args=(
                 mgd.TempInputFile('per_interval.txt', 'chromosome', axes_origin=[]),
-                mgd.OutputFile(output)
+                mgd.OutputFile(output),
             )
         )
 
@@ -65,26 +94,32 @@ def get_coverage_data(input_bam, output, refdir, single_node=False):
 def create_postprocessing_workflow(
         normal_bam,
         tumour_bam,
-        variant_dir,
-        copynumber_dir,
-        breakpoint_dir,
-        circos_plot,
+        titan,
+        remixt,
+        breakpoints_consensus,
+        roh,
+        germline_calls,
+        somatic_calls,
+        circos_plot_remixt,
+        circos_plot_titan,
         genome_wide_plot,
         refdir,
         sample_id,
         single_node=False
 ):
+
     refdir_paths = config.refdir_data(refdir)['paths']
+    refdir_params = config.refdir_data(refdir)['params']
 
-    variant_dir = variant_dir[sample_id]
-    breakpoint_dir = breakpoint_dir[sample_id]
-    copynumber_dir = copynumber_dir[sample_id]
+    ideogram = refdir_paths["ideogram"]
 
-    cn_calls = os.path.join(copynumber_dir, 'titan', '{}_titan_markers.csv.gz'.format(sample_id))
-    sv_calls = os.path.join(breakpoint_dir, '{}_filtered_consensus_calls.csv.gz'.format(sample_id))
-    roh_calls = os.path.join(variant_dir, '{}_roh.csv.gz'.format(sample_id))
-    germline_vcf = os.path.join(variant_dir, '{}_samtools_germline.vcf.gz'.format(sample_id))
-    snv_calls = os.path.join(variant_dir, '{}_museq_paired_annotated.vcf.gz'.format(sample_id))
+    titan_calls = titan[sample_id]
+    remixt_calls = remixt[sample_id]
+    sv_calls = breakpoints_consensus[sample_id]
+    roh_calls = roh[sample_id]
+    germline_vcf = germline_calls[sample_id]
+    somatic_calls = somatic_calls[sample_id]
+    chromosomes = refdir_params['chromosomes']
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -110,41 +145,100 @@ def create_postprocessing_workflow(
         kwargs={'single_node': single_node}
     )
 
-    workflow.transform(
-        name='generate_circos_plot',
-        ctx=helpers.get_default_ctx(
-            memory=10,
-            walltime='24:00',
-            disk=400
-        ),
-        func="wgs.workflows.postprocessing.tasks.circos",
-        args=(
-            mgd.InputFile(cn_calls),
-            mgd.InputFile(sv_calls),
-            mgd.TempOutputFile(circos_plot),
-            mgd.TempSpace('circos'),
-            refdir_paths['annotation_genes'],
-        ),
-        kwargs={
-            'docker_image': config.containers('circos'),
-        }
-    )
 
     workflow.transform(
-        name='generate_genome_wide_plot',
+        name='parse_roh',
         ctx=helpers.get_default_ctx(
-            memory=10,
+            memory=5
         ),
-        func="wgs.workflows.postprocessing.tasks.genome_wide_plot",
+        func="wgs.workflows.postprocessing.tasks.parse_roh",
         args=(
-            mgd.InputFile(cn_calls),
             mgd.InputFile(roh_calls),
-            mgd.InputFile(germline_vcf),
-            mgd.InputFile(snv_calls),
-            mgd.TempInputFile('tumour_coverage'),
-            mgd.TempInputFile('tumour_coverage'),
-            mgd.OutputFile(genome_wide_plot),
+            mgd.TempOutputFile("ROH_parsed"),
         ),
     )
+
+    if remixt_calls:
+
+        workflow.transform(
+            name='generate_genome_wide_plot',
+            ctx=helpers.get_default_ctx(
+                memory=10,
+            ),
+            func="wgs.workflows.postprocessing.tasks.genome_wide",
+            args=(
+                mgd.InputFile(titan_calls),
+                mgd.TempInputFile("ROH_parsed"),
+                mgd.InputFile(germline_vcf),
+                mgd.InputFile(somatic_calls),
+                mgd.TempInputFile('tumour_coverage'),
+                mgd.TempInputFile('normal_coverage'),
+                mgd.InputFile(sv_calls),
+                mgd.InputFile(ideogram),
+                chromosomes,
+                mgd.OutputFile(genome_wide_plot),
+
+            ),
+            kwargs={"remixt": mgd.InputFile(remixt_calls),
+                    "remixt_label": sample_id}
+        )
+        workflow.transform(
+            name='generate_circos_plot',
+            ctx=helpers.get_default_ctx(
+                memory=10
+            ),
+            func="wgs.workflows.postprocessing.tasks.circos",
+            args=(
+                mgd.InputFile(titan_calls),
+                sample_id,
+                mgd.InputFile(sv_calls),
+                mgd.TempOutputFile(circos_plot_remixt),
+                mgd.TempOutputFile(circos_plot_titan),
+                mgd.TempSpace('circos'),
+            ),
+
+            kwargs={'docker_image': config.containers('circos'),
+                    'remixt_calls': mgd.InputFile(remixt_calls)},
+        )
+    else:
+
+        workflow.transform(
+            name='generate_genome_wide_plot',
+            ctx=helpers.get_default_ctx(
+                memory=10,
+            ),
+            func="wgs.workflows.postprocessing.tasks.genome_wide",
+            args=(
+                mgd.InputFile(titan_calls),
+                mgd.TempInputFile("ROH_parsed"),
+                mgd.InputFile(germline_vcf),
+                mgd.InputFile(somatic_calls),
+                mgd.InputFile('tumour_coverage'),
+                mgd.InputFile('normal_coverage'),
+                mgd.InputFile(sv_calls),
+                mgd.InputFile(ideogram),
+                chromosomes,
+                mgd.OutputFile(genome_wide_plot),
+            ),
+        )
+
+        workflow.transform(
+            name='generate_circos_plot',
+            ctx=helpers.get_default_ctx(
+                memory=10
+            ),
+            func="wgs.workflows.postprocessing.tasks.circos",
+            args=(
+                mgd.InputFile(titan_calls),
+                sample_id,
+                mgd.InputFile(sv_calls),
+                mgd.OutputFile(circos_plot_remixt),
+                mgd.OutputFile(circos_plot_titan),
+                mgd.TempSpace('circos'),
+            ),
+
+            kwargs={'docker_image': config.containers('circos')}
+        )
 
     return workflow
+

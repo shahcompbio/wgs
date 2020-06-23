@@ -1,24 +1,34 @@
 import os
-
 import numpy as np
 import pandas as pd
 import pypeliner
+from wgs.workflows.postprocessing import genome_wide_plot
+from wgs_qc_utils.reader import read_titan, read_remixt
+from wgs_qc_utils.plotter import gene_annotation_plotting
+from wgs.utils import helpers
 import pysam
-from scripts import plot
-from wgs.utils import helpers
 
-from wgs.utils import helpers
+def get_gene_annotations( outfile):
 
-def circos(cn_calls, sv_calls, circos_plot, tempdir, annotations, docker_image=None):
+    chroms = list(map(str, range(1, 22))) + ["X"]
+    annotations = pd.concat([gene_annotation_plotting.get_gene_annotation_data(chrom) for chrom in chroms])
+    annotations.to_csv(outfile, sep="\t", index=False)
+
+
+def circos(titan_calls, sample_id, sv_calls,
+           circos_plot_remixt, circos_plot_titan, tempdir, remixt_calls="NULL",
+           docker_image=None):
+
     helpers.makedirs(tempdir)
 
-    prepped_cn_calls = os.path.join(tempdir, 'prepped_cn_calls.csv')
-    prep_cn_for_circos(cn_calls, prepped_cn_calls)
+    prepped_titan_calls = os.path.join(tempdir, 'prepped_titan_calls.csv')
+    read_titan.make_for_circos(titan_calls, prepped_titan_calls)
 
-    prepped_sv_calls = os.path.join(tempdir, 'prepped_sv_calls.csv')
-    prep_sv_for_circos(sv_calls, prepped_sv_calls)
+    prepped_remixt_calls = os.path.join(tempdir, 'prepped_remixt_calls.csv')
+    read_remixt.make_for_circos(remixt_calls, sample_id, prepped_remixt_calls)
 
-    cmd = ['circos.R', annotations, prepped_cn_calls, prepped_sv_calls, circos_plot]
+    cmd = ["Rscript", "/circos.R", prepped_titan_calls, prepped_remixt_calls, sv_calls,
+           circos_plot_remixt, circos_plot_titan, sample_id]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
@@ -38,29 +48,37 @@ def bin_data(positions, copy_number, state, n_bins, start, extent):
                          "state": state})
 
 
-def prep_cn_for_circos(copy_number, outfile):
-    '''
-    prep copy number data to be used by circos.r
-    :param copy_number: input copy_number file
-    :param outfile: path to prepped copy_number csv
-    :return:
-    '''
-    copy_number = pd.read_csv(copy_number, sep="\t", dtype={'Chr': str})
+def generate_coverage_bed(ref, bins_out, chromosomes, bins_per_chrom=2000):
+    fasta = pysam.FastaFile(ref)
 
-    output = []
-    chroms = copy_number.Chr.unique()
+    chroms = dict(zip(fasta.references, fasta.lengths))
+    chroms = {k:v for k, v in chroms.items() if k in chromosomes}
 
-    for chrom in chroms:
-        prepped = copy_number[copy_number["Chr"] == chrom]
-        prepped = bin_data(prepped.Position, prepped.LogRatio, prepped.TITANstate, 200,
-                           prepped.Position.min(), prepped.Position.max())
-        prepped["Chr"] = [chrom] * len(prepped.index)
-        output.append(prepped)
+    chroms_all = []
+    starts_all = []
+    ends_all = []
 
-    output = pd.concat(output)
-    # the NaNs over centromere breaks the R code
-    output = output[~output.Position.isna()]
-    output.to_csv(outfile, index=False, header=True, sep="\t")
+    for chrom, length in chroms.items():
+
+        step_size = int(length / bins_per_chrom)
+
+        starts = [str(int(i * step_size) + 1) for i in range(bins_per_chrom)]
+        ends = [str(int((i + 1) * step_size)) for i in range(bins_per_chrom)]
+
+        assert len(starts) == len(ends)
+        chroms = [chrom] * len(starts)
+
+        starts_all += starts
+        ends_all += ends
+        chroms_all += chroms
+
+    out = pd.DataFrame({"chrom": chroms_all, "starts": starts_all, "ends": ends_all})
+
+    out = out[out.chrom == chromosomes]
+
+    out.to_csv(bins_out, sep="\t", index=False, header=False)
+
+
 
 
 def prep_sv_for_circos(sv_calls, outfile):
@@ -77,77 +95,34 @@ def prep_sv_for_circos(sv_calls, outfile):
     svs.to_csv(outfile, index=False, header=True, sep="\t")
 
 
-def count_depth(regions, input):
-    """
-    Count the depth of the read. For each genomic coordonate return the
-    number of reads
-    -----
-    Parameters :
-        chr : (str) name of the chromosome
-    -----
-    Returns :
-        none
-    """
-    bamfile = pysam.AlignmentFile(input, 'rb')
 
-    output_values = []
+def parse_roh(roh_calls, parsed):
 
-    for region in regions:
-        chrom, start, stop = region.split('_')
+    lines = [l for l in open(roh_calls) if "ST" in l]
 
-        start = int(start)
-        stop = int(stop)
-
-        size = stop - start
-
-        running_count = 0
-
-        for pileupcolumn in bamfile.pileup(chrom, start, stop, stepper='nofilter'):
-            running_count += pileupcolumn.nsegments
-
-        output_values.append((chrom, start, stop, running_count / size))
-
-    return output_values
+    with open(parsed, 'w') as f:
+        for line in lines:
+            f.write("%s\n" % line)
+    f.close()
 
 
-def samtools_coverage(bam_file, output, chromosomes, reference, bins_per_chrom=2000):
-    intervals = generate_intervals(reference, chromosomes, bins_per_chrom=bins_per_chrom)
+def samtools_coverage(bam_file, bed_file, output, docker_image=None):
 
-    counts = count_depth(intervals, bam_file)
+    command = ["samtools", "bedcov", bed_file, bam_file, ">", output]
 
-    with helpers.GetFileHandle(output, 'w') as outfile:
-        outfile.write('chrom,start,stop,coverage\n')
-        for value in counts:
-            value = ','.join(map(str, value)) + '\n'
-            outfile.write(value)
+    pypeliner.commandline.execute(*command, docker_image=docker_image)
+
+    df_out = pd.read_csv(output, sep="\t", names=["chrom", "start", "end", "sum_cov"])
+    df_out.to_csv(output, sep="\t", index=False, header=True)
 
 
-def generate_intervals(ref, chromosomes, bins_per_chrom=2000):
-    fasta = pysam.FastaFile(ref)
-    lengths = fasta.lengths
-    names = fasta.references
-
-    intervals = []
-
-    for name, length in zip(names, lengths):
-        if name not in chromosomes:
-            continue
-
-        step_size = int(length / bins_per_chrom)
-
-        for i in range(bins_per_chrom):
-            start = str(int(i * step_size) + 1)
-            end = str(int((i + 1) * step_size))
-            intervals.append(name + "_" + start + "_" + end)
-
-    return intervals
-
-
-def genome_wide_plot(
-        cn_markers, roh_calls, germline_vcf, somatic_vcf,
-        tumour_coverage, normal_coverage, pdf_output
+def genome_wide(
+        titan, roh, germline_calls, somatic_calls,
+        tumour_coverage, normal_coverage, breakpoints, ideogram, chromosomes, pdf,
+        remixt=None, remixt_label=None,
 ):
-    plot.main(
-        cn_markers, roh_calls, germline_vcf, somatic_vcf,
-        tumour_coverage, normal_coverage, pdf_output
+    genome_wide_plot.genome_wide_plot(
+        remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
+        tumour_coverage, normal_coverage, breakpoints, ideogram, chromosomes, pdf
     )
+
