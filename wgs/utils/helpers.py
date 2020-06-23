@@ -441,6 +441,20 @@ def makedirs(directory, isfile=False):
             raise
 
 
+def rmdirs(directory, isfile=False):
+    if isfile:
+        directory = os.path.dirname(directory)
+
+    if not os.path.exists(directory):
+        return
+
+    try:
+        shutil.rmtree(directory)
+    except OSError:
+        if os.path.exists(directory):
+            raise
+
+
 def add_extensions(filepaths):
     paths_extensions = []
     for filepath in filepaths:

@@ -8,7 +8,8 @@ from wgs.cmdline import parse_args
 from wgs.copynumber_calling import copynumber_calling_workflow
 from wgs.realign import realign_bam_workflow
 from wgs.breakpoint_calling import breakpoint_calling_workflow
-from wgs.variant_calling import variant_calling_workflow
+from wgs.somatic_calling import somatic_calling_workflow
+from wgs.germline_calling import germline_calling_workflow
 from wgs.postprocessing import postprocessing_workflow
 from wgs.config import batch_config
 
@@ -33,9 +34,13 @@ def main():
         args = generate_config(args)
         alignment_workflow(args)
 
-    if args["which"] == "variant_calling":
+    if args["which"] == "somatic_calling":
         args = generate_config(args)
-        variant_calling_workflow(args)
+        somatic_calling_workflow(args)
+
+    if args["which"] == "germline_calling":
+        args = generate_config(args)
+        germline_calling_workflow(args)
 
     if args["which"] == "breakpoint_calling":
         args = generate_config(args)

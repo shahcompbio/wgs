@@ -174,7 +174,11 @@ def containers(container_name):
         'hmmcopy': 'hmmcopy:v0.0.1',
         'circos': 'circos:v0.0.1',
         'igvtools': 'igvtools:v0.0.1',
-        'remixt': 'remixt:v0.0.2'
+        'remixt': 'remixt:v0.0.2',
+        'freebayes': 'freebayes:v0.0.1',
+        'rtg': 'rtg:v0.0.1',
+        'vcf2maf': 'vcf2maf:v0.0.1',
+        'gatk': 'gatk:v0.0.1'
     }
 
     return docker_images[container_name]

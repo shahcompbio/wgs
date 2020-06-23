@@ -1,7 +1,7 @@
 '''
 Created on Feb 21, 2018
 
-@author: pwalters
+@author: dgrewal
 '''
 import pypeliner
 import pypeliner.managed as mgd
@@ -11,9 +11,12 @@ from wgs.utils import helpers
 
 def create_museq_workflow(
         snv_vcf,
+        snv_maf,
         museqportrait_pdf,
         reference,
+        reference_vep,
         chromosomes,
+        sample_id,
         thousand_genomes=None,
         dbsnp=None,
         germline_refdata=None,
@@ -88,6 +91,7 @@ def create_museq_workflow(
                 reference,
                 mgd.InputInstance('interval'),
                 params['museq_params'],
+                mgd.TempSpace('museq_temp', 'interval')
             ),
             kwargs={
                 'tumour_bam': tumour_bam,
@@ -144,6 +148,21 @@ def create_museq_workflow(
                 'germline_refdata': germline_refdata,
                 'germline_plot_threshold': params['germline_portrait_threshold']
                 }
+    )
+
+    if single:
+        vcf2maf_kwargs = {'normal_id': sample_id}
+    else:
+        vcf2maf_kwargs = {'tumour_id': sample_id}
+    workflow.subworkflow(
+        name="mutationseq_single_maf",
+        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        args=(
+            mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
+            mgd.OutputFile(snv_maf),
+            reference_vep
+        ),
+        kwargs=vcf2maf_kwargs
     )
 
     return workflow
