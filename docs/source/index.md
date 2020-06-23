@@ -53,8 +53,8 @@ Please refer to the docker guide to learn how to launch pipeline.
 #### Variant Calling
 1. download test datasets
 ```
-wget https://wgstestsets.blob.core.windows.net/datasets/variant_data.tar.gz
-tar -xvf variant_data.tar.gz
+wget https://wgstestsets.blob.core.windows.net/datasets/variant_data_v2.tar.gz
+tar -xvf variant_data_v2.tar.gz
 cd data
 ```
 2. create input.yaml
