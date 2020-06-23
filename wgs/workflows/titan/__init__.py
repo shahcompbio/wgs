@@ -77,7 +77,8 @@ def create_titan_workflow(
                 mgd.TempOutputFile('museq.log', 'interval'),
                 reference,
                 mgd.InputInstance('interval'),
-                cn_params['museq_params']
+                cn_params['museq_params'],
+                mgd.TempSpace('museq_temp_titan', 'interval')
             ),
             kwargs={
                 'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),

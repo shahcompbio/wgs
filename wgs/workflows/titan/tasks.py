@@ -8,7 +8,7 @@ import pypeliner
 import pysam
 from wgs.workflows.titan.scripts import PygeneAnnotation
 from wgs.workflows.titan.scripts import ReadCounter
-from wgs.workflows.titan.scripts import TransformVcfCounts
+from wgs.workflows.titan.scripts import vcf_to_counts
 from wgs.workflows.titan.scripts import parse_titan
 from wgs.utils import csvutils
 from wgs.utils import helpers
@@ -45,9 +45,7 @@ def convert_museq_vcf2counts(infile, outfile, het_positions):
     :param infile: merged temporary vcf file from museq run (museq.vcf)
     :param outfile: temporary text file of counts (museq_postprocess.txt)
     """
-
-    transformer = TransformVcfCounts(infile, outfile, het_positions)
-    transformer.main()
+    vcf_to_counts(infile, outfile, het_positions)
 
 
 def run_readcounter(input_bam, output_wig, chromosomes, config):

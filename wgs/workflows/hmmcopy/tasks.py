@@ -110,7 +110,7 @@ def plot_hmm(
                             for pdf in os.listdir(hmmcopy_plots_dir)]
     # just some sorting
     human_pdfs = [os.path.join(hmmcopy_plots_dir, 'chr_{}.pdf'.format(chrom))
-                      for chrom in map(str, range(1,23)) + ['X']]
+                      for chrom in list(map(str, range(1,23))) + ['X']]
     all_hmmcopy_pdfs = [v for v in human_pdfs if v in all_hmmcopy_pdfs]
     all_hmmcopy_pdfs += list(set(all_hmmcopy_pdfs) - set(human_pdfs))
 

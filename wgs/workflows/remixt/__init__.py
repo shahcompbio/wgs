@@ -33,8 +33,8 @@ def create_remixt_workflow(
     workflow = pypeliner.workflow.Workflow(ctx=ctx)
 
     remixt_config = {
-        'genome_fasta': reference,
-        'genome_fai': reference + '.fai',
+        'genome_fasta_template': reference,
+        'genome_fai_template': reference + '.fai',
     }
 
     if breakpoints is None:
