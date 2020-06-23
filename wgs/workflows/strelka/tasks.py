@@ -6,6 +6,7 @@ Created on Nov 1, 2015
 from __future__ import division
 
 import csv
+import gzip
 import os
 import shutil
 
@@ -13,6 +14,36 @@ import numpy as np
 import pypeliner
 import pysam
 from wgs.utils import helpers
+
+
+def get_sample_id(bamfile):
+    bam = pysam.AlignmentFile(bamfile)
+    readgroups = bam.header['RG']
+
+    samples = set()
+
+    for readgroup in readgroups:
+        samples.add(readgroup['SM'])
+
+    assert len(samples) == 1
+
+    return list(samples)[0]
+
+
+def update_header_sample_ids(infile, outfile, tumour_id, normal_id):
+    in_opener = gzip.open if '.gz' in infile else open
+    out_opener = gzip.open if '.gz' in outfile else open
+
+    with in_opener(infile) as indata:
+        with out_opener(outfile, 'wt') as outdata:
+            for line in indata:
+                if line.startswith('#CHROM'):
+                    outdata.write('##tumor_sample={}\n'.format(tumour_id))
+                    outdata.write('##normal_sample={}\n'.format(normal_id))
+                    line = line.replace('TUMOR', tumour_id).replace('NORMAL', normal_id)
+                    outdata.write(line)
+                else:
+                    outdata.write(line)
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -158,15 +189,23 @@ def strelka_one_node(
     parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp')
     helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
 
-    merge_temp = os.path.join(tmp_dir, 'indel_merge')
     indel_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_indel.vcf')
                    for i, region in enumerate(regions)]
-    concatenate_vcf(indel_files, indel_file, merge_temp, docker_image=vcftools_docker_image)
 
     merge_temp = os.path.join(tmp_dir, 'snv_merge')
     snv_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_snv.vcf')
                  for i, region in enumerate(regions)]
-    concatenate_vcf(snv_files, snv_file, merge_temp, docker_image=vcftools_docker_image)
+
+    temp_strelka_snv = os.path.join(tmp_dir, 'snv_merge', 'temp_strelka_merge_snv.vcf')
+    concatenate_vcf(snv_files, temp_strelka_snv, merge_temp, docker_image=vcftools_docker_image)
+
+    temp_strelka_indel = os.path.join(tmp_dir, 'indel_merge' 'temp_strelka_merge_indel.vcf')
+    concatenate_vcf(indel_files, temp_strelka_indel, merge_temp, docker_image=vcftools_docker_image)
+
+    tumour_id = get_sample_id(tumour_bam_file)
+    normal_id = get_sample_id(normal_bam_file)
+    update_header_sample_ids(temp_strelka_snv, snv_file, tumour_id, normal_id)
+    update_header_sample_ids(temp_strelka_indel, indel_file, tumour_id, normal_id)
 
 
 def call_genome_segment(
@@ -208,9 +247,11 @@ def call_genome_segment(
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    shutil.move(tmp_indel_file, indel_file)
+    tumour_id = get_sample_id(tumour_bam_file)
+    normal_id = get_sample_id(normal_bam_file)
 
-    shutil.move(tmp_snv_file, snv_file)
+    update_header_sample_ids(tmp_snv_file, snv_file, tumour_id, normal_id)
+    update_header_sample_ids(tmp_indel_file, indel_file, tumour_id, normal_id)
 
 
 def genome_segment_cmd(

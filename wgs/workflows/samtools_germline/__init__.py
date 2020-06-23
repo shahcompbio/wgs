@@ -1,7 +1,7 @@
 '''
 Created on Feb 21, 2018
 
-@author: pwalters
+@author: dgrewal
 '''
 import pypeliner
 import pypeliner.managed as mgd
@@ -11,10 +11,13 @@ from wgs.utils import helpers
 
 def create_samtools_germline_workflow(
         germline_vcf,
+        germline_maf,
         germline_roh,
         bam_file,
         reference,
+        reference_vep,
         chromosomes,
+        sample_id,
         single_node=None
 ):
     params = config.default_params('variant_calling')
@@ -71,7 +74,8 @@ def create_samtools_germline_workflow(
                 mgd.TempOutputFile('germline.vcf.gz', 'interval'),
                 reference,
                 mgd.InputInstance('interval'),
-                mgd.InputFile(bam_file)
+                mgd.InputFile(bam_file),
+                mgd.TempSpace('tempdir_samtools', 'interval')
             ),
             kwargs={
                 'docker_image': config.containers('samtools')
@@ -118,5 +122,17 @@ def create_samtools_germline_workflow(
         ),
         kwargs={'docker_image': config.containers('vcftools')}
     )
+
+    workflow.subworkflow(
+        name="samtools_germline_maf",
+        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        args=(
+            mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
+            mgd.OutputFile(germline_maf, extensions=['.tbi', '.csi']),
+            reference_vep
+        ),
+        kwargs={'normal_id': sample_id}
+    )
+
 
     return workflow

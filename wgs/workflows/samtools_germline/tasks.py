@@ -1,12 +1,13 @@
 '''
 Created on Feb 21, 2018
 
-@author: pwalters
+@author: dgrewal
 '''
 import os
 
 import pypeliner
 import pysam
+from wgs.utils import bamutils
 from wgs.utils import helpers
 from wgs.utils import vcfutils
 
@@ -42,9 +43,15 @@ def samtools_germline_command(vcf, reference, interval, bam_file):
     return cmd
 
 
-def run_samtools_germline(vcf, reference, interval, bam_file, docker_image=None):
-    cmd = samtools_germline_command(vcf, reference, interval, bam_file)
+def run_samtools_germline(vcf, reference, interval, bam_file, tempdir, docker_image=None):
+    helpers.makedirs(tempdir)
+    vcf_file = os.path.join(tempdir, 'samtools_snps.vcf.gz')
+
+    cmd = samtools_germline_command(vcf_file, reference, interval, bam_file)
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    normal_id = bamutils.get_sample_id(bam_file)
+    vcfutils.update_germline_header_sample_ids(vcf_file, vcf, normal_id)
 
 
 def run_samtools_germline_one_job(
@@ -64,8 +71,12 @@ def run_samtools_germline_one_job(
     vcf_files = [os.path.join(tempdir, str(i), 'germline.vcf.gz') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'germline_merge')
     helpers.makedirs(merge_tempdir)
-    merge_vcfs(vcf_files, vcf, merge_tempdir, docker_image=vcftools_docker_image)
 
+    temp_vcf = os.path.join(merge_tempdir, 'merged_rtg.vcf')
+    merge_vcfs(vcf_files, temp_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+
+    normal_id = bamutils.get_sample_id(bam_file)
+    vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
 
 def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
     helpers.makedirs(tempdir)

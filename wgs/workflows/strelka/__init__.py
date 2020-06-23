@@ -1,18 +1,21 @@
 import pypeliner
 import pypeliner.managed as mgd
 from pypeliner.workflow import Workflow
-
-from wgs.utils import helpers
 from wgs.config import config
+from wgs.utils import helpers
 
 
 def create_strelka_workflow(
         normal_bam_file,
         tumour_bam_file,
-        indel_vcf_file,
         snv_vcf_file,
+        snv_maf_file,
+        indel_vcf_file,
+        indel_maf_file,
         reference,
+        reference_vep,
         chromosomes,
+        sample_id,
         single_node=False,
         is_exome=False
 ):
@@ -159,6 +162,28 @@ def create_strelka_workflow(
             mgd.OutputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
         ),
         kwargs={'docker_image': config.containers('vcftools')}
+    )
+
+    workflow.subworkflow(
+        name="strelka_snv_maf",
+        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        args=(
+            mgd.InputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
+            mgd.OutputFile(snv_maf_file),
+            reference_vep,
+        ),
+        kwargs={'tumour_id': 'TUMOR', 'normal_id': 'NORMAL'}
+    )
+
+    workflow.subworkflow(
+        name="strelka_indel_maf",
+        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        args=(
+            mgd.InputFile(indel_vcf_file, extensions=['.tbi', '.csi']),
+            mgd.OutputFile(indel_maf_file),
+            reference_vep,
+        ),
+        kwargs={'tumour_id': sample_id}
     )
 
     return workflow

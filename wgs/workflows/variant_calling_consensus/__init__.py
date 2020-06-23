@@ -1,7 +1,7 @@
 '''
 Created on Feb 21, 2018
 
-@author: pwalters
+@author: dgrewal
 '''
 import os
 
@@ -12,7 +12,6 @@ from wgs.config import config
 
 
 def create_consensus_workflow(
-        museq_germline,
         museq_snv,
         strelka_snv,
         strelka_indel,
@@ -24,34 +23,12 @@ def create_consensus_workflow(
         indel_snpeff,
         indel_ma,
         indel_ids,
-        germline_calls,
-        germline_snpeff,
-        germline_ma,
-        germline_ids,
         refdir
 ):
     params = config.default_params('variant_calling')
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
 
     workflow = pypeliner.workflow.Workflow()
-
-    workflow.transform(
-        name='parse_museq_germlines',
-        ctx=helpers.get_default_ctx(
-            memory=15,
-            walltime='8:00', ),
-        func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
-        args=(
-            mgd.InputFile(museq_germline, extensions=['.csi', '.tbi']),
-            mgd.OutputFile(germline_calls, extensions=['.yaml']),
-            mgd.OutputFile(germline_snpeff, extensions=['.yaml']),
-            mgd.OutputFile(germline_ma, extensions=['.yaml']),
-            mgd.OutputFile(germline_ids, extensions=['.yaml']),
-            params["parse_museq"],
-            chromosomes,
-            mgd.TempSpace("tempdir_parse_germlines")
-        ),
-    )
 
     workflow.transform(
         name='parse_strelka_indel',
