@@ -8,6 +8,7 @@ from wgs.utils import helpers
 from wgs.workflows import breakpoint_calling_consensus
 from wgs.workflows import destruct_wgs
 from wgs.workflows import lumpy
+from wgs.workflows import svaba
 
 
 def breakpoint_calling_workflow(args):
@@ -30,6 +31,9 @@ def breakpoint_calling_workflow(args):
     destruct_reads = os.path.join(sv_outdir, '{sample_id}_destruct_reads.csv.gz')
     lumpy_vcf = os.path.join(sv_outdir, '{sample_id}_lumpy.vcf')
     parsed_csv = os.path.join(sv_outdir, '{sample_id}_filtered_consensus_calls.csv.gz')
+
+    svaba_vcf = os.path.join(sv_outdir, '{sample_id}_svaba.vcf')
+
 
     single_node = args['single_node']
 
@@ -83,6 +87,18 @@ def breakpoint_calling_workflow(args):
                 extensions=['.bai'], axes_origin=[]),
             'single_node': single_node
         },
+    )
+
+    workflow.subworkflow(
+        name='svaba',
+        func=svaba.create_svaba_workflow,
+        axes=('sample_id',),
+        args=(
+            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours, extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile("normal.bam", 'sample_id', fnames=normals, extensions=['.bai'], axes_origin=[]),
+            mgd.OutputFile('svaba_vcf', 'sample_id', template=svaba_vcf),
+            refdir_paths['reference'],
+        ),
     )
 
     workflow.subworkflow(

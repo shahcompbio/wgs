@@ -178,7 +178,8 @@ def containers(container_name):
         'freebayes': 'freebayes:v0.0.1',
         'rtg': 'rtg:v0.0.1',
         'vcf2maf': 'vcf2maf:v0.0.1',
-        'gatk': 'gatk:v0.0.1'
+        'gatk': 'gatk:v0.0.1',
+        'svaba': 'svaba:v0.0.1'
     }
 
     return docker_images[container_name]
