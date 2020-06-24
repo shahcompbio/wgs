@@ -9,6 +9,7 @@ import warnings
 import pypeliner
 from wgs.utils import helpers
 
+
 def _get_header(infile):
     '''
     Extract header from the VCF file
@@ -79,7 +80,10 @@ def update_germline_header_sample_ids(infile, outfile, sample_id):
             for line in indata:
                 if line.startswith('#CHROM'):
                     outdata.write('##normal_sample={}\n'.format(sample_id))
-                    line = line.replace('NORMA', sample_id)
+                    line = line.strip().split()
+                    assert line[-1] in ['normal', sample_id]
+                    line[-1] = sample_id
+                    line = '\t'.join(line)
                     outdata.write(line)
                 else:
                     outdata.write(line)
