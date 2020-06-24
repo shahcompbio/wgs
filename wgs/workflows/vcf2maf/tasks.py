@@ -43,3 +43,45 @@ def run_vcf2maf(
         cmd.extend(['--normal-id', normal_id])
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+def filter_vcfs(museq_vcf, strelka_vcf, output_vcf):
+    '''
+    original code by Diljot Grewal
+    museq_paired and strekla_snv,
+    take position intersection plus probability filter of 0.85
+    (keep positions >= 0.85 that are in both)
+    modifications: take museq and strelka directly as input, output
+    to temp_dir, take sample id as input and append to output
+    filtered filename
+    '''
+
+    strelka_ref = set()
+    with helpers.GetFileHandle(strelka_vcf) as strelka_data:
+        for line in strelka_data:
+            if line.startswith('#'):
+                continue
+            line = line.strip().split()
+            chrom = line[0]
+            pos = line[1]
+            strelka_ref.add((chrom, pos))
+
+    with helpers.GetFileHandle(museq_vcf) as museq_data, helpers.GetFileHandle(output_vcf, 'wt') as museqout:
+        for line in museq_data:
+            if line.startswith('#'):
+                museqout.write(line)
+                continue
+
+            line = line.strip().split()
+            chrom = line[0]
+            pos = line[1]
+
+            if ((chrom, pos)) not in strelka_ref:
+                continue
+
+            pr = line[7].split(';')[0].split('=')[1]
+            if float(pr) < 0.85:
+                continue
+
+            outstr = '\t'.join(line) + '\n'
+            museqout.write(outstr)

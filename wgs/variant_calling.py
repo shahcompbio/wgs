@@ -112,7 +112,6 @@ def call_germlines_only(
                 }
     )
 
-
     return workflow
 
 
@@ -123,7 +122,7 @@ def call_variants(
         germline_calls, germline_snpeff, germline_ma, germline_ids,
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
-        museq_paired_pdf, museq_single_pdf, refdir,
+        museq_paired_pdf, museq_single_pdf, maf_consensus, refdir,
         single_node=False, strelka_depth_filter=True
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
@@ -170,6 +169,9 @@ def call_variants(
                         for sampid in samples])
     germline_ids = dict([(sampid, germline_ids[sampid])
                          for sampid in samples])
+
+    maf_consensus = dict([(sampid, maf_consensus[sampid])
+                          for sampid in samples])
 
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
@@ -301,7 +303,6 @@ def call_variants(
                 }
     )
 
-
     workflow.subworkflow(
         name="annotate_germline_samtools",
         func='wgs.workflows.vcf_annotation.create_annotation_workflow',
@@ -322,8 +323,6 @@ def call_variants(
                 'snpeff_docker': config.containers('vcftools'),
                 }
     )
-
-
 
     workflow.subworkflow(
         name="annotate_strelka",
@@ -393,6 +392,19 @@ def call_variants(
         ),
     )
 
+    workflow.subworkflow(
+        name="maf_consensus",
+        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        axes=('sample_id',),
+        args=(
+            mgd.InputFile("museq_snv_ann.vcf.gz", 'sample_id', fnames=museq_vcf),
+            mgd.InputFile("strelka_snv_ann.vcf.gz", 'sample_id', fnames=strelka_snv_vcf),
+            mgd.InputFile("strelka_indel_ann.vcf.gz", 'sample_id', fnames=strelka_indel_vcf),
+            mgd.OutputFile('consensus.maf', 'sample_id', fnames=maf_consensus),
+            paths_refdir['reference_vep'],
+        )
+    )
+
     return workflow
 
 
@@ -432,6 +444,8 @@ def variant_calling_workflow(args):
     germline_snpeff = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_snpeff.csv.gz')
     germline_ma = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_ma.csv.gz')
     germline_ids = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_ids.csv.gz')
+
+    maf_consensus = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus.maf')
 
     pyp = pypeliner.app.Pypeline(config=args)
 
@@ -490,6 +504,7 @@ def variant_calling_workflow(args):
                 mgd.OutputFile('strelka_indel', 'sample_id', template=strelka_indel_vcf, axes_origin=[]),
                 mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
+                mgd.OutputFile('consensus.maf', 'sample_id', template=maf_consensus, axes_origin=[]),
                 args['refdir'],
             ),
             kwargs={
