@@ -51,12 +51,12 @@ def run_svaba(
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    get_vcfs(tempdir, 'sampleid.svaba.germline.indel.vcf', germline_indel)
-    get_vcfs(tempdir, 'sampleid.svaba.germline.sv.vcf', germline_sv)
-    get_vcfs(tempdir, 'sampleid.svaba.somatic.indel.vcf', somatic_indel)
-    get_vcfs(tempdir, 'sampleid.svaba.somatic.sv.vcf', somatic_sv)
+    get_vcfs(tempdir, 'sampleid.svaba.germline.indel.vcf.gz', germline_indel)
+    get_vcfs(tempdir, 'sampleid.svaba.germline.sv.vcf.gz', germline_sv)
+    get_vcfs(tempdir, 'sampleid.svaba.somatic.indel.vcf.gz', somatic_indel)
+    get_vcfs(tempdir, 'sampleid.svaba.somatic.sv.vcf.gz', somatic_sv)
 
-    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.germline.indel.vcf', unfiltered_germline_indel)
-    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.germline.sv.vcf', unfiltered_germline_sv)
-    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.somatic.indel.vcf', unfiltered_somatic_indel)
-    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.somatic.sv.vcf', unfiltered_somatic_sv)
+    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.germline.indel.vcf.gz', unfiltered_germline_indel)
+    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.germline.sv.vcf.gz', unfiltered_germline_sv)
+    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.somatic.indel.vcf.gz', unfiltered_somatic_indel)
+    get_vcfs(tempdir, 'sampleid.svaba.unfiltered.somatic.sv.vcf.gz', unfiltered_somatic_sv)
