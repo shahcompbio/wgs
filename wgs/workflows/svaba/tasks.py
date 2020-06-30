@@ -26,8 +26,6 @@ def svaba_cmd(tumor, normal, reference, tempdir, region=None, ncores=None, sampl
 def get_vcfs(tempdir, filename, outfile):
     output_vcf = os.path.join(tempdir, filename)
     shutil.copyfile(output_vcf, outfile)
-    shutil.copyfile(output_vcf + '.csi', outfile + '.csi')
-    shutil.copyfile(output_vcf + '.tbi', outfile + '.tbi')
 
 
 def run_svaba(
