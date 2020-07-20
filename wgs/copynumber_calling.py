@@ -63,6 +63,7 @@ def copynumber_calling_workflow(args):
 
     remixt_outdir = os.path.join(args['out_dir'], 'remixt', '{sample_id}')
     remixt_outfile = os.path.join(remixt_outdir, '{sample_id}_remixt.h5')
+    remixt_raw_dir = os.path.join(remixt_outdir, '{sample_id}_raw_dir')
 
     remixt_brk_cn_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_brk_cn.csv.gz')
     remixt_cn_csv = os.path.join(remixt_outdir, '{sample_id}_remixt_cn.csv.gz')
@@ -103,6 +104,7 @@ def copynumber_calling_workflow(args):
                 mgd.OutputFile('remixt_stats.csv', 'sample_id', template=remixt_stats_csv),
                 refdir_paths['refdata_remixt'],
                 refdir_paths['reference'],
+                mgd.Template('rawdir', 'sample_id', template=remixt_raw_dir),
             ),
             kwargs={'single_node': args['single_node']}
         )
@@ -179,6 +181,18 @@ def copynumber_calling_workflow(args):
         )
 
     filenames = []
+
+    if run_remixt:
+        filenames += [
+            remixt_outfile,
+            remixt_raw_dir,
+            remixt_brk_cn_csv,
+            remixt_cn_csv,
+            remixt_minor_modes_csv,
+            remixt_mix_csv,
+            remixt_read_depth_csv,
+            remixt_stats_csv
+        ]
     if run_titan:
         filenames += [
             titan_outfile,
@@ -204,22 +218,22 @@ def copynumber_calling_workflow(args):
             tumour_pygenes
         ]
 
-    outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
+        outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
-    workflow.transform(
-        name='generate_meta_files_results',
-        func='wgs.utils.helpers.generate_and_upload_metadata',
-        args=(
-            sys.argv[0:],
-            args["out_dir"],
-            outputted_filenames,
-            mgd.OutputFile(meta_yaml)
-        ),
-        kwargs={
-            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
-            'input_yaml': mgd.OutputFile(input_yaml_blob),
-            'metadata': {'type': 'copynumber_calling'}
-        }
-    )
+        workflow.transform(
+            name='generate_meta_files_results',
+            func='wgs.utils.helpers.generate_and_upload_metadata',
+            args=(
+                sys.argv[0:],
+                args["out_dir"],
+                outputted_filenames,
+                mgd.OutputFile(meta_yaml)
+            ),
+            kwargs={
+                'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+                'input_yaml': mgd.OutputFile(input_yaml_blob),
+                'metadata': {'type': 'copynumber_calling'}
+            }
+        )
 
-    pyp.run(workflow)
+        pyp.run(workflow)
