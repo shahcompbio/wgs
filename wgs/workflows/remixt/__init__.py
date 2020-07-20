@@ -9,6 +9,8 @@ import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.config import config
 
+class MissingInputs(Exception):
+    pass
 
 def create_remixt_workflow(
         tumour_path,
@@ -39,21 +41,7 @@ def create_remixt_workflow(
     }
 
     if breakpoints is None:
-        workflow.setobj(
-            obj=mgd.TempOutputObj('emptybreakpoints'),
-            value=[],
-        )
-
-        workflow.transform(
-            name='write_empty_breakpoints',
-            func='wgs.workflows.remixt.tasks.write_empty_breakpoints',
-            args=(
-                mgd.TempInputObj('emptybreakpoints'),
-                mgd.TempOutputFile('filtered_breakpoints.csv'),
-            ),
-        )
-
-        return workflow
+        raise MissingInputs('Remixt requires breakpoints')
 
     workflow.transform(
         name='filter_breakpoints',
