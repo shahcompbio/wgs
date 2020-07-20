@@ -23,7 +23,7 @@ def create_remixt_workflow(
         remixt_read_depth_csv,
         remixt_stats_csv,
         remixt_refdata,
-        remixt_raw_dar,
+        remixt_raw_dir,
         reference,
         single_node=False,
 ):
@@ -53,19 +53,20 @@ def create_remixt_workflow(
             ),
         )
 
-    else:
-        workflow.transform(
-            name='filter_breakpoints',
-            func='wgs.workflows.remixt.tasks.filter_destruct_breakpoints',
-            ctx=helpers.get_default_ctx(
-                memory=4,
-                walltime='4:00'),
-            args=(
-                mgd.InputFile(breakpoints),
-                mgd.TempOutputFile('filtered_breakpoints.csv'),
-                params['min_num_reads']
-            )
+        return workflow
+
+    workflow.transform(
+        name='filter_breakpoints',
+        func='wgs.workflows.remixt.tasks.filter_destruct_breakpoints',
+        ctx=helpers.get_default_ctx(
+            memory=4,
+            walltime='4:00'),
+        args=(
+            mgd.InputFile(breakpoints),
+            mgd.TempOutputFile('filtered_breakpoints.csv'),
+            params['min_num_reads']
         )
+    )
 
     if single_node:
         workflow.transform(

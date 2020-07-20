@@ -103,8 +103,8 @@ def copynumber_calling_workflow(args):
                 mgd.OutputFile('remixt_read_depth.csv', 'sample_id', template=remixt_read_depth_csv),
                 mgd.OutputFile('remixt_stats.csv', 'sample_id', template=remixt_stats_csv),
                 refdir_paths['refdata_remixt'],
-                refdir_paths['reference'],
                 mgd.Template('rawdir', 'sample_id', template=remixt_raw_dir),
+                refdir_paths['reference'],
             ),
             kwargs={'single_node': args['single_node']}
         )
@@ -218,22 +218,22 @@ def copynumber_calling_workflow(args):
             tumour_pygenes
         ]
 
-        outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
+    outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
-        workflow.transform(
-            name='generate_meta_files_results',
-            func='wgs.utils.helpers.generate_and_upload_metadata',
-            args=(
-                sys.argv[0:],
-                args["out_dir"],
-                outputted_filenames,
-                mgd.OutputFile(meta_yaml)
-            ),
-            kwargs={
-                'input_yaml_data': helpers.load_yaml(args['input_yaml']),
-                'input_yaml': mgd.OutputFile(input_yaml_blob),
-                'metadata': {'type': 'copynumber_calling'}
-            }
-        )
+    workflow.transform(
+        name='generate_meta_files_results',
+        func='wgs.utils.helpers.generate_and_upload_metadata',
+        args=(
+            sys.argv[0:],
+            args["out_dir"],
+            outputted_filenames,
+            mgd.OutputFile(meta_yaml)
+        ),
+        kwargs={
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
+            'metadata': {'type': 'copynumber_calling'}
+        }
+    )
 
-        pyp.run(workflow)
+    pyp.run(workflow)
