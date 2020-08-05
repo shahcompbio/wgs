@@ -402,6 +402,8 @@ def call_variants(
             mgd.InputFile("strelka_indel_ann.vcf.gz", 'sample_id', fnames=strelka_indel_vcf),
             mgd.OutputFile('consensus.maf', 'sample_id', fnames=maf_consensus),
             paths_refdir['reference_vep'],
+            chromosomes,
+            mgd.InputInstance('sample_id'),
         )
     )
 
