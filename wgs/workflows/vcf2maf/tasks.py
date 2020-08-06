@@ -18,9 +18,8 @@ def run_vcf2maf(
         maf_output,
         tempdir,
         reference,
-        tumour_id=None,
-        normal_id=None,
-        docker_image=None
+        vcf2maf_docker_image=None,
+        vcftools_docker_image=None
 ):
 
     helpers.makedirs(tempdir)
@@ -33,10 +32,9 @@ def run_vcf2maf(
         vcf_unzipped = vcf_file
 
     sorted_file = os.path.join(tempdir, 'sorted.vcf')
-    vcfutils.sort_vcf(vcf_unzipped, sorted_file)
+    vcfutils.sort_vcf(vcf_unzipped, sorted_file, docker_image=vcftools_docker_image)
 
     cmd = [
-        '/opt/local/singularity/3.3.0/bin/singularity', 'run', '--bind', '/juno/work/shah', 'docker://docker.io/wgspipeline/vcf2maf:v0.0.1',
         'vcf2maf.pl', '--input-vcf', sorted_file, '--output-maf', maf_output,
         '--vep-path', '/usr/local/bin',
         '--ref-fasta',
@@ -45,14 +43,8 @@ def run_vcf2maf(
         '--vep-data', reference,
     ]
 
-    if tumour_id:
-        cmd.extend(['--tumor-id', tumour_id])
-    if normal_id:
-        cmd.extend(['--normal-id', normal_id])
-
     cmd = ' '.join(map(str,cmd))
-    #pypeliner.commandline.execute(*cmd, docker_image=docker_image)
-    os.system(cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=vcf2maf_docker_image)
 
 def update_maf_counts(input_maf, counts_file, output_maf, sample_id):
     counts = {}
