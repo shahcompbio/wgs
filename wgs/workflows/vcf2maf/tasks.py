@@ -43,7 +43,6 @@ def run_vcf2maf(
         '--vep-data', reference,
     ]
 
-    cmd = ' '.join(map(str,cmd))
     pypeliner.commandline.execute(*cmd, docker_image=vcf2maf_docker_image)
 
 def update_maf_counts(input_maf, counts_file, output_maf, sample_id):
