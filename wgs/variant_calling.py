@@ -405,7 +405,7 @@ def call_variants(
             mgd.InputFile("strelka_snv_ann.vcf.gz", 'sample_id', fnames=strelka_snv_vcf),
             mgd.InputFile("strelka_indel_ann.vcf.gz", 'sample_id', fnames=strelka_indel_vcf),
             mgd.InputFile("museq_germlines_ann.vcf.gz", 'sample_id', fnames=museq_ss_vcf),
-            mgd.OutputFile("samtools_germlines_ann.vcf.gz", 'sample_id', fnames=samtools_germlines_vcf),
+            mgd.InputFile("samtools_germlines_ann.vcf.gz", 'sample_id', fnames=samtools_germlines_vcf),
             mgd.OutputFile('consensus.maf', 'sample_id', fnames=maf_consensus),
             mgd.OutputFile('germline_consensus.maf', 'sample_id', fnames=germline_maf_consensus),
             paths_refdir['reference_vep'],

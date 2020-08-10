@@ -43,9 +43,6 @@ def create_vcf2maf_workflow(
         ),
     )
 
-
-
-
     workflow.transform(
         name='vcf2maf',
         func='wgs.workflows.vcf2maf.tasks.run_vcf2maf',
