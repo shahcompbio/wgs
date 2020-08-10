@@ -18,9 +18,12 @@ def run_vcf2maf(
         maf_output,
         tempdir,
         reference,
+        vcftools_docker_image=None,
         vcf2maf_docker_image=None,
-        vcftools_docker_image=None
 ):
+
+    if os.path.exists(tempdir):
+        shutil.rmtree(tempdir)
 
     helpers.makedirs(tempdir)
 

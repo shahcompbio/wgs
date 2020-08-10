@@ -122,7 +122,7 @@ def call_variants(
         germline_calls, germline_snpeff, germline_ma, germline_ids,
         tumours, normals, museq_vcf, museq_ss_vcf, samtools_germlines_vcf, roh_calls,
         strelka_snv_vcf, strelka_indel_vcf,
-        museq_paired_pdf, museq_single_pdf, maf_consensus, refdir,
+        museq_paired_pdf, museq_single_pdf, maf_consensus, germline_maf_consensus, refdir,
         single_node=False, strelka_depth_filter=True
 ):
     strelka_snv_vcf = dict([(sampid, strelka_snv_vcf[sampid])
@@ -172,6 +172,10 @@ def call_variants(
 
     maf_consensus = dict([(sampid, maf_consensus[sampid])
                           for sampid in samples])
+    germline_maf_consensus = dict([(sampid, maf_consensus[sampid])
+                          for sampid in samples])
+
+
 
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
@@ -400,7 +404,10 @@ def call_variants(
             mgd.InputFile("museq_snv_ann.vcf.gz", 'sample_id', fnames=museq_vcf),
             mgd.InputFile("strelka_snv_ann.vcf.gz", 'sample_id', fnames=strelka_snv_vcf),
             mgd.InputFile("strelka_indel_ann.vcf.gz", 'sample_id', fnames=strelka_indel_vcf),
+            mgd.InputFile("museq_germlines_ann.vcf.gz", 'sample_id', fnames=museq_ss_vcf),
+            mgd.OutputFile("samtools_germlines_ann.vcf.gz", 'sample_id', fnames=samtools_germlines_vcf),
             mgd.OutputFile('consensus.maf', 'sample_id', fnames=maf_consensus),
+            mgd.OutputFile('germline_consensus.maf', 'sample_id', fnames=germline_maf_consensus),
             paths_refdir['reference_vep'],
             chromosomes,
             mgd.InputInstance('sample_id'),
@@ -448,6 +455,7 @@ def variant_calling_workflow(args):
     germline_ids = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_ids.csv.gz')
 
     maf_consensus = os.path.join(var_dir, '{sample_id}', '{sample_id}_consensus.maf')
+    germline_maf_consensus = os.path.join(var_dir, '{sample_id}', '{sample_id}_germline_consensus.maf')
 
     pyp = pypeliner.app.Pypeline(config=args)
 
@@ -507,6 +515,7 @@ def variant_calling_workflow(args):
                 mgd.OutputFile('museq_paired_pdf', 'sample_id', template=museq_paired_pdf, axes_origin=[]),
                 mgd.OutputFile('museq_single_pdf', 'sample_id', template=museq_single_pdf, axes_origin=[]),
                 mgd.OutputFile('consensus.maf', 'sample_id', template=maf_consensus, axes_origin=[]),
+                mgd.OutputFile('germline_consensus.maf', 'sample_id', template=germline_maf_consensus, axes_origin=[]),
                 args['refdir'],
             ),
             kwargs={
