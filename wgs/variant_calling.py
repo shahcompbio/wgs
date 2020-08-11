@@ -172,7 +172,7 @@ def call_variants(
 
     maf_consensus = dict([(sampid, maf_consensus[sampid])
                           for sampid in samples])
-    germline_maf_consensus = dict([(sampid, maf_consensus[sampid])
+    germline_maf_consensus = dict([(sampid, germline_maf_consensus[sampid])
                           for sampid in samples])
 
 
