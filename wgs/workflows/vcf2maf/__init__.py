@@ -102,9 +102,8 @@ def create_vcf2maf_workflow(
             reference
         ),
         kwargs={
-            'docker_image': config.containers('vcf2maf'),
-            'tumour_id': tumour_id,
-            'normal_id': normal_id
+            'vcf2maf_docker_image': config.containers('vcf2maf'),
+            'vcftools_docker_image': config.containers('vcftools'),
         }
     )
 
