@@ -73,6 +73,9 @@ def fetch_vcf(filename, chromosome, caller):
             assert len(filter) <= 1
             filter = filter[0]
 
+        if caller == 'museq_snv' and record.INFO < 0.85:
+            continue
+
         if caller == 'strelka_indel' or caller == 'strelka_snv':
             tr, tas, td, nr, nas, nd = get_counts(record, caller, 'TUMOR','NORMAL', ref, alts)
         else:

@@ -57,6 +57,9 @@ def fetch_vcf(filename, chromosome, caller):
             assert len(filter_call) <= 1
             filter_call = filter_call[0]
 
+        if caller == 'museq' and record.INFO < 0.85:
+            continue
+
         tum_id = 'TUMOR' if caller == 'samtools' else 'TUMOUR'
 
         nr, nas, nd = get_counts(record, caller, tum_id, 'NORMAL', ref, alts)
@@ -66,7 +69,7 @@ def fetch_vcf(filename, chromosome, caller):
         for (alt, na) in zip(alts, nas):
             alt = str(alt)
 
-            data = [record.QUAL, filter_call,'NA', 'NA', 'NA',  nr, na, nd, "{}_{}".format(caller, id_counter)]
+            data = [record.QUAL, filter_call, 'NA', 'NA', 'NA', nr, na, nd, "{}_{}".format(caller, id_counter)]
 
             if len(ref) == len(alt):
                 for i, (rb, ab) in enumerate(zip(ref, alt)):
@@ -171,4 +174,3 @@ def main(
         consensus += indel_consensus(samtools_indels)
 
         write_vcf(consensus, consensus_vcf, counts_output)
-
