@@ -1,0 +1,32 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document
+params:
+  oncoplot: ""
+  somatic_plot: ""
+  summary: ""
+---
+---
+title: `bbwob`
+---
+
+
+
+## Summary plot
+```{r adjdist, echo = FALSE}
+# All defaults
+include_graphics(params$summary)
+```
+
+## oncoplot plot
+```{r adjdist, echo = FALSE}
+# All defaults
+include_graphics(params$oncoplot)
+```
+
+## somatic_plot plot
+```{r adjdist, echo = FALSE}
+# All defaults
+include_graphics(params$somatic_plot)
+```

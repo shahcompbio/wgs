@@ -115,7 +115,25 @@ def parse_args():
         help='''remixt'''
     )
 
-
+    # ================
+    # cohort qc
+    # ================
+    cohort_qc = subparsers.add_parser("cohort_qc")
+    cohort_qc.set_defaults(which='cohort_qc')
+    cohort_qc = add_global_args(cohort_qc)
+    # cohort_qc.add_argument(
+    #     "--group_analysis",
+    #     default=False,
+    #     action='store_true',
+    #     help='''True or False: pass in an additional file in input.yaml for grouping MAF \
+    #     into patients or cohort subgroups. File should be a csv with two columns: \
+    #     label: name of item in Maf line; group: new group to assign it to. '''
+    # )
+    cohort_qc.add_argument(
+        "--API_key",
+        default=False,
+        help='''API key for account on oncokv to run MafAnnotate.py. '''
+    )
     # ======================================
     # generates pipeline and batch configs
     # ======================================
