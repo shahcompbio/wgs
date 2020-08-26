@@ -115,6 +115,17 @@ def parse_args():
         help='''remixt'''
     )
 
+    # ================
+    # postprocessing
+    # ================
+    postprocessing = subparsers.add_parser("postprocessing")
+    postprocessing.set_defaults(which='postprocessing')
+    postprocessing = add_global_args(postprocessing)
+    postprocessing.add_argument(
+        "--qc_metadata",
+        required=True,
+        help='''qc_metadata'''
+    )
 
     # ======================================
     # generates pipeline and batch configs

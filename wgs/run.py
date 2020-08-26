@@ -11,6 +11,7 @@ from wgs.breakpoint_calling import breakpoint_calling_workflow
 from wgs.somatic_calling import somatic_calling_workflow
 from wgs.germline_calling import germline_calling_workflow
 from wgs.config import batch_config
+from wgs.postprocessing import postprocessing_workflow
 
 
 def generate_config(args):
@@ -52,7 +53,10 @@ def main():
     if args["which"] == "realignment":
         args = generate_config(args)
         realign_bam_workflow(args)
-
+        
+    if args["which"] == "postprocessing":
+        args = generate_config(args)
+        postprocessing_workflow(args)
 
 if __name__ == "__main__":
     main()
