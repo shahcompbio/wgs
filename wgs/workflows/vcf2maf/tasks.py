@@ -29,12 +29,10 @@ def run_vcf2maf(
         vcf_unzipped = vcf_file
 
     cmd = [
-        'vcf2maf.pl', '--input-vcf', vcf_unzipped, '--output-maf', maf_output,
-        '--vep-path', '/usr/local/bin',
-        '--ref-fasta',
+        'vcf2maf',  vcf_unzipped, maf_output,
         os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
-        '--filter-vcf', os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
-        '--vep-data', reference,
+        os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
+        reference,
     ]
 
     if tumour_id:
