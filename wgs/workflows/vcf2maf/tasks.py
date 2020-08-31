@@ -38,12 +38,10 @@ def run_vcf2maf(
     vcfutils.sort_vcf(vcf_unzipped, sorted_file, docker_image=vcftools_docker_image)
 
     cmd = [
-        'vcf2maf.pl', '--input-vcf', sorted_file, '--output-maf', maf_output,
-        '--vep-path', '/usr/local/bin',
-        '--ref-fasta',
+        'vcf2maf', sorted_file, maf_output,
         os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
-        '--filter-vcf', os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
-        '--vep-data', reference,
+        os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
+        reference,
     ]
 
     pypeliner.commandline.execute(*cmd, docker_image=vcf2maf_docker_image)
