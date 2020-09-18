@@ -149,7 +149,7 @@ wgs realignment --input_yaml input.yaml \
   --refdir ref --maxjobs 4
 ```
 
-###  Postprocessing
+###  sample_qc
 1. download test datasets
 ```
 wget https://wgstestsets.blob.core.windows.net/datasets/postprocessing_data.tar.gz
@@ -169,7 +169,7 @@ Sample_123:
 ```
 #!/bin/bash
 
-wgs postprocessing --input_yaml input.yaml \
+wgs sample_qc --input_yaml input.yaml \
   --out_dir output --tmpdir temp --pipelinedir pipeline \
   --loglevel DEBUG --submit local \
   --refdir ref --maxjobs 4

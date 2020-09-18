@@ -117,6 +117,18 @@ def parse_args():
     )
 
     # ================
+    # sample_qc
+    # ================
+    sample_qc = subparsers.add_parser("sample_qc")
+    sample_qc.set_defaults(which='sample_qc')
+    sample_qc = add_global_args(sample_qc)
+    sample_qc.add_argument(
+        "--qc_metadata",
+        required=True,
+        help='''qc_metadata'''
+    )
+
+    # ================
     # cohort qc
     # ================
     cohort_qc = subparsers.add_parser("cohort_qc")
@@ -127,6 +139,7 @@ def parse_args():
         default=False,
         help='''API key for account on oncokv to run MafAnnotate.py. '''
     )
+
     # ======================================
     # generates pipeline and batch configs
     # ======================================
