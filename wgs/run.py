@@ -3,6 +3,7 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 """
+from wgs.cohort_qc import cohort_qc_workflow
 from wgs.alignment import alignment_workflow
 from wgs.cmdline import parse_args
 from wgs.copynumber_calling import copynumber_calling_workflow
@@ -29,6 +30,10 @@ def main():
 
     if args["which"] == "generate_config":
         generate_config(args)
+
+    if args["which"] == "cohort_qc":
+        args = generate_config(args)
+        cohort_qc_workflow(args)
 
     if args["which"] == "alignment":
         args = generate_config(args)

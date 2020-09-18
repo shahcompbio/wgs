@@ -3,10 +3,11 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 '''
+import argparse
 import json
 
-import argparse
 import pypeliner
+
 from wgs import __version__
 
 
@@ -54,14 +55,14 @@ def parse_args():
     # ================
     alignment = subparsers.add_parser("alignment")
     alignment.set_defaults(which='alignment')
-    alignment = add_global_args(alignment)
+    add_global_args(alignment)
 
     # ================
     # realignment
     # ================
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
-    realignment = add_global_args(realignment)
+    add_global_args(realignment)
 
     # ================
     # variant calling
@@ -88,7 +89,7 @@ def parse_args():
     # ================
     sv_calling = subparsers.add_parser("breakpoint_calling")
     sv_calling.set_defaults(which='breakpoint_calling')
-    sv_calling = add_global_args(sv_calling)
+    add_global_args(sv_calling)
 
     # ================
     # copy number calling
@@ -125,6 +126,18 @@ def parse_args():
         "--qc_metadata",
         required=True,
         help='''qc_metadata'''
+    )
+
+    # ================
+    # cohort qc
+    # ================
+    cohort_qc = subparsers.add_parser("cohort_qc")
+    cohort_qc.set_defaults(which='cohort_qc')
+    cohort_qc = add_global_args(cohort_qc)
+    cohort_qc.add_argument(
+        "--API_key",
+        default=False,
+        help='''API key for account on oncokv to run MafAnnotate.py. '''
     )
 
     # ======================================
