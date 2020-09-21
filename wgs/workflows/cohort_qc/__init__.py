@@ -38,7 +38,7 @@ def create_cohort_qc_workflow(
                 mgd.TempSpace("annotated_maf_tm"),
                 mgd.TempOutputFile("annotated_maf"),
             ),
-            kwargs={'docker_container': config.containers("oncokb")}
+            kwargs={'docker_image': config.containers("oncokb-annotator")}
         )
 
         workflow.transform(
@@ -51,7 +51,6 @@ def create_cohort_qc_workflow(
         )
 
         kwargs = {"filtered_maf": mgd.InputFile(filtered_maf)}
-
     else:
         logging.warning("No API key is provided to use oncoKB, so results will be unfiltered.")
         kwargs = None

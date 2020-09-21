@@ -133,7 +133,8 @@ def default_params(mode='all'):
         'copynumber_calling': copynumber_calling,
         'breakpoint_calling': breakpoint_calling,
         'variant_calling': variant_calling,
-        'alignment': alignment
+        'alignment': alignment,
+        'sample_qc': sample_qc
     }
 
     if not mode == 'all':
@@ -179,7 +180,8 @@ def containers(container_name):
         'rtg': 'rtg:v0.0.1',
         'vcf2maf': 'vcf2maf:v0.0.1',
         'gatk': 'gatk:v0.0.1',
-        'svaba': 'svaba:v0.0.1'
+        'svaba': 'svaba:v0.0.1',
+        'oncokb-annotator': 'oncokb-annotator:v0.0.1'
     }
 
     return docker_images[container_name]

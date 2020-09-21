@@ -13,7 +13,7 @@ def sample_qc_workflow(args):
 
     samples = list(inputs.keys())
 
-    pipeline_metadata = helpers.load_yaml(args['qc_metadata'])
+    chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
     normal_bam_files = {sample: inputs[sample]['normal_bam'] for sample in samples}
     tumour_bam_files = {sample: inputs[sample]['tumour_bam'] for sample in samples}
@@ -51,7 +51,6 @@ def sample_qc_workflow(args):
         args=(
             mgd.InputInstance('sample_id'),
             args["refdir"],
-            pipeline_metadata,
             mgd.InputFile('normal.bam', 'sample_id', fnames=normal_bam_files),
             mgd.InputFile('tumour.bam', 'sample_id', fnames=tumour_bam_files),
             mgd.InputFile('titan', 'sample_id', fnames=titan_files),
@@ -63,6 +62,9 @@ def sample_qc_workflow(args):
             mgd.OutputFile('genome_wide_plot.pdf', 'sample_id', template=genome_wide_plot),
             mgd.OutputFile('normcov', 'sample_id', template=normal_coverage),
             mgd.OutputFile('tumcov', 'sample_id', template=tumour_coverage),
+            chromosomes,
+            args['bins'],
+            args['mapping_qual_threshold']
         ),
         kwargs={'single_node': args['single_node']}
     )

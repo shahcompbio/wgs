@@ -95,7 +95,6 @@ def get_coverage_data(
 def create_sample_qc_workflow(
         sample_id,
         refdir,
-        metadata,
         normal_bam,
         tumour_bam,
         titan,
@@ -107,11 +106,11 @@ def create_sample_qc_workflow(
         genome_wide_plot,
         normal_coverage,
         tumour_coverage,
+        chromosomes,
+        bins,
+        mapping_qual_threshold,
         single_node=False
 ):
-    chromosomes = metadata["chromosomes"]
-    bins = metadata["bins"]
-    mapping_qual = metadata["mapping_quality_threshold"]
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -123,7 +122,7 @@ def create_sample_qc_workflow(
             mgd.OutputFile(normal_coverage),
             refdir,
             chromosomes,
-            mapping_qual,
+            mapping_qual_threshold,
             bins,
         ),
         kwargs={'single_node': single_node}
@@ -137,7 +136,7 @@ def create_sample_qc_workflow(
             mgd.OutputFile(tumour_coverage),
             refdir,
             chromosomes,
-            mapping_qual,
+            mapping_qual_threshold,
             bins,
         ),
         kwargs={'single_node': single_node}

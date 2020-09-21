@@ -19,8 +19,8 @@ def filter_annotated_maf(annotated_maf, filtered_maf):
     annotated_maf = pd.read_csv(annotated_maf, sep="\t")
 
     filt_maf = annotated_maf[
-        (annotated_maf.oncogenic == "Oncogenic")
-        | (annotated_maf.oncogenic == "Likely Oncogenic")
+        (annotated_maf.ONCOGENIC == "Oncogenic")
+        | (annotated_maf.ONCOGENIC == "Likely Oncogenic")
         ]
     filt_maf.to_csv(filtered_maf, sep="\t")
 
@@ -35,7 +35,7 @@ def plot_mutation_burden(maf, burden_plot_path):
     plt.xticks(nums, data.index, rotation='vertical')
     axis.set_ylabel("Number of mutations")
     fig.savefig(burden_plot_path, format="png")
-    fig.close()
+    plt.close()
 
 
 def make_R_cohort_plots(

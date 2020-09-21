@@ -123,9 +123,12 @@ def parse_args():
     sample_qc.set_defaults(which='sample_qc')
     sample_qc = add_global_args(sample_qc)
     sample_qc.add_argument(
-        "--qc_metadata",
-        required=True,
-        help='''qc_metadata'''
+        '--bins',
+        default=2000
+    )
+    sample_qc.add_argument(
+        '--mapping_qual_threshold',
+        default=0
     )
 
     # ================

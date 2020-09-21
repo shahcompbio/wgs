@@ -33,7 +33,6 @@ def cohort_qc_workflow(args):
             mgd.InputInstance("cohort_label", ),
             api_key,
             out_dir,
-            tmp_dir,
             mgd.InputFile('cohort_maf', 'cohort_label', fnames=cohort_mafs),
             mgd.OutputFile('report_path', 'cohort_label', template=report_path),
 
