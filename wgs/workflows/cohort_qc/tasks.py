@@ -4,6 +4,25 @@ import pypeliner
 from wgs.utils import helpers
 
 
+def merge_mafs(mafs, merged_maf, labels=None):
+
+    if labels:
+        mafs = dict(zip(labels.values(), mafs.values()))
+
+    #only write the first header
+    write_header = True
+
+    for label, maf in mafs.items():
+        maf = pd.read_csv(maf, sep="\t", chunksize=10e6)
+        for chunk in maf:
+            if labels:
+                chunk["Tumor_Sample_Barcode"] = [label] * len(chunk.index)
+            chunk.to_csv(merged_maf, sep="\t", index=False, header=write_header, mode='a')
+
+            #only write the first header
+            write_header=False
+
+    
 def annotate_maf_with_oncokb(
         maf, api_key, tmpspace, annotated_maf, docker_image=None
 ):
@@ -12,6 +31,7 @@ def annotate_maf_with_oncokb(
     cmd = [
         "MafAnnotator.py", "-i", maf, "-o", annotated_maf, "-b", api_key
     ]
+
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
@@ -22,6 +42,7 @@ def filter_annotated_maf(annotated_maf, filtered_maf):
         (annotated_maf.ONCOGENIC == "Oncogenic")
         | (annotated_maf.ONCOGENIC == "Likely Oncogenic")
         ]
+
     filt_maf.to_csv(filtered_maf, sep="\t")
 
 
