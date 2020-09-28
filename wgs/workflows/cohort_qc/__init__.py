@@ -7,7 +7,7 @@ from wgs.config import config
 
 
 def create_cohort_qc_workflow(
-        cohort_label, api_key, out_dir, cohort_maf, report_path
+        cohort_label, api_key, out_dir, sample_labels, sample_mafs, report_path
 ):
     oncoplot = os.path.join(
         out_dir, cohort_label, "cohort_oncoplot.png"
@@ -26,6 +26,18 @@ def create_cohort_qc_workflow(
         ctx={'docker_image': config.containers('wgs')}
     )
 
+
+    workflow.transform(
+        name='merge_sample_mafs',
+        func='wgs.workflows.cohort_qc.tasks.merge_mafs',
+        args=(
+            sample_mafs,
+            mgd.TempOutputFile("cohort_maf"),
+        ),
+        kwargs={'labels': sample_labels}
+    )
+
+
     if api_key:
         filtered_maf = os.path.join(out_dir, cohort_label, "onco_kb-filtered_maf.maf")
 
@@ -33,7 +45,7 @@ def create_cohort_qc_workflow(
             name='annotate_maf',
             func='wgs.workflows.cohort_qc.tasks.annotate_maf_with_oncokb',
             args=(
-                cohort_maf,
+                mgd.TempInputFile("cohort_maf"),
                 api_key,
                 mgd.TempSpace("annotated_maf_tm"),
                 mgd.TempOutputFile("annotated_maf"),
@@ -55,11 +67,12 @@ def create_cohort_qc_workflow(
         logging.warning("No API key is provided to use oncoKB, so results will be unfiltered.")
         kwargs = None
 
+
     workflow.transform(
         name='make_cohort_plots',
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
         args=(
-            cohort_maf,
+            mgd.TempInputFile("cohort_maf"),
             mgd.OutputFile(oncoplot),
             mgd.OutputFile(somatic_interactions_plot),
             mgd.OutputFile(summary_plot),
@@ -71,7 +84,7 @@ def create_cohort_qc_workflow(
         name='burden_plot',
         func='wgs.workflows.cohort_qc.tasks.plot_mutation_burden',
         args=(
-            cohort_maf,
+            mgd.TempInputFile("cohort_maf"),
             mgd.OutputFile(burden_plot),
         ),
     )
