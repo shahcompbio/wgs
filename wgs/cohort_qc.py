@@ -19,7 +19,7 @@ def cohort_qc_workflow(args):
     sample_mafs = {label: data["sample_maf"] for label, data in inputs.items()}
     sample_labels = {label: data["sample_label"] for label, data in inputs.items()}
 
-    report_path = os.path.join(out_dir, '{cohort_label}', "report.html")
+    report_path = {label[0]: os.path.join(out_dir, label[0], "report.html") for label, data in inputs.items()}
 
     workflow.setobj(
         obj=mgd.OutputChunks('cohort_label', 'sample_label'),
@@ -36,7 +36,7 @@ def cohort_qc_workflow(args):
             out_dir,
             sample_labels, 
             mgd.InputFile('sample_maf_dict', 'cohort_label', 'sample_label', fnames=sample_mafs, axes_origin=[]),
-            mgd.OutputFile('report_path', 'cohort_label', template=report_path),
+            mgd.OutputFile('report_path', 'cohort_label', fnames=report_path),
         
         ),
     )

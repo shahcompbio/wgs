@@ -33,8 +33,8 @@ def create_cohort_qc_workflow(
         args=(
             sample_mafs,
             mgd.TempOutputFile("cohort_maf"),
+            sample_labels
         ),
-        kwargs={'labels': sample_labels}
     )
 
 
@@ -47,7 +47,7 @@ def create_cohort_qc_workflow(
             args=(
                 mgd.TempInputFile("cohort_maf"),
                 api_key,
-                mgd.TempSpace("annotated_maf_tm"),
+                mgd.TempSpace("annotated_maf_tmp"),
                 mgd.TempOutputFile("annotated_maf"),
             ),
             kwargs={'docker_image': config.containers("oncokb-annotator")}
@@ -98,7 +98,7 @@ def create_cohort_qc_workflow(
             mgd.InputFile(somatic_interactions_plot),
             mgd.InputFile(summary_plot),
             mgd.InputFile(burden_plot),
-            report_path,
+            mgd.OutputFile(report_path),
         ),
     )
 
