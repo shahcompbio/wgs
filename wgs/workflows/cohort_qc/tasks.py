@@ -4,16 +4,16 @@ import pypeliner
 from wgs.utils import helpers
 
 
-def merge_mafs(mafs, merged_maf, labels=None):
+def merge_mafs(mafs, merged_maf, labels):
 
-    if labels:
-        mafs = dict(zip(labels.values(), mafs.values()))
+    mafs = list(mafs.values())
+    labels = list(labels.values())
 
     #only write the first header
     write_header = True
 
-    for label, maf in mafs.items():
-        maf = pd.read_csv(maf, sep="\t", chunksize=10e6)
+    for label, maf in zip(labels, mafs):
+        maf = pd.read_csv(maf, sep="\t", chunksize=10e6, skiprows=1)
         for chunk in maf:
             if labels:
                 chunk["Tumor_Sample_Barcode"] = [label] * len(chunk.index)
@@ -21,8 +21,8 @@ def merge_mafs(mafs, merged_maf, labels=None):
 
             #only write the first header
             write_header=False
-
     
+
 def annotate_maf_with_oncokb(
         maf, api_key, tmpspace, annotated_maf, docker_image=None
 ):
