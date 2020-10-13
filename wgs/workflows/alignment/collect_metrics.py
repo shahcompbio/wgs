@@ -8,10 +8,11 @@ import os
 
 import pandas as pd
 from wgs.utils import csvutils
-from wgs.workflows.alignment.dtypes import dtypes
+
 
 class CollectMetrics(object):
-    def __init__(self, wgs_metrics, insert_metrics, flagstat_metrics, markdups_metrics, output, sample_id, main_dtypes, insert_metrics_dtypes):
+    def __init__(self, wgs_metrics, insert_metrics, flagstat_metrics, markdups_metrics, output, sample_id, main_dtypes,
+                 insert_metrics_dtypes):
         self.wgs_metrics = wgs_metrics
         self.flagstat_metrics = flagstat_metrics
         self.insert_metrics = insert_metrics
@@ -192,13 +193,13 @@ class CollectMetrics(object):
         """
         assert len(header) == len(data)
         # replace empty vals with NA
-        df = pd.DataFrame(dict(zip(header, data)), index = [0])
-        csv_out = csvutils.CsvOutput(self.output, header = header, dtypes = dtypes)
+        df = pd.DataFrame(dict(zip(header, data)), index=[0])
+        csv_out = csvutils.CsvOutput(self.output, header=header, dtypes=dtypes)
         csv_out.write_df(df)
-        #writer = open(self.output, 'w')
-        #writer.write(','.join(header) + '\n')
-        #writer.write(','.join([str(v) for v in data]))
-        #writer.close()
+        # writer = open(self.output, 'w')
+        # writer.write(','.join(header) + '\n')
+        # writer.write(','.join([str(v) for v in data]))
+        # writer.close()
 
     # =========================================================================
     # Run script
@@ -230,6 +231,6 @@ class CollectMetrics(object):
                        'standard_deviation_insert_size']
             dtypes.update(self.insert_metrics_dtypes)
 
-        #print output
-        #raise Exception
+        # print output
+        # raise Exception
         self.write_data(header, output, dtypes)

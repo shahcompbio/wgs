@@ -202,7 +202,6 @@ def align_samples(
         metrics_tar = {sample: metrics_tar[sample] for sample in samples}
         bam_tdf = {sample: bam_tdf[sample] for sample in samples}
 
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
@@ -257,6 +256,7 @@ def align_samples(
         args=(
             mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
             mgd.TempOutputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
+            mgd.TempSpace('merge_tumour_lanes_tempdir')
         ),
         kwargs={
             'picard_docker_image': config.containers('picard'),
@@ -378,6 +378,7 @@ def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_
         args=(
             pypeliner.managed.TempInputFile('aligned.bam'),
             pypeliner.managed.OutputFile(out_file),
+            pypeliner.managed.TempSpace('bam_sort_tempdir')
         ),
         kwargs={
             'docker_image': config.containers('picard'),

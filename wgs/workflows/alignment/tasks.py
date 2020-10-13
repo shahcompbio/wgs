@@ -9,11 +9,15 @@ from wgs.workflows.alignment.collect_metrics import CollectMetrics
 
 def produce_fastqc_report(fastq_filename, output_html, output_plots, temp_dir,
                           **kwargs):
-    helpers.makedirs(temp_dir)
+    temp_out_dir = os.path.join(temp_dir, 'out')
+    temp_tmp_dir = os.path.join(temp_dir, 'tmp')
+    helpers.makedirs(temp_out_dir)
+    helpers.makedirs(temp_tmp_dir)
 
     pypeliner.commandline.execute(
         'fastqc',
-        '--outdir=' + temp_dir,
+        '--outdir=' + temp_out_dir,
+        '--dir=' + temp_tmp_dir,
         fastq_filename,
         **kwargs)
 
@@ -126,8 +130,7 @@ def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samt
         pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
 
 
-
-def picard_merge_bams(inputs, output, mem="2G", **kwargs):
+def picard_merge_bams(inputs, output, tempdir, mem="2G", docker_image=None):
     if isinstance(inputs, dict):
         inputs = inputs.values()
 
@@ -138,13 +141,14 @@ def picard_merge_bams(inputs, output, mem="2G", **kwargs):
            'SORT_ORDER=coordinate',
            'ASSUME_SORTED=true',
            'VALIDATION_STRINGENCY=LENIENT',
-           'MAX_RECORDS_IN_RAM=150000'
+           'MAX_RECORDS_IN_RAM=150000',
+           'TMP_DIR=' + tempdir,
            ]
 
     for bamfile in inputs:
         cmd.append('I=' + os.path.abspath(bamfile))
 
-    pypeliner.commandline.execute(*cmd, **kwargs)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def bam_index(infile, outfile, **kwargs):
@@ -155,9 +159,9 @@ def bam_index(infile, outfile, **kwargs):
         **kwargs)
 
 
-def merge_bams(inputs, output, picard_docker_image=None, samtools_docker_image=None):
+def merge_bams(inputs, output, tempdir, picard_docker_image=None, samtools_docker_image=None):
     output_index = output + '.bai'
-    picard_merge_bams(inputs, output, docker_image=picard_docker_image)
+    picard_merge_bams(inputs, output, tempdir, docker_image=picard_docker_image)
     bam_index(output, output_index, docker_image=samtools_docker_image)
 
 
@@ -241,12 +245,16 @@ def align_bwa_mem(
     )
 
 
-def bam_sort(bam_filename, sorted_bam_filename, threads=1, mem="2G", docker_image=None):
+def bam_sort(bam_filename, sorted_bam_filename, tempdir, threads=1, mem="2G", docker_image=None):
+    prefix = os.path.join(tempdir, 'samtools_sort')
+
     pypeliner.commandline.execute(
         'samtools', 'sort', '-@', threads, '-m', mem,
         bam_filename,
         '-o',
         sorted_bam_filename,
+        '-T',
+        prefix,
         docker_image=docker_image)
 
 
