@@ -98,7 +98,6 @@ def collect_bam_metrics(
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='16:00',
-            # docker_image=config.containers('igvtools')
         ),
         func='wgs.workflows.alignment.tasks.get_igvtools_count',
         args=(

@@ -33,7 +33,7 @@ def produce_fastqc_report(fastq_filename, output_html, output_plots, temp_dir,
     else:
         raise Exception("Unknown file type")
 
-    output_basename = os.path.join(temp_dir, fastq_basename)
+    output_basename = os.path.join(temp_out_dir, fastq_basename)
 
     shutil.move(output_basename + '_fastqc.zip', output_plots)
     shutil.move(output_basename + '_fastqc.html', output_html)
