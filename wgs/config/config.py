@@ -134,7 +134,6 @@ def default_params(mode='all'):
         'breakpoint_calling': breakpoint_calling,
         'variant_calling': variant_calling,
         'alignment': alignment,
-        'sample_qc': sample_qc
     }
 
     if not mode == 'all':
