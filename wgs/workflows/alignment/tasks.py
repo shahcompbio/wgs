@@ -246,6 +246,9 @@ def align_bwa_mem(
 
 
 def bam_sort(bam_filename, sorted_bam_filename, tempdir, threads=1, mem="2G", docker_image=None):
+
+    helpers.makedirs(tempdir)
+
     prefix = os.path.join(tempdir, 'samtools_sort')
 
     pypeliner.commandline.execute(
