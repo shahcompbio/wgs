@@ -493,6 +493,7 @@ def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id,
         args=(
             pypeliner.managed.TempInputFile('sorted.bam', 'split'),
             pypeliner.managed.OutputFile(out_file),
+            pypeliner.managed.TempSpace('bam_merge_by_split', 'split')
         ),
         kwargs={
             'picard_docker_image': config.containers('picard'),
