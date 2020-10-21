@@ -72,8 +72,11 @@ def somatic_calling_workflow(args):
     )
 
     filenames = [
-        museq_vcf, museq_maf, strelka_snv_vcf, strelka_snv_maf,
-        strelka_indel_vcf, strelka_indel_maf, museq_paired_pdf
+        museq_vcf, museq_maf, museq_paired_pdf,
+        strelka_snv_vcf, strelka_snv_maf,
+        strelka_indel_vcf, strelka_indel_maf,
+        mutect_vcf, mutect_maf,
+        consensus_somatic_maf
     ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
