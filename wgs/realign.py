@@ -58,7 +58,7 @@ def realign_bam_workflow(args):
     input_bams = {sample: yamldata[sample]['input'] for sample in samples}
 
     output_bams = os.path.join(outdir, '{sample_id}', '{sample_id}.bam')
-    metrics = os.path.join(outdir, '{sample_id}', '{sample_id}.txt')
+    metrics = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
     metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}.tar')
 
     workflow.setobj(

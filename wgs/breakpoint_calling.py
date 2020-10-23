@@ -117,6 +117,7 @@ def breakpoint_calling_workflow(args):
         destruct_breakpoints,
         destruct_library,
         destruct_raw_breakpoints,
+        destruct_raw_library,
         destruct_reads,
         lumpy_vcf,
         parsed_csv

@@ -3,6 +3,8 @@ from collections import defaultdict
 import pandas as pd
 from intervaltree import IntervalTree
 
+from wgs.utils.csvutils import csvutils
+
 
 def build_interval_tree(data):
     '''
@@ -68,7 +70,8 @@ def filter_destruct_on_lumpy(destruct, lumpy_tree):
 
 
 def write(data, outfile):
-    data.to_csv(outfile, index=False)
+    csvutils.write_dataframe_to_csv_and_yaml(
+        data, outfile, write_header=True, sep=',')
 
 
 def consensus(destruct_infile, lumpy_infile, consensus, confidence_interval=None):

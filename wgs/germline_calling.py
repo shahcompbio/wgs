@@ -72,8 +72,17 @@ def germline_calling_workflow(args):
     )
 
     filenames = [
-        museq_ss_vcf, samtools_germline_vcf, samtools_roh,
-        museq_single_pdf
+        museq_ss_vcf,
+        museq_ss_maf,
+        museq_single_pdf,
+        samtools_germline_vcf,
+        samtools_germline_maf,
+        samtools_roh,
+        freebayes_germline_vcf,
+        freebayes_germline_maf,
+        rtg_germline_vcf,
+        rtg_germline_maf,
+        consensus_germline_maf
     ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")

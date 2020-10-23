@@ -73,7 +73,7 @@ def create_destruct_wgs_workflow(
                  sample_id + 'N': mgd.InputFile(normal_bam)},
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
-                mgd.OutputFile(reads),
+                mgd.TempOutputFile("raw_reads"),
                 mgd.TempInputObj("destruct_config"),
                 destruct_refdata
             )
@@ -164,6 +164,19 @@ def create_destruct_wgs_workflow(
         args=(
             mgd.TempInputFile("library"),
             mgd.OutputFile(library, extensions=['.yaml']),
+        )
+    )
+
+    workflow.transform(
+        name='finalize_reads',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
+        func="wgs.utils.csvutils.finalize_csv",
+        args=(
+            mgd.TempInputFile("reads"),
+            mgd.OutputFile(reads, extensions=['.yaml']),
         )
     )
 
