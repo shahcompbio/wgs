@@ -48,7 +48,17 @@ def alignment_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
-    outputted_filenames = helpers.expand_list([outputs, metrics_output, metrics_tar], samples, "sample_id")
+    outputted_filenames = helpers.expand_list(
+        [
+            outputs,
+            outputs_tdf,
+            metrics_output,
+            metrics_tar,
+
+        ],
+        samples,
+        "sample_id"
+    )
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
