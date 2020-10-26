@@ -25,7 +25,7 @@ def germline_calling_workflow(args):
 
     samtools_germline_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_samtools_germline.vcf.gz')
     samtools_germline_maf = os.path.join(var_dir, '{sample_id}', '{sample_id}_samtools_germline.maf')
-    samtools_roh = os.path.join(var_dir, '{sample_id}', '{sample_id}_roh.csv')
+    samtools_roh = os.path.join(var_dir, '{sample_id}', '{sample_id}_roh.csv.gz')
 
     freebayes_germline_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_freebayes_germline.vcf.gz')
     freebayes_germline_maf = os.path.join(var_dir, '{sample_id}', '{sample_id}_freebayes_germline.maf')

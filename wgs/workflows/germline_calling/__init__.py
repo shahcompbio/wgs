@@ -99,7 +99,7 @@ def create_germline_calling_workflow(
                            fnames=samtools_germline_vcf),
             mgd.OutputFile("samtools_germlines_anno.maf", 'sample_id',
                            fnames=samtools_germline_maf),
-            mgd.OutputFile("roh_calls.csv", 'sample_id',
+            mgd.OutputFile("roh_calls.csv.gz", 'sample_id',
                            fnames=roh_calls),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
