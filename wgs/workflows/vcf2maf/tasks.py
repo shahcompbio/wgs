@@ -21,22 +21,22 @@ def run_vcf2maf(
         normal_id=None,
         docker_image=None
 ):
+    if os.path.exists(tempdir):
+        helpers.rmdirs(tempdir)
+
+    helpers.makedirs(tempdir)
+
+    input_vcf = os.path.join(tempdir, os.path.basename(vcf_file))
+    shutil.copyfile(vcf_file, input_vcf)
+
     if vcf_file.endswith('.gz'):
-        helpers.makedirs(tempdir)
         vcf_unzipped = os.path.join(tempdir, 'unzipped_vcf.vcf')
-        gunzip_file(vcf_file, vcf_unzipped)
+        gunzip_file(input_vcf, vcf_unzipped)
     else:
-        vcf_unzipped = vcf_file
-
-    #remove vcf from filepath
-    vep_vcf = vcf_unzipped[:-3]
-    vep_vcf += 'vep.vcf'
-
-    if os.path.exists(vep_vcf):
-        os.remove(vep_vcf)
+        vcf_unzipped = input_vcf
 
     cmd = [
-        'vcf2maf',  vcf_unzipped, maf_output,
+        'vcf2maf', vcf_unzipped, maf_output,
         os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
         os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
         reference,

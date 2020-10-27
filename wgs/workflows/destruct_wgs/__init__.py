@@ -53,7 +53,7 @@ def create_destruct_wgs_workflow(
                 sample_id,
                 mgd.TempOutputFile("raw_breakpoints"),
                 mgd.TempOutputFile("raw_library"),
-                mgd.OutputFile(reads),
+                mgd.TempOutputFile("raw_reads"),
                 mgd.TempInputObj("destruct_config"),
                 destruct_refdata,
             ),
@@ -167,6 +167,20 @@ def create_destruct_wgs_workflow(
         )
     )
 
+
+    workflow.transform(
+        name='reheader_reads',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='8:00'
+        ),
+        func="wgs.workflows.destruct_wgs.tasks.reheader_reads",
+        args=(
+            mgd.TempInputFile("raw_reads"),
+            mgd.TempOutputFile("raw_reads_reheader"),
+        )
+    )
+
     workflow.transform(
         name='finalize_reads',
         ctx=helpers.get_default_ctx(
@@ -175,7 +189,7 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("reads"),
+            mgd.TempInputFile("raw_reads_reheader"),
             mgd.OutputFile(reads, extensions=['.yaml']),
         )
     )

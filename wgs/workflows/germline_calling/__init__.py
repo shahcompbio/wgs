@@ -100,7 +100,7 @@ def create_germline_calling_workflow(
             mgd.OutputFile("samtools_germlines_anno.maf", 'sample_id',
                            fnames=samtools_germline_maf),
             mgd.OutputFile("roh_calls.csv.gz", 'sample_id',
-                           fnames=roh_calls),
+                           fnames=roh_calls, extensions=['.yaml']),
             mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                           extensions=['.bai'], axes_origin=[]),
             paths_refdir['reference'],

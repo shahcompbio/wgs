@@ -3,7 +3,7 @@ from collections import defaultdict
 import pandas as pd
 from intervaltree import IntervalTree
 
-from wgs.utils.csvutils import csvutils
+from wgs.utils import csvutils
 
 
 def build_interval_tree(data):

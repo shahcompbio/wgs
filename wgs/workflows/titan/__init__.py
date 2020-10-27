@@ -269,7 +269,7 @@ def create_titan_workflow(
             mgd.TempInputFile("titan_parsed.csv", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.TempInputFile("titan_plots", 'numclusters', 'ploidy', axes_origin=[]),
             mgd.OutputFile(segs, extensions=['.yaml']),
-            mgd.OutputFile(igv_segs, extensions=['.yaml']),
+            mgd.OutputFile(igv_segs),
             mgd.OutputFile(params, extensions=['.yaml']),
             mgd.OutputFile(outfile, extensions=['.yaml']),
             mgd.OutputFile(parsed, extensions=['.yaml']),

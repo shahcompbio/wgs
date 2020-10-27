@@ -108,7 +108,7 @@ def breakpoint_calling_workflow(args):
         args=(
             mgd.InputFile('destruct_breakpoints', 'sample_id', template=destruct_breakpoints),
             mgd.InputFile('lumpy_vcf', 'sample_id', template=lumpy_vcf),
-            mgd.OutputFile('consensus_calls', 'sample_id', template=parsed_csv),
+            mgd.OutputFile('consensus_calls', 'sample_id', template=parsed_csv, extensions=['.yaml']),
             chromosomes
         ),
     )
@@ -120,6 +120,7 @@ def breakpoint_calling_workflow(args):
         destruct_raw_library,
         destruct_reads,
         lumpy_vcf,
+        svaba_vcf,
         parsed_csv
     ]
 

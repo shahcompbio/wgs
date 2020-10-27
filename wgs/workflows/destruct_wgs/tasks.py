@@ -4,6 +4,7 @@ import os
 
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.utils import helpers
 
 
 def run_destruct_local(
@@ -21,7 +22,6 @@ def run_destruct_local(
     config = {'pipelinedir': pipelinedir, 'tmpdir': tmpdir,
               'submit': 'local', 'maxjobs': ncpus,
               'loglevel': 'DEBUG'}
-
 
     pyp = pypeliner.app.Pypeline(config=config)
 
@@ -48,3 +48,24 @@ def run_destruct_local(
     )
 
     pyp.run(workflow)
+
+
+def reheader_reads(infile, outfile):
+    with helpers.GetFileHandle(infile, 'rt') as indata, helpers.GetFileHandle(outfile, 'wt') as outdata:
+        line_one = indata.readline()
+
+        header = line_one.split('\t')
+
+        assert len(header) == 8
+
+        assert not header[0] == 'prediction_id'
+
+        header = ['prediction_id', 'library_id', 'fragment_id', 'read_end', 'seq', 'qual', 'comment', 'filtered']
+
+        header = '\t'.join(header) + '\n'
+
+        outdata.write(header)
+        outdata.write(line_one)
+
+        for line in indata:
+            outdata.write(line)

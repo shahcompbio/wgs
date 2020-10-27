@@ -8,8 +8,11 @@ import os
 import pypeliner
 import pysam
 from wgs.utils import bamutils
+from wgs.utils import csvutils
 from wgs.utils import helpers
 from wgs.utils import vcfutils
+
+import pandas as pd
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -78,6 +81,7 @@ def run_samtools_germline_one_job(
     normal_id = bamutils.get_sample_id(bam_file)
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
 
+
 def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
@@ -85,7 +89,54 @@ def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
     vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
 
 
-def roh_calling(samtools_germlines, roh_output, docker_image=None):
-    cmd = ['bcftools', 'roh', '-G30', '--AF-dflt', 0.4, samtools_germlines, '>', roh_output]
+def roh_calling(samtools_germlines, roh_output, tempdir, docker_image=None):
+    helpers.makedirs(tempdir)
+
+    output = os.path.join(tempdir, 'output.csv')
+
+    cmd = ['bcftools', 'roh', '-G30', '--AF-dflt', 0.4, samtools_germlines, '>', output]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+    parse_roh_output( output, roh_output)
+
+
+def parse_roh_output(infile, outfile):
+    parsed = []
+
+    with helpers.GetFileHandle(infile) as indata:
+        for line in indata:
+            if line.startswith('#'):
+                continue
+
+            line = line.strip().split()
+
+            if line[0] == 'ST':
+               parsed.append({
+                   'type': line[0],
+                   'sample': line[1],
+                   'chromosome': line[2],
+                   'start': line[3],
+                   'end': float('nan'),
+                   'state': line[4],
+                   'length': float('nan'),
+                   'num_markers': float('nan'),
+                   'quality': line[5]
+               })
+            elif line[0] == 'RG':
+                parsed.append({
+                    'type': line[0],
+                    'sample': line[1],
+                    'chromosome': line[2],
+                    'start': line[3],
+                    'end': line[4],
+                    'state': float('nan'),
+                    'length': line[5],
+                    'num_markers': line[6],
+                    'quality': line[7]
+                })
+
+
+    parsed = pd.DataFrame(parsed)
+
+    csvutils.write_dataframe_to_csv_and_yaml(parsed, outfile, write_header=True)

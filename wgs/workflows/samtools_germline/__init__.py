@@ -118,7 +118,8 @@ def create_samtools_germline_workflow(
         func='wgs.workflows.samtools_germline.tasks.roh_calling',
         args=(
             mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
-            mgd.OutputFile(germline_roh)
+            mgd.OutputFile(germline_roh, extensions=['.yaml']),
+            mgd.TempSpace('roh_calling_temp')
         ),
         kwargs={'docker_image': config.containers('vcftools')}
     )
@@ -133,6 +134,5 @@ def create_samtools_germline_workflow(
         ),
         kwargs={'normal_id': sample_id}
     )
-
 
     return workflow

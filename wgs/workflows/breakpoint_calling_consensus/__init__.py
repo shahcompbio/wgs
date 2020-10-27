@@ -59,7 +59,7 @@ def create_consensus_workflow(
         args=(
             mgd.TempInputFile('destruct.csv'),
             mgd.TempInputFile('lumpy.csv'),
-            mgd.OutputFile(output),
+            mgd.OutputFile(output, extensions=['.yaml']),
             params['consensus']
         ),
     )
