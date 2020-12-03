@@ -6,9 +6,49 @@ import pypeliner.managed as mgd
 from wgs.config import config
 
 
+def cna_annotation_workflow(cohort, labels, remixt_dict, output_table, gtf):
+    workflow = pypeliner.workflow.Workflow(
+        ctx={'docker_image': config.containers('wgs')}
+    )
+    workflow.setobj(
+        obj=mgd.OutputChunks('sample_label'),
+        value=list(remixt_dict.keys()),
+    )
+    # gtf="/home/mcphersa1/work/apolloanalysis/metadata/Homo_sapiens.GRCh37.73.gtf.gz"
+
+    workflow.transform(
+        name='classify_remixt',
+        func='wgs.workflows.cohort_qc.tasks.classify_remixt',
+        axes=("sample_label",),
+        args=(
+            mgd.InputInstance('sample_label'),
+            mgd.InputFile('remixt', 'sample_label', fnames=remixt_dict),
+            gtf,
+            mgd.TempSpace('annotated_maf_tmp', 'sample_label'),
+            mgd.TempOutputFile('amps', 'sample_label'),
+            mgd.TempOutputFile('dels', 'sample_label'),
+        ),
+    )
+
+    workflow.transform(
+        name='merge_cna_tables',
+        func='wgs.workflows.cohort_qc.tasks.merge_cna_tables',
+        args=(
+            mgd.TempInputFile('amps', 'sample_label', axes_origin=[]),
+            mgd.TempInputFile('dels', 'sample_label', axes_origin=[]),
+            labels,
+            mgd.OutputFile(output_table),
+            cohort
+        ),
+    )
+
+    return workflow
+
 def create_cohort_qc_workflow(
-        cohort_label, api_key, out_dir, sample_labels, sample_mafs, report_path
+        cohort_label, api_key, out_dir, sample_labels, germline_mafs, somatic_mafs, 
+        cna_table, report_path, cohort_maf_oncogenic_annotated, cohort_remixt_path
 ):
+
     oncoplot = os.path.join(
         out_dir, cohort_label, "cohort_oncoplot.png"
     )
@@ -28,19 +68,41 @@ def create_cohort_qc_workflow(
 
 
     workflow.transform(
-        name='merge_sample_mafs',
-        func='wgs.workflows.cohort_qc.tasks.merge_mafs',
+        name='merge_germline_mafs',
+        func='wgs.workflows.cohort_qc.tasks.merge_relabel_mafs',
         args=(
-            sample_mafs,
-            mgd.TempOutputFile("cohort_maf"),
+            germline_mafs,
+            mgd.TempOutputFile("cohort_germline_maf"),
             sample_labels
         ),
+        kwargs={"class_label": "_germline"}
+
     )
 
+    workflow.transform(
+        name='merge_somatic_mafs',
+        func='wgs.workflows.cohort_qc.tasks.merge_relabel_mafs',
+        args=(
+            somatic_mafs,
+            mgd.TempOutputFile("cohort_somatic_maf"),
+            sample_labels
+        ),
+        kwargs={ "class_label": "_somatic"}
 
+    )
+
+    workflow.transform(
+        name='merge_mafs',
+        func='wgs.workflows.cohort_qc.tasks.merge_mafs',
+        args=(
+            [mgd.TempInputFile("cohort_somatic_maf"),
+            mgd.TempInputFile("cohort_germline_maf")],
+            mgd.TempOutputFile("cohort_maf"),
+        ),
+
+    )
+    
     if api_key:
-        filtered_maf = os.path.join(out_dir, cohort_label, "onco_kb-filtered_maf.maf")
-
         workflow.transform(
             name='annotate_maf',
             func='wgs.workflows.cohort_qc.tasks.annotate_maf_with_oncokb',
@@ -48,7 +110,7 @@ def create_cohort_qc_workflow(
                 mgd.TempInputFile("cohort_maf"),
                 api_key,
                 mgd.TempSpace("annotated_maf_tmp"),
-                mgd.TempOutputFile("annotated_maf"),
+                mgd.OutputFile(cohort_maf_oncogenic_annotated),
             ),
             kwargs={'docker_image': config.containers("oncokb-annotator")}
         )
@@ -57,12 +119,11 @@ def create_cohort_qc_workflow(
             name='filter_annotated_maf',
             func='wgs.workflows.cohort_qc.tasks.filter_annotated_maf',
             args=(
-                mgd.TempInputFile("annotated_maf"),
-                mgd.OutputFile(filtered_maf),
+                mgd.InputFile(cohort_maf_oncogenic_annotated),
+                mgd.TempOutputFile("filtered_maf"),
             ),
         )
-
-        kwargs = {"filtered_maf": mgd.InputFile(filtered_maf)}
+        kwargs={"filtered_maf":  mgd.TempInputFile("filtered_maf") }
     else:
         logging.warning("No API key is provided to use oncoKB, so results will be unfiltered.")
         kwargs = None
@@ -73,6 +134,7 @@ def create_cohort_qc_workflow(
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
         args=(
             mgd.TempInputFile("cohort_maf"),
+            mgd.InputFile(cna_table),
             mgd.OutputFile(oncoplot),
             mgd.OutputFile(somatic_interactions_plot),
             mgd.OutputFile(summary_plot),
