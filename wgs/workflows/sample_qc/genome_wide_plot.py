@@ -158,7 +158,10 @@ def genome_wide_plot(
     roh = read_roh.read(roh)
 
     germline_calls = read_variant_calls.read(germline_calls)
-    somatic_calls = read_variant_calls.read_consensus_csv(somatic_calls)
+    if  somatic_calls.endswith(".maf"):
+        somatic_calls = read_variant_calls.read(somatic_calls)
+    else:
+        somatic_calls = read_variant_calls.read_consensus_csv(somatic_calls)
 
     tumour_coverage = read_coverage.read(tumour_coverage)
     normal_coverage = read_coverage.read(normal_coverage)
