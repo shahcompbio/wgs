@@ -146,7 +146,7 @@ def create_cohort_qc_workflow(
         name='burden_plot',
         func='wgs.workflows.cohort_qc.tasks.plot_mutation_burden',
         args=(
-            mgd.TempInputFile("cohort_maf"),
+            mgd.TempInputFile("cohort_somatic_maf"),
             mgd.OutputFile(burden_plot),
         ),
     )

@@ -98,7 +98,7 @@ def filter_annotated_maf(annotated_maf, filtered_maf):
 
 
 def plot_mutation_burden(maf, burden_plot_path):
-    maf = pd.read_csv(maf, sep="\t").drop_duplicates()
+    maf = pd.read_csv(maf, sep="\t", usecols=["Tumor_Sample_Barcode"]).drop_duplicates()
     data = maf.groupby("Tumor_Sample_Barcode").size().sort_values(ascending=False)
 
     fig, axis = plt.subplots(figsize=(15, 5))
@@ -127,7 +127,7 @@ def make_R_cohort_plots(
 
 def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary, burden_plot, report_path):
     cmd = [
-        "run_report.sh", report_path, cohort_label, oncoplot,
+        "run_cohort_qc_report.sh", report_path, cohort_label, oncoplot,
         somatic_interactions, mafsummary, burden_plot
     ]
     pypeliner.commandline.execute(*cmd)
