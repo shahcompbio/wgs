@@ -180,7 +180,8 @@ def containers(container_name):
         'vcf2maf': 'vcf2maf:v0.0.1',
         'gatk': 'gatk:v0.0.1',
         'svaba': 'svaba:v0.0.1',
-        'oncokb-annotator': 'oncokb-annotator:v0.0.1'
+        'oncokb-annotator': 'oncokb-annotator:v0.0.1',
+        'wgs_qc_html':'wgs_qc_html:v0.0.1'
     }
 
     return docker_images[container_name]

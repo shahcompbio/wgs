@@ -6,7 +6,7 @@ import pypeliner.managed as mgd
 from wgs.config import config
 
 
-def cna_annotation_workflow(cohort, labels, remixt_dict, output_table, gtf):
+def cna_annotation_workflow(cohort, labels, remixt_dict, output_table, segmental_copynumber, gtf):
     workflow = pypeliner.workflow.Workflow(
         ctx={'docker_image': config.containers('wgs')}
     )
@@ -14,7 +14,6 @@ def cna_annotation_workflow(cohort, labels, remixt_dict, output_table, gtf):
         obj=mgd.OutputChunks('sample_label'),
         value=list(remixt_dict.keys()),
     )
-    # gtf="/home/mcphersa1/work/apolloanalysis/metadata/Homo_sapiens.GRCh37.73.gtf.gz"
 
     workflow.transform(
         name='classify_remixt',
@@ -39,6 +38,26 @@ def cna_annotation_workflow(cohort, labels, remixt_dict, output_table, gtf):
             labels,
             mgd.OutputFile(output_table),
             cohort
+        ),
+    )
+
+    workflow.transform(
+        name='generate_segmental_copynumber',
+        func='wgs.workflows.cohort_qc.tasks.generate_segmental_copynumber',
+        axes=("sample_label",),
+        args=(
+            mgd.InputFile('remixt', 'sample_label', fnames=remixt_dict),
+            mgd.TempOutputFile('segmental_cn', 'sample_label'),
+            mgd.InputInstance('sample_label')
+        ),
+    )
+
+    workflow.transform(
+        name='merge_segmental_cn',
+        func='wgs.workflows.cohort_qc.tasks.merge_segmental_cn',
+        args=(
+            mgd.TempInputFile('segmental_cn', 'sample_label', axes_origin=[]),
+            mgd.OutputFile(segmental_copynumber)
         ),
     )
 
@@ -123,10 +142,12 @@ def create_cohort_qc_workflow(
                 mgd.TempOutputFile("filtered_maf"),
             ),
         )
-        kwargs={"filtered_maf":  mgd.TempInputFile("filtered_maf") }
+        kwargs={"filtered_maf":  mgd.TempInputFile("filtered_maf"), 
+            'docker_image':config.containers("wgs_qc_html") 
+        }
     else:
         logging.warning("No API key is provided to use oncoKB, so results will be unfiltered.")
-        kwargs = None
+        kwargs = {'docker_image':config.containers("wgs_qc_html") }
 
 
     workflow.transform(
@@ -162,6 +183,7 @@ def create_cohort_qc_workflow(
             mgd.InputFile(burden_plot),
             mgd.OutputFile(report_path),
         ),
+        kwargs={'docker_image':config.containers("wgs_qc_html") }
     )
 
     return workflow

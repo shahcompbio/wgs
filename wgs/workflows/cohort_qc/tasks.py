@@ -2,7 +2,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pypeliner
 from wgs.utils import helpers
+from classifycopynumber import parsers, transformations
 
+
+def merge_segmental_cn(segmental_cn, concats):
+    files = [pd.read_csv(f, sep="\t") for f in list(segmental_cn.values())]
+    segmental_cn_combined = pd.concat(files)
+    segmental_cn_combined.to_csv(concats, sep="\t", index=False)
+
+
+def generate_segmental_copynumber(remixt, segmental_cn, sample):
+    cn, stats = parsers.read_remixt(remixt)
+    cn["sample"] = [sample] * len(cn)
+
+    transformations.generate_segmental_cn(segmental_cn, cn, stats)
 
 
 def merge_cna_tables(amps, dels, labels, output, cohort):
@@ -112,7 +125,7 @@ def plot_mutation_burden(maf, burden_plot_path):
 
 def make_R_cohort_plots(
         cohort_maf, cntable, oncoplot_path, somatic_interactions,
-        mafsummary, filtered_maf=None
+        mafsummary, filtered_maf=None, docker_image=None
 ):
     if not filtered_maf:
         filtered_maf = cohort_maf
@@ -122,13 +135,15 @@ def make_R_cohort_plots(
         oncoplot_path, somatic_interactions, mafsummary
     ]
 
-    pypeliner.commandline.execute(*plots_cmd)
+    pypeliner.commandline.execute(*plots_cmd, docker_image=docker_image)
 
 
-def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary, burden_plot, report_path):
+def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary, 
+    burden_plot, report_path, docker_image=None
+):
     cmd = [
         "run_cohort_qc_report.sh", report_path, cohort_label, oncoplot,
         somatic_interactions, mafsummary, burden_plot
     ]
-    pypeliner.commandline.execute(*cmd)
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 

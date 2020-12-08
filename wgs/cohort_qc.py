@@ -25,9 +25,11 @@ def cohort_qc_workflow(args):
 
     report_path = {label[0]: os.path.join(out_dir, label[0], "report.html") for label, data in inputs.items()}
     cna_table = {label[0]: os.path.join(out_dir, label[0], "cna_table.tsv") for label, data in inputs.items()}
+    segmental_copynumber = {label[0]: os.path.join(out_dir, label[0], "segmental_copynumber.tsv") for label, data in inputs.items()}
     cohort_maf = {label[0]: os.path.join(out_dir, label[0], "cohort.maf") for label, data in inputs.items()}
     cohort_maf_oncogenic_filtered = {label[0]: os.path.join(out_dir, label[0], "cohort_oncogenic_filtered.maf") for label, data in inputs.items()}
     cohort_cna = {label[0]: os.path.join(out_dir, label[0], "cohort_cna.tsv") for label, data in inputs.items()}
+
 
     workflow.setobj(
         obj=mgd.OutputChunks('cohort_label', 'sample_label'),
@@ -43,6 +45,7 @@ def cohort_qc_workflow(args):
             sample_labels,
             mgd.InputFile('remixt_dict', 'cohort_label', 'sample_label', fnames=remixt_data, axes_origin=[]),
             mgd.OutputFile('cna_table', 'cohort_label', fnames=cna_table),
+            mgd.OutputFile('segmental_copynumber', 'cohort_label', fnames=segmental_copynumber),
             gtf,
         ),
     )
