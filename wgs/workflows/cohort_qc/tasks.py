@@ -4,7 +4,6 @@ import pypeliner
 from wgs.utils import helpers
 from classifycopynumber import parsers, transformations
 
-
 def merge_segmental_cn(segmental_cn, concats):
     files = [pd.read_csv(f, sep="\t") for f in list(segmental_cn.values())]
     segmental_cn_combined = pd.concat(files)
@@ -94,20 +93,26 @@ def annotate_maf_with_oncokb(
     helpers.makedirs(tmpspace)
 
     cmd = [
-        "MafAnnotator.py", "-i", maf, "-o", annotated_maf, "-b", api_key
+        "/juno/work/shah/abramsd/oncokb-annotator/MafAnnotator.py", "-i", maf, "-o", annotated_maf, "-b", api_key
     ]
-
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def filter_annotated_maf(annotated_maf, filtered_maf):
-    annotated_maf = pd.read_csv(annotated_maf, sep="\t")
+def label_variants_with_onco_annotatons(row):
+    if row.oncogenic in ["Oncogenic", "Likely Oncogenic", "Predicted Oncogenic"]:
+        return row.Variant_Classification +  "_" + row.oncogenic
+    return row.Variant_Classification
 
-    filt_maf = annotated_maf[
-        (annotated_maf.ONCOGENIC == "Oncogenic")
-        | (annotated_maf.ONCOGENIC == "Likely Oncogenic")
-        ]
-    filt_maf.to_csv(filtered_maf, sep="\t")
+
+def filter_annotated_maf(annotated_maf, filtered_maf, vcNames):
+    annotated_maf = pd.read_csv(annotated_maf, sep="\t")
+    annotated_maf["Variant_Classification"] = annotated_maf[["Variant_Classification", "oncogenic"]].apply(lambda row: 
+        label_variants_with_onco_annotatons(row), axis=1
+    )
+    annotated_maf.to_csv(filtered_maf, sep="\t")
+
+    classes = pd.DataFrame({"Variant_Classification":annotated_maf.Variant_Classification.unique()})
+    classes.to_csv(vcNames, index=False)
 
 
 def plot_mutation_burden(maf, burden_plot_path):
@@ -125,13 +130,15 @@ def plot_mutation_burden(maf, burden_plot_path):
 
 def make_R_cohort_plots(
         cohort_maf, cntable, oncoplot_path, somatic_interactions,
-        mafsummary, filtered_maf=None, docker_image=None
+        mafsummary, filtered_maf=None, vcNames=None, docker_image=None
 ):
-    if not filtered_maf:
-        filtered_maf = cohort_maf
+
+    usemaf=filtered_maf
+    if filtered_maf==None:
+        usemaf=cohort_maf
 
     plots_cmd = [
-        "maftools_plots.R", cohort_maf, cntable, filtered_maf,
+        "maftools_plots.R", usemaf, vcNames, cntable,
         oncoplot_path, somatic_interactions, mafsummary
     ]
 
