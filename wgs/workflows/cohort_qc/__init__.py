@@ -140,9 +140,10 @@ def create_cohort_qc_workflow(
             args=(
                 mgd.InputFile(cohort_maf_oncogenic_annotated),
                 mgd.TempOutputFile("filtered_maf"),
+                mgd.TempOutputFile('vcNames'),
             ),
         )
-        kwargs={"filtered_maf":  mgd.TempInputFile("filtered_maf"), 
+        kwargs={"filtered_maf":  mgd.TempInputFile("filtered_maf"), 'vcNames':mgd.TempInputFile('vcNames'),
             'docker_image':config.containers("wgs_qc_html") 
         }
     else:
@@ -154,7 +155,7 @@ def create_cohort_qc_workflow(
         name='make_cohort_plots',
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
         args=(
-            mgd.TempInputFile("cohort_maf"),
+            mgd.InputFile(cohort_maf_oncogenic_annotated),
             mgd.InputFile(cna_table),
             mgd.OutputFile(oncoplot),
             mgd.OutputFile(somatic_interactions_plot),
