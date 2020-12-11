@@ -164,8 +164,10 @@ def make_R_cohort_plots(
 def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary, 
     burden_plot, report_path, docker_image=None
 ):
+    absolute_report = os.path.abspath(report_path)
+    intermediate_dir = os.path.dirname(absolute_report)
     cmd = [
-        "run_cohort_qc_report.sh", os.path.abspath(report_path), os.path.abspath(cohort_label), os.path.abspath(oncoplot),
+        "run_cohort_qc_report.sh", os.path.abspath(report_path), intermediate_dir,cohort_label, os.path.abspath(oncoplot),
         os.path.abspath(somatic_interactions), os.path.abspath(mafsummary), os.path.abspath(burden_plot)
     ]
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
