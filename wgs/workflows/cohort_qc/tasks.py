@@ -3,6 +3,8 @@ import pandas as pd
 import pypeliner
 from wgs.utils import helpers
 from classifycopynumber import parsers, transformations
+import os
+
 
 def merge_segmental_cn(segmental_cn, concats):
     files = [pd.read_csv(f, sep="\t") for f in list(segmental_cn.values())]
@@ -11,7 +13,8 @@ def merge_segmental_cn(segmental_cn, concats):
 
 
 def generate_segmental_copynumber(remixt, segmental_cn, sample):
-    cn, stats = parsers.read_remixt(remixt)
+
+    cn, stats = parsers.read_remixt_parsed_csv(remixt)
     cn["sample"] = [sample] * len(cn)
 
     transformations.generate_segmental_cn(segmental_cn, cn, stats)
@@ -48,9 +51,8 @@ def merge_cna_tables(amps, dels, labels, output, cohort):
 def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels, docker_image=None):
 
     cmd = [
-        "classifycopynumber", gtf, output_dir, sample_label, amps, dels, "--remixt_h5_filename", remixt, "--plot", False
+        "classifycopynumber", gtf, output_dir, sample_label, amps, dels, "--remixt_parsed_csv", remixt, "--plot", False
     ]
-
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
@@ -98,14 +100,28 @@ def annotate_maf_with_oncokb(
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
+def label_non_synonymous_mutations(variant):
+    non_synonymous_mutation_types=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation",
+         "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation"]
+
+    for v in non_synonymous_mutation_types:
+        if v in variant:
+            return True
+        return False
+
+
 def label_variants_with_onco_annotatons(row):
+    
     if row.oncogenic in ["Oncogenic", "Likely Oncogenic", "Predicted Oncogenic"]:
+        oncogenic = "_".join(row.oncogenic.split(" "))
         return row.Variant_Classification +  "_" + row.oncogenic
     return row.Variant_Classification
 
 
 def filter_annotated_maf(annotated_maf, filtered_maf, vcNames):
     annotated_maf = pd.read_csv(annotated_maf, sep="\t")
+    annotated_maf["non_synonymous"] = annotated_maf.Variant_Classification.apply(lambda v: label_non_synonymous_mutations(v))
+    annotated_maf=annotated_maf[annotated_maf.non_synonymous==True]
     annotated_maf["Variant_Classification"] = annotated_maf[["Variant_Classification", "oncogenic"]].apply(lambda row: 
         label_variants_with_onco_annotatons(row), axis=1
     )
@@ -149,8 +165,8 @@ def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary,
     burden_plot, report_path, docker_image=None
 ):
     cmd = [
-        "run_cohort_qc_report.sh", report_path, cohort_label, oncoplot,
-        somatic_interactions, mafsummary, burden_plot
+        "run_cohort_qc_report.sh", os.path.abspath(report_path), os.path.abspath(cohort_label), os.path.abspath(oncoplot),
+        os.path.abspath(somatic_interactions), os.path.abspath(mafsummary), os.path.abspath(burden_plot)
     ]
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
