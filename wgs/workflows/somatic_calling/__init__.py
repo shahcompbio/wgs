@@ -58,13 +58,14 @@ def create_somatic_calling_workflow(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
-    workflow.setobj(
-        obj=mgd.TempOutputObj('normal_id', 'sample_id'),
-        value={(normal_ids[v], v) for v in samples})
 
     workflow.setobj(
-        obj=mgd.TempOutputObj('tumour_id', 'sample_id'),
-        value={(tumour_ids[v], v) for v in samples})
+        obj=mgd.TempOutputObj('normal_id', 'sample_id', axes_origin=[]),
+        value={v: normal_ids[v] for v in samples})
+
+    workflow.setobj(
+        obj=mgd.TempOutputObj('tumour_id', 'sample_id', axes_origin=[]),
+        value={v: tumour_ids[v] for v in samples})
 
     workflow.subworkflow(
         name="mutationseq_paired",
