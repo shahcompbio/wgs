@@ -17,7 +17,7 @@ def create_samtools_germline_workflow(
         reference,
         reference_vep,
         chromosomes,
-        sample_id,
+        normal_id,
         single_node=None
 ):
     params = config.default_params('variant_calling')
@@ -132,7 +132,7 @@ def create_samtools_germline_workflow(
             mgd.OutputFile(germline_maf, extensions=['.tbi', '.csi']),
             reference_vep
         ),
-        kwargs={'normal_id': sample_id}
+        kwargs={'normal_id': normal_id}
     )
 
     return workflow

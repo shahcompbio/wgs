@@ -16,7 +16,8 @@ def create_museq_workflow(
         reference,
         reference_vep,
         chromosomes,
-        sample_id,
+        normal_id=None,
+        tumour_id=None,
         thousand_genomes=None,
         dbsnp=None,
         germline_refdata=None,
@@ -150,10 +151,6 @@ def create_museq_workflow(
                 }
     )
 
-    if single:
-        vcf2maf_kwargs = {'normal_id': sample_id}
-    else:
-        vcf2maf_kwargs = {'tumour_id': sample_id}
     workflow.subworkflow(
         name="mutationseq_single_maf",
         func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
@@ -162,7 +159,7 @@ def create_museq_workflow(
             mgd.OutputFile(snv_maf),
             reference_vep
         ),
-        kwargs=vcf2maf_kwargs
+        kwargs={'normal_id': normal_id, 'tumour_id': tumour_id}
     )
 
     return workflow

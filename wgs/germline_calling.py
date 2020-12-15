@@ -17,6 +17,8 @@ def germline_calling_workflow(args):
     normals = helpers.get_values_from_input(inputs, 'normal')
     samples = list(normals.keys())
 
+    normal_ids = helpers.get_values_from_input(inputs, 'normal_id')
+
     var_dir = os.path.join(args['out_dir'], 'germline')
 
     museq_ss_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_single_annotated.vcf.gz')
@@ -64,7 +66,8 @@ def germline_calling_workflow(args):
             mgd.OutputFile('rtg_germline_vcf', 'sample_id', template=rtg_germline_vcf, axes_origin=[]),
             mgd.OutputFile('rtg_germline_maf', 'sample_id', template=rtg_germline_maf, axes_origin=[]),
             mgd.OutputFile('consensus_germline_maf', 'sample_id', template=consensus_germline_maf, axes_origin=[]),
-            args['refdir']
+            args['refdir'],
+            normal_ids
         ),
         kwargs={
             'single_node': args['single_node'],

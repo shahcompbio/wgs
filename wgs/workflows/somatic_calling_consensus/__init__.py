@@ -18,8 +18,9 @@ def create_somatic_consensus_workflow(
         museq_snv_vcf,
         consensus_maf,
         chromosomes,
-        sample_id,
-        reference_vep
+        reference_vep,
+        normal_id,
+        tumour_id,
 ):
     workflow = pypeliner.workflow.Workflow()
 
@@ -48,7 +49,7 @@ def create_somatic_consensus_workflow(
             mgd.TempOutputFile('consensus.maf'),
             reference_vep,
         ),
-        kwargs={'normal_id': sample_id}
+        kwargs={'normal_id': normal_id, 'tumour_id': tumour_id}
     )
 
     workflow.transform(
