@@ -62,7 +62,7 @@ def create_germline_calling_workflow(
 
     workflow.setobj(
         obj=mgd.TempOutputObj('normal_id', 'sample_id', axes_origin=[]),
-        value={(normal_ids[v], v) for v in samples})
+        value=[(normal_ids[v], v) for v in samples])
 
     workflow.subworkflow(
         name="mutationseq_single",
