@@ -18,6 +18,9 @@ def somatic_calling_workflow(args):
     normals = helpers.get_values_from_input(inputs, 'normal')
     samples = list(tumours.keys())
 
+    tumour_ids = helpers.get_values_from_input(inputs, 'tumour_id')
+    normal_ids = helpers.get_values_from_input(inputs, 'normal_id')
+
     var_dir = os.path.join(args['out_dir'], 'somatic')
     museq_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.vcf.gz')
     museq_maf = os.path.join(var_dir, '{sample_id}', '{sample_id}_museq_paired_annotated.maf')
@@ -64,6 +67,8 @@ def somatic_calling_workflow(args):
             mgd.OutputFile('mutect_maf', 'sample_id', template=mutect_maf, axes_origin=[]),
             mgd.OutputFile('consensus_somatic_maf', 'sample_id', template=consensus_somatic_maf, axes_origin=[]),
             args['refdir'],
+            normal_ids,
+            tumour_ids,
         ),
         kwargs={
             'single_node': args['single_node'],

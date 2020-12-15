@@ -19,6 +19,7 @@ def create_germline_calling_workflow(
         rtg_germline_maf,
         consensus_germline_maf,
         refdir,
+        normal_ids,
         single_node=False
 ):
     museq_ss_vcf = dict([(sampid, museq_ss_vcf[sampid])
@@ -46,7 +47,7 @@ def create_germline_calling_workflow(
                              for sampid in samples])
 
     consensus_germline_maf = dict([(sampid, consensus_germline_maf[sampid])
-                             for sampid in samples])
+                                   for sampid in samples])
 
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
@@ -58,6 +59,10 @@ def create_germline_calling_workflow(
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
+
+    workflow.setobj(
+        obj=mgd.TempOutputObj('normal_id', 'sample_id', axes_origin=[]),
+        value={v: normal_ids[v] for v in samples})
 
     workflow.subworkflow(
         name="mutationseq_single",
@@ -77,9 +82,10 @@ def create_germline_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
         ),
         kwargs={
+            'tumour_id': None,
+            'normal_id': mgd.TempInputObj('normal_id', 'sample_id'),
             'tumour_bam': None,
             'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
                                         extensions=['.bai'], axes_origin=[]),
@@ -106,7 +112,7 @@ def create_germline_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id', fnames=normal_ids),
         ),
         kwargs={
             'single_node': single_node,
@@ -127,7 +133,7 @@ def create_germline_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id'),
         ),
         kwargs={
             'single_node': single_node,
@@ -149,7 +155,7 @@ def create_germline_calling_workflow(
             paths_refdir['reference_sdf'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id'),
         ),
         kwargs={
             'single_node': single_node,
@@ -163,16 +169,16 @@ def create_germline_calling_workflow(
         args=(
             mgd.InputFile('museq_germlines.vcf.gz', 'sample_id', fnames=museq_ss_vcf),
             mgd.InputFile("samtools_germlines_anno.vcf.gz", 'sample_id',
-                           fnames=samtools_germline_vcf),
+                          fnames=samtools_germline_vcf),
             mgd.InputFile("rtg_germlines_anno.vcf.gz", 'sample_id',
                           fnames=rtg_germline_vcf),
             mgd.InputFile("freebayes_germlines_anno.vcf.gz", 'sample_id',
-                           fnames=freebayes_germline_vcf),
+                          fnames=freebayes_germline_vcf),
             mgd.OutputFile("germlines_consensus.maf", 'sample_id',
                            fnames=consensus_germline_maf),
             chromosomes,
-            mgd.InputInstance('sample_id'),
             paths_refdir['reference_vep'],
+            mgd.TempInputObj('normal_id', 'sample_id')
         ),
     )
 

@@ -19,6 +19,8 @@ def create_somatic_calling_workflow(
         mutect_maf,
         somatic_consensus_maf,
         refdir,
+        normal_ids,
+        tumour_ids,
         single_node=False,
         is_exome=False
 ):
@@ -56,6 +58,14 @@ def create_somatic_calling_workflow(
         obj=mgd.OutputChunks('sample_id'),
         value=samples)
 
+    workflow.setobj(
+        obj=mgd.TempOutputObj('normal_id', 'sample_id', axes_origin=[]),
+        value={v: normal_ids[v] for v in samples})
+
+    workflow.setobj(
+        obj=mgd.TempOutputObj('tumour_id', 'sample_id', axes_origin=[]),
+        value={v: tumour_ids[v] for v in samples})
+
     workflow.subworkflow(
         name="mutationseq_paired",
         func='wgs.workflows.mutationseq.create_museq_workflow',
@@ -69,9 +79,10 @@ def create_somatic_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
         ),
         kwargs={
+            'normal_id': mgd.TempInputObj('normal_id', 'sample_id'),
+            'tumour_id': mgd.TempInputObj('tumour_id', 'sample_id'),
             'tumour_bam': mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                                         extensions=['.bai'], axes_origin=[]),
             'normal_bam': mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
@@ -98,7 +109,8 @@ def create_somatic_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id'),
+            mgd.TempInputObj('tumour_id', 'sample_id'),
         ),
         kwargs={
             'single_node': single_node,
@@ -121,7 +133,8 @@ def create_somatic_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.InputInstance('sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id'),
+            mgd.TempInputObj('tumour_id', 'sample_id'),
         ),
         kwargs={
             'single_node': single_node,
@@ -145,8 +158,9 @@ def create_somatic_calling_workflow(
             mgd.OutputFile("somatic_consensus.maf", 'sample_id',
                            fnames=somatic_consensus_maf),
             chromosomes,
-            mgd.InputInstance('sample_id'),
             paths_refdir['reference_vep'],
+            mgd.TempInputObj('normal_id', 'sample_id'),
+            mgd.TempInputObj('tumour_id', 'sample_id'),
         ),
     )
 

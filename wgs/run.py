@@ -3,16 +3,16 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 """
-from wgs.cohort_qc import cohort_qc_workflow
 from wgs.alignment import alignment_workflow
-from wgs.cmdline import parse_args
-from wgs.copynumber_calling import copynumber_calling_workflow
-from wgs.realign import realign_bam_workflow
 from wgs.breakpoint_calling import breakpoint_calling_workflow
-from wgs.somatic_calling import somatic_calling_workflow
-from wgs.germline_calling import germline_calling_workflow
+from wgs.cmdline import parse_args
+from wgs.cohort_qc import cohort_qc_workflow
 from wgs.config import batch_config
+from wgs.copynumber_calling import copynumber_calling_workflow
+from wgs.germline_calling import germline_calling_workflow
+from wgs.realign import realign_bam_workflow
 from wgs.sample_qc import sample_qc_workflow
+from wgs.somatic_calling import somatic_calling_workflow
 
 
 def generate_config(args):
@@ -58,10 +58,11 @@ def main():
     if args["which"] == "realignment":
         args = generate_config(args)
         realign_bam_workflow(args)
-        
+
     if args["which"] == "sample_qc":
         args = generate_config(args)
         sample_qc_workflow(args)
+
 
 if __name__ == "__main__":
     main()

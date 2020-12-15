@@ -17,7 +17,8 @@ def create_mutect_workflow(
         reference,
         reference_vep,
         chromosomes,
-        sample_id,
+        normal_id,
+        tumour_id,
         single_node=None
 ):
     params = config.default_params('variant_calling')
@@ -120,7 +121,7 @@ def create_mutect_workflow(
             mgd.OutputFile(snv_maf),
             reference_vep,
         ),
-        kwargs={'tumour_id': sample_id}
+        kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )
 
 
