@@ -59,11 +59,11 @@ def create_somatic_calling_workflow(
         value=samples)
 
     workflow.setobj(
-        obj=mgd.OutputChunks('normal_id'),
+        obj=mgd.TempOutputObj('normal_id'),
         value={v: normal_ids[v] for v in samples})
 
     workflow.setobj(
-        obj=mgd.OutputChunks('tumour_id'),
+        obj=mgd.TempOutputObj('tumour_id'),
         value={v: tumour_ids[v] for v in samples})
 
     workflow.subworkflow(
