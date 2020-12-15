@@ -61,8 +61,8 @@ def create_germline_calling_workflow(
         value=samples)
 
     workflow.setobj(
-        obj=mgd.TempOutputObj('normal_id', 'sample_id'),
-        value={(normal_ids[v],v) for v in samples})
+        obj=mgd.TempOutputObj('normal_id', 'sample_id', axes_origin=[]),
+        value={(normal_ids[v], v) for v in samples})
 
     workflow.subworkflow(
         name="mutationseq_single",
@@ -112,7 +112,7 @@ def create_germline_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             chromosomes,
-            mgd.TempInputObj('normal_id', 'sample_id'),
+            mgd.TempInputObj('normal_id', 'sample_id', fnames=normal_ids),
         ),
         kwargs={
             'single_node': single_node,
