@@ -20,12 +20,11 @@ def generate_segmental_copynumber(remixt, segmental_cn, sample):
     transformations.generate_segmental_cn(segmental_cn, cn, stats)
 
 
-def merge_cna_tables(amps, dels, labels, output, cohort):
+def merge_cna_tables(sample_labels, amps, dels, output, cohort):
     cna = {d1: [a,d] for (d1, a), (d2, d) in zip(amps.items(), dels.items()) }
     number=0
-    for s, files in cna.items():
-        
-        label = labels[(cohort, s)]
+    for label, files in cna.items():
+        matching_t_barcode = sample_labels[(cohort, label)]
         for f in files:
         
             data = pd.read_csv(f, usecols=["cn_type", "gene_name", "pass_filter"])
@@ -34,7 +33,7 @@ def merge_cna_tables(amps, dels, labels, output, cohort):
 
             data=data.rename(columns={"cn_type": "CN", "gene_name":"Gene"})
 
-            data["Sample_name"] = [label] * len(data)
+            data["Sample_name"] = matching_t_barcode
 
             data = data[["Gene", "Sample_name", "CN"]]
 
@@ -56,38 +55,32 @@ def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels, docker_im
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-
-def merge_mafs(mafs, merged_maf, write_header=True):
-    for m in mafs:
-
-        maf = pd.read_csv(m, sep="\t", chunksize=10e6)
-        for chunk in maf:
-
-            chunk.to_csv(merged_maf, sep="\t", index=False, header=write_header, mode='a')
-        #only write the first header
+def _write_maf(m, label, merged_maf, write_header):
+    maf = pd.read_csv(m, sep="\t", chunksize=10e6)
+    for chunk in maf:
+        chunk["Tumor_Sample_Barcode"] = label
+        chunk.to_csv(merged_maf, sep="\t", index=False, header=write_header, mode='a')
         write_header=False   
 
 
-def merge_relabel_mafs(mafs, merged_maf, labels, class_label=None, write_header=True):
+def merge_mafs(sample_labels, cohort, germline_mafs, somatic_mafs, merged_maf):
+    write_header=True
 
-    mafs = list(mafs.values())
-    labels = list(labels.values())
+    for label, m in germline_mafs.items():
+        new_t_barcode = sample_labels[(cohort, label)]
+        _write_maf(m, new_t_barcode, merged_maf, write_header)
+        write_header=False
 
-    #only write the first header
-    #TODO better v names
-    for label, maf in zip(labels, mafs):
-        if maf:
-            maf = pd.read_csv(maf, sep="\t", chunksize=10e6, skiprows=1)
-            for chunk in maf:
-                if labels:
-                    chunk["Tumor_Sample_Barcode"] = [label] * len(chunk.index)
-                if class_label:
-                    chunk["Variant_Classification"] = chunk.Variant_Classification.apply(lambda c: c+class_label)
-                chunk.to_csv(merged_maf, sep="\t", index=False, header=write_header, mode='a')
+    for label, m in somatic_mafs.items():
+        new_t_barcode = sample_labels[(cohort, label)]
+        _write_maf(m, new_t_barcode, merged_maf, write_header)
+        write_header=False
 
-            #only write the first header
-            write_header=False
-    
+
+def annotate_maf(maf, annotated_maf, api_key, tempspace, class_label="", docker_image=None):
+
+    annotate_maf_with_oncokb(maf, api_key, tmpspace, annotate_maf, docker_image)
+
 
 def annotate_maf_with_oncokb(
         maf, api_key, tmpspace, annotated_maf, docker_image=None
@@ -100,35 +93,40 @@ def annotate_maf_with_oncokb(
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def label_non_synonymous_mutations(variant):
-    non_synonymous_mutation_types=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation",
-         "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation"]
 
-    for v in non_synonymous_mutation_types:
-        if v in variant:
-            return True
-        return False
+def filter_maf(annotated_maf, filtered_maf, write_header=True):
+    oncogenic_annotations = ["Oncogenic", "Likely Oncogenic", "Predicted Oncogenic"]
+    maf = pd.read_csv(annotated_maf, sep="\t", chunksize=10e6)
+    for chunk in maf:
+        chunk = chunk[chunk.oncogenic.isin(oncogenic_annotations)]
+        chunk.to_csv(filtered_maf, sep="\t", index=False, header=write_header, mode='a')
 
+        write_header=False
 
-def label_variants_with_onco_annotatons(row):
-    
-    if row.oncogenic in ["Oncogenic", "Likely Oncogenic", "Predicted Oncogenic"]:
-        oncogenic = "_".join(row.oncogenic.split(" "))
-        return row.Variant_Classification +  "_" + row.oncogenic
-    return row.Variant_Classification
+def annotate_germline_somatic(filtered_maf, annotated_maf, is_germline):
+    maf = pd.read_csv(filtered_maf, sep="\t")
+    maf["is_germline"] = [is_germline] * len(maf)
+    maf.to_csv(annotated_maf, sep="\t", index=False)
 
+def label_germline_somatic(row):
+    if row.is_germline == True:
+        return row.Variant_Classification + "_" + "germline"
+    return row.Variant_Classification + "_" + "somatic"
+  
 
-def filter_annotated_maf(annotated_maf, filtered_maf, vcNames):
-    annotated_maf = pd.read_csv(annotated_maf, sep="\t")
-    annotated_maf["non_synonymous"] = annotated_maf.Variant_Classification.apply(lambda v: label_non_synonymous_mutations(v))
-    annotated_maf=annotated_maf[annotated_maf.non_synonymous==True]
-    annotated_maf["Variant_Classification"] = annotated_maf[["Variant_Classification", "oncogenic"]].apply(lambda row: 
-        label_variants_with_onco_annotatons(row), axis=1
-    )
-    annotated_maf.to_csv(filtered_maf, sep="\t")
-
-    classes = pd.DataFrame({"Variant_Classification":annotated_maf.Variant_Classification.unique()})
-    classes.to_csv(vcNames, index=False)
+def prepare_maf_for_maftools(cohort_label, filtered_maf, prepared_maf, non_synonymous_labels, vcNames):
+    '''
+    filter on non synonymous labels
+    add germline/somatic annotate to variant classification
+    add group/patient labels
+    write out vcNames
+    '''
+    maf = pd.read_csv(filtered_maf, sep="\t")
+    maf = maf[maf.Variant_Classification.isin(non_synonymous_labels)]
+    maf["Variant_Classification"] = maf.apply(lambda row: label_germline_somatic(row), axis=1 )
+    nonsynclasses = pd.DataFrame({"Variant_Classification":maf.Variant_Classification.unique().tolist()})
+    nonsynclasses.to_csv(vcNames, index=False)
+    maf.to_csv(prepared_maf, sep="\t", index=False)
 
 
 def plot_mutation_burden(maf, burden_plot_path):
@@ -145,16 +143,12 @@ def plot_mutation_burden(maf, burden_plot_path):
 
 
 def make_R_cohort_plots(
-        cohort_maf, cntable, oncoplot_path, somatic_interactions,
-        mafsummary, filtered_maf=None, vcNames=None, docker_image=None
+        maf, cntable, oncoplot_path, somatic_interactions,
+        mafsummary, vcNames, docker_image=None
 ):
 
-    usemaf=filtered_maf
-    if filtered_maf==None:
-        usemaf=cohort_maf
-
     plots_cmd = [
-        "maftools_plots.R", usemaf, vcNames, cntable,
+        "maftools_plots.R", maf, vcNames, cntable,
         oncoplot_path, somatic_interactions, mafsummary
     ]
 
@@ -167,7 +161,7 @@ def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary,
     absolute_report = os.path.abspath(report_path)
     intermediate_dir = os.path.dirname(absolute_report)
     cmd = [
-        "run_cohort_qc_report.sh", os.path.abspath(report_path), intermediate_dir,cohort_label, os.path.abspath(oncoplot),
+        "run_cohort_qc_report.sh", os.path.abspath(report_path), intermediate_dir, cohort_label, os.path.abspath(oncoplot),
         os.path.abspath(somatic_interactions), os.path.abspath(mafsummary), os.path.abspath(burden_plot)
     ]
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
