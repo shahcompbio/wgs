@@ -2,6 +2,7 @@ import gzip
 import os
 import shutil
 
+import pandas as pd
 import pypeliner
 from wgs.utils import helpers
 
@@ -48,3 +49,28 @@ def run_vcf2maf(
         cmd.extend(['--normal-id', normal_id])
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+def update_ids(infile, tumour_id, normal_id, output):
+    with open(infile) as infile_read:
+        maf_header = infile_read.readline()
+    assert maf_header.startswith('#version 2.4')
+
+    df = pd.read_csv(infile, skiprows=1, sep='\t')
+
+    assert len(df['Tumor_Sample_Barcode'].unique()) == 1
+    assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
+
+    assert len(df['Matched_Norm_Sample_Barcode'].unique()) == 1
+    assert df['Matched_Norm_Sample_Barcode'].unique()[0] == 'NORMAL'
+
+    df['Matched_Norm_Sample_Barcode'] = normal_id
+
+    # for germlines tumour will be none
+    if tumour_id is not None:
+        df['Tumor_Sample_Barcode'] = tumour_id
+
+    with open(output, 'wt') as outfile:
+        outfile.write(maf_header)
+
+        df.to_csv(outfile, sep='\t', index=False)
