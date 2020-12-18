@@ -36,6 +36,14 @@ def run_vcf2maf(
     else:
         vcf_unzipped = input_vcf
 
+
+    assert vcf_unzipped.endswith('.vcf')
+    vcf_unzipped_vep = vcf_unzipped[:-4]
+    vcf_unzipped_vep = vcf_unzipped_vep+'.vep.vcf'
+
+    if os.path.exists(vcf_unzipped_vep):
+        os.remove(vcf_unzipped_vep)
+
     cmd = [
         'vcf2maf', vcf_unzipped, maf_output,
         os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
