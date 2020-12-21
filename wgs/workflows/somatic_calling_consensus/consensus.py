@@ -164,6 +164,11 @@ def indel_consensus(strelka_indel, mutect_indel):
                 consensus.append([chrom, pos, mutect_ref, mutect_alt, id_count, qual, filter, tr, ta, td, nr, na, nd])
                 qual, filter, tr, ta, td, nr, na, nd, id_count = strelka_data
                 consensus.append([chrom, pos, strelka_ref, strelka_alt, id_count, qual, filter, tr, ta, td, nr, na, nd])
+        else:
+            chrom, pos = k
+            strelka_data, strelka_ref, strelka_alt = strelka_indel[k]
+            qual, filter, tr, ta, td, nr, na, nd, id_count = strelka_data
+            consensus.append([chrom, pos, strelka_ref, strelka_alt, id_count, qual, filter, tr, ta, td, nr, na, nd])
 
     for k in mutect_indel:
         if k not in strelka_indel:
