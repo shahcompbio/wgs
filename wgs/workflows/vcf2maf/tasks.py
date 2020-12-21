@@ -75,8 +75,9 @@ def update_ids(infile, tumour_id, normal_id, output):
     df['Matched_Norm_Sample_Barcode'] = normal_id
 
     # for germlines tumour will be none
-    if tumour_id is not None:
-        df['Tumor_Sample_Barcode'] = tumour_id
+    if tumour_id is None:
+        tumour_id = 'NA'
+    df['Tumor_Sample_Barcode'] = tumour_id
 
     with open(output, 'wt') as outfile:
         outfile.write(maf_header)
