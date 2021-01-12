@@ -32,6 +32,7 @@ def get_counts(record, caller, sample_id):
             assert isinstance(ad, int)
             ref = ad
             alt = ['NA']
+            raise Exception('TODO')
     elif caller == 'samtools':
         depth = record.INFO['DP']
         ref = 'NA'
@@ -76,13 +77,16 @@ def fetch_vcf(filename, chromosome, caller):
 
         for alt, alt_count in zip(alts, alt_counts):
             alt = str(alt)
-            data = [record.QUAL, filter, ref_count, alt_count, depth, id_counter]
+            data = [record.QUAL, filter, ref_count, alt_count, depth, '{}_{}'.format(caller, id_counter)]
             if len(ref) == len(alt):
                 for i, (rb, ab) in enumerate(zip(ref, alt)):
                     if not rb == ab:
                         snv_data[(chrom, pos + i, rb, ab)] = data
+                        id_counter += 1
             else:
-                indel_data[(chrom, pos)] = (data, ref, alt)
+                ref, alt = normalize(ref, alt)
+                indel_data[(chrom, pos, ref, alt)] = data
+                id_counter += 1
 
     return snv_data, indel_data
 
@@ -158,32 +162,17 @@ def indel_consensus(freebayes, rtg, samtools):
     for k in outdata:
         if outdata[k] <= 1:
             continue
-        chrom, pos = k
+        chrom, pos, ref, alt = k
 
-        fb_data, fb_ref, fb_alt = freebayes.get(k, (None, None, None))
-        rtg_data, rtg_ref, rtg_alt = rtg.get(k, (None, None, None))
-        sam_data, sam_ref, sam_alt = samtools.get(k, (None, None, None))
+        fb_data = freebayes.get(k)
+        rtg_data = rtg.get(k)
 
-        try:
-            rtg_ref, rtg_alt = normalize(rtg_ref, rtg_alt)
-            fb_ref, fb_alt = normalize(fb_ref, fb_alt)
-            sam_ref, sam_alt = normalize(sam_ref, sam_alt)
-        except:
-            print(chrom, pos, freebayes.get(k), rtg.get(k), samtools.get(k))
-            raise
+        if fb_data:
+            qual, vcf_filter, nr, na, nd, id_counter = fb_data
+        else:
+            qual, vcf_filter, nr, na, nd, id_counter = rtg_data
 
-        data = dict()
-        data[(chrom, pos, fb_ref, fb_alt)] = fb_data
-        data[(chrom, pos, rtg_ref, rtg_alt)] = rtg_data
-        data[(chrom, pos, sam_ref, sam_alt)] = sam_data
-
-        for k, v in data.items():
-            if not v:
-                continue
-
-            chrom, pos, ref, alt = k
-            qual, filter, nr, na, nd, id_counter = v
-            consensus.append((chrom, pos, ref, alt, id_counter, qual, filter, nr, na, nd))
+        consensus.append((chrom, pos, ref, alt, id_counter, qual, vcf_filter, nr, na, nd))
 
     return consensus
 
