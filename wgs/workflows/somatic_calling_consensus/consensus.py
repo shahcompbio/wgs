@@ -193,6 +193,9 @@ def indel_consensus(strelka_indel, mutect_indel):
 
 def write_vcf(consensus, vcf_output, counts_output):
     with open(vcf_output, 'a') as outfile, open(counts_output, 'a') as count_file:
+        outfile.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+        count_file.write("chrom\tpos\tID\tTR\tTA\tTD\tNR\tNA\tND\n")
+
         for call in consensus:
             outstr = [call[0], str(call[1]), str(call[4]), call[2], call[3], str(call[5]), call[6], '.']
             outstr = '\t'.join(outstr) + '\n'

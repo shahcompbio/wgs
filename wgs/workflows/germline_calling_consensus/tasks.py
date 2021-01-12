@@ -1,3 +1,6 @@
+from wgs.utils import helpers
+
+
 def update_maf_counts(input_maf, counts_file, output_maf):
     counts = {}
     with open(counts_file) as infile:
@@ -42,3 +45,26 @@ def update_maf_counts(input_maf, counts_file, output_maf):
             line = '\t'.join(line) + '\n'
 
             outfile.write(line)
+
+
+def split_vcf_by_chr(vcf_file, chromosome, output):
+    with helpers.GetFileHandle(vcf_file, 'rt') as vcf_reader, \
+            helpers.GetFileHandle(output, 'wt') as vcf_writer:
+        for line in vcf_reader:
+            if line.startswith('#') or line.startswith(chromosome):
+                vcf_writer.write(line)
+
+
+def merge_mafs(maf_files, output):
+    header = False
+
+    with helpers.GetFileHandle(output, 'wt') as maf_writer:
+        for _, file in maf_files.items():
+            with helpers.GetFileHandle(output, 'rt') as maf_reader:
+                for line in maf_reader:
+                    if line.startswith('Hugo_Symbol'):
+                        if not header:
+                            maf_writer.write(line)
+                            header = True
+                    else:
+                        maf_writer.write(line)

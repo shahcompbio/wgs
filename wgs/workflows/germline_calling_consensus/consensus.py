@@ -4,10 +4,40 @@ import vcf
 
 
 def get_reader(filename):
+    """
+    pyvcf vcf reader
+    Parameters
+    ----------
+    filename :
+
+    Returns
+    -------
+    vcf.Reader
+    """
     return vcf.Reader(filename=filename)
 
 
 def get_counts(record, caller, sample_id):
+    """
+    given a record,
+    Parameters
+    ----------
+    record : vcf.Record
+        a vcf call
+    caller :    str
+        the caller used to generate the call
+    sample_id : str
+        sample_id
+
+    Returns
+    -------
+        ref: int
+            count for ref base
+        alt: int
+            count for alt base
+        depth: int
+            count for depth
+    """
     sample = [v for v in record.samples if v.sample == sample_id]
     assert len(sample) == 1, (sample, caller, sample_id, record, sample_id)
     sample = sample[0]
@@ -46,6 +76,29 @@ def get_counts(record, caller, sample_id):
 
 
 def fetch_vcf(filename, chromosome, caller):
+    """
+    read records from vcf
+
+    Parameters
+    ----------
+    filename : str
+        vcf file
+    chromosome : list
+        list of chromosomes to fetch from
+    caller : str
+        caller name
+
+    Returns
+    -------
+        snv_data: Dict(tuple, list)
+            snv_data, each key is (chrom, pos, ref, alt) and data is: [qual, filter, ref_count, alt_count, id]
+
+        indel_data: Dict(tuple, list)
+            snv_data, each key is (chrom, pos, ref, alt) and data is: [qual, filter, ref_count, alt_count, id]
+
+
+    """
+
     snv_data = {}
     indel_data = {}
 
@@ -92,6 +145,23 @@ def fetch_vcf(filename, chromosome, caller):
 
 
 def snv_consensus(museq, freebayes, rtg, samtools):
+    """
+    find consensus calls, anything that's called by 2 or more callers is kept.
+    key for consensus: chrom, pos, ref, alt
+
+    Parameters
+    ----------
+    museq : str
+    freebayes : str
+    rtg :  str
+    samtools : str
+
+    Returns
+    -------
+    consensus: List
+        each item in list is [chrom, pos, ref, alt, id, qual, filter, nr, na ,nd]
+
+    """
     outdata = defaultdict(int)
     for v in museq:
         outdata[v] += 1
@@ -179,6 +249,9 @@ def indel_consensus(freebayes, rtg, samtools):
 
 def write_vcf(consensus, vcf_output, counts_output):
     with open(vcf_output, 'a') as outfile, open(counts_output, 'a') as count_file:
+        outfile.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+        count_file.write("chrom\tpos\tID\tNR\tNA\tND\n")
+
         for call in consensus:
             outstr = [call[0], str(call[1]), str(call[4]), call[2], call[3], str(call[5]), call[6], '.']
             outstr = '\t'.join(outstr) + '\n'
