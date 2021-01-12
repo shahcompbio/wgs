@@ -6,14 +6,14 @@ import numpy as np
 import pandas as pd
 import pypeliner
 import pysam
-from wgs.workflows.titan.scripts import PygeneAnnotation
-from wgs.workflows.titan.scripts import ReadCounter
-from wgs.workflows.titan.scripts import vcf_to_counts
-from wgs.workflows.titan.scripts import parse_titan
 from wgs.utils import csvutils
 from wgs.utils import helpers
 from wgs.utils import pdfutils
 from wgs.utils import vcfutils
+from wgs.workflows.titan.scripts import PygeneAnnotation
+from wgs.workflows.titan.scripts import ReadCounter
+from wgs.workflows.titan.scripts import parse_titan
+from wgs.workflows.titan.scripts import vcf_to_counts
 
 
 def generate_intervals(ref, chromosomes, size=1000000):
@@ -111,13 +111,21 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None
 
     script = 'plot_titan.R'
 
-    chrom = '"c(' + ','.join(['\'' + c + '\'' for c in chromosomes]) + ')"'
-    cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
+    chrom = 'c(' + ','.join(['\'' + c + '\'' for c in chromosomes]) + ')'
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    try:
+        cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
-    cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
-    pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
+        cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
+        pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
+    except FileNotFoundError:
+        chrom = '"{}"'.format(chrom)
+        cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
+        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+        cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
+        pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
 
 
 def calc_cnsegments_titan(infile, outigv, outfile, sample_id, docker_image=None):
