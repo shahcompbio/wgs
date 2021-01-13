@@ -75,7 +75,6 @@ def create_germline_consensus_workflow(
             memory=15,
             walltime='8:00', ),
         func='wgs.workflows.germline_calling_consensus.tasks.merge_mafs',
-        axes=('chrom',),
         args=(
             mgd.TempInputFile('consensus_chrom.maf', 'chrom'),
             mgd.TempOutputFile('consensus.maf')
