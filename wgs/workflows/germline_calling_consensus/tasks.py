@@ -56,15 +56,24 @@ def split_vcf_by_chr(vcf_file, chromosome, output):
 
 
 def merge_mafs(maf_files, output):
-    header = False
+
+    if isinstance(maf_files, dict):
+        maf_files = list(maf_files.values())
 
     with helpers.GetFileHandle(output, 'wt') as maf_writer:
-        for _, file in maf_files.items():
-            with helpers.GetFileHandle(output, 'rt') as maf_reader:
+
+        with helpers.GetFileHandle(maf_files[0]) as header_read:
+            header = header_read.readline()
+            assert header.startswith('#version 2.4')
+            maf_writer.write(header)
+
+            header = header_read.readline()
+            assert header.startswith('Hugo_Symbol')
+            maf_writer.write(header)
+
+        for filepath in maf_files:
+            with helpers.GetFileHandle(filepath, 'rt') as maf_reader:
                 for line in maf_reader:
-                    if line.startswith('Hugo_Symbol'):
-                        if not header:
-                            maf_writer.write(line)
-                            header = True
-                    else:
-                        maf_writer.write(line)
+                    if line.startswith('Hugo_Symbol') or line.startswith('#'):
+                        continue
+                    maf_writer.write(line)
