@@ -87,6 +87,8 @@ def fetch_vcf(filename, chromosome, caller):
             assert len(vcf_filter) <= 1
             vcf_filter = vcf_filter[0]
 
+        if alts == [None]:
+            continue
         tr, tas, td, nr, nas, nd = get_counts(record, caller, tumor_sample, normal_sample, ref, alts)
 
         assert len(alts) == len(tas) == len(nas)

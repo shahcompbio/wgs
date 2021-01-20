@@ -126,6 +126,8 @@ def fetch_vcf(filename, chromosome, caller):
             assert len(filter) <= 1
             filter = filter[0]
 
+        if alts == [None]:
+            continue
         ref_count, alt_counts, depth = get_counts(record, caller, sample_id)
 
         for alt, alt_count in zip(alts, alt_counts):
