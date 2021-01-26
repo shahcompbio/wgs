@@ -5,8 +5,8 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-from wgs.utils import helpers
 from wgs.config import config
+from wgs.utils import helpers
 
 
 def create_destruct_wgs_workflow(
@@ -15,7 +15,6 @@ def create_destruct_wgs_workflow(
         sample_id, reference, destruct_refdata, gtf, mappability,
         single_node=False
 ):
-
     destruct_config = {
         'genome_fasta': reference,
         'genome_fai': reference + '.fai',
@@ -87,17 +86,14 @@ def create_destruct_wgs_workflow(
             walltime='8:00'
         ),
         args=(
-            'filter_annotate_breakpoints.py',
-            '--breakpoints',
+            'destruct',
+            'extract_somatic',
             mgd.TempInputFile("raw_breakpoints"),
-            '--library',
             mgd.TempInputFile("raw_library"),
+            mgd.TempOutputFile("filter_annotate_breakpoints_output"),
+            mgd.TempOutputFile("library"),
             '--control_ids',
             sample_id + 'N',
-            '--out_breakpoints',
-            mgd.TempOutputFile("filter_annotate_breakpoints_output"),
-            '--out_library',
-            mgd.TempOutputFile("library"),
         )
     )
 
@@ -166,7 +162,6 @@ def create_destruct_wgs_workflow(
             mgd.OutputFile(library, extensions=['.yaml']),
         )
     )
-
 
     workflow.transform(
         name='reheader_reads',
