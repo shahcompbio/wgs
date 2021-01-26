@@ -21,7 +21,6 @@ def cohort_qc_workflow(args):
     germline_mafs = {label: data["germline_maf"] for label, data in inputs.items()}
     somatic_mafs = {label: data["somatic_maf"] for label, data in inputs.items()}
     remixt_data = {label: data["remixt"] for label, data in inputs.items()}
-    sample_labels = {label: data["group_label"] for label, data in inputs.items()}
 
     report_path = {label[0]: os.path.join(out_dir, label[0], "report.html") for label, data in inputs.items()}
     cna_table = {label[0]: os.path.join(out_dir, label[0], "cna_table.tsv") for label, data in inputs.items()}
@@ -36,48 +35,46 @@ def cohort_qc_workflow(args):
         value=list(inputs.keys()),
     )
 
+
     workflow.subworkflow(
         name="classifycopynumber",
         func="wgs.workflows.cohort_qc.cna_annotation_workflow",
         axes=("cohort_label",),
         args=(
-            sample_labels,
-            mgd.InputInstance('cohort_label'),
             mgd.InputFile('remixt_dict', 'cohort_label', 'sample_label', fnames=remixt_data, axes_origin=[]),
-            mgd.OutputFile('cna_table', 'cohort_label', fnames=cna_table),
+            mgd.TempOutputFile('cna_maftools_table', 'cohort_label'),
             mgd.OutputFile('segmental_copynumber', 'cohort_label', fnames=segmental_copynumber),
+            mgd.OutputFile('cna_table_cbio', 'cohort_label', fnames=cna_table),
             gtf,
         ),
     )
 
-    workflow.subworkflow(
-        name="maf_annotation_workflow",
-        func="wgs.workflows.cohort_qc.preprocess_mafs_workflow",
-        axes=("cohort_label",),
-        args=(
-            mgd.InputInstance("cohort_label",),
-            sample_labels,
-            mgd.InputFile('germline_mafs_dict', 'cohort_label', 'sample_label', fnames=germline_mafs, axes_origin=[]),
-            mgd.InputFile('somatic_mafs_dict', 'cohort_label', 'sample_label', fnames=somatic_mafs, axes_origin=[]),
-            mgd.OutputFile('cohort_maf_oncogenic_filtered', 'cohort_label', fnames=cohort_maf_oncogenic_filtered),
-            api_key
-        ),
-    )
 
 
+   workflow.subworkflow(
+       name="maf_annotation_workflow",
+       func="wgs.workflows.cohort_qc.preprocess_mafs_workflow",
+       axes=("cohort_label",),
+       args=(
+           mgd.InputFile('germline_mafs_dict', 'cohort_label', 'sample_label', fnames=germline_mafs, axes_origin=[]),
+           mgd.InputFile('somatic_mafs_dict', 'cohort_label', 'sample_label', fnames=somatic_mafs, axes_origin=[]),
+           mgd.OutputFile('cohort_maf_oncogenic_filtered', 'cohort_label', fnames=cohort_maf_oncogenic_filtered),
+           api_key
+       ),
+   )
 
-    workflow.subworkflow(
-        name="make_plots_and_report",
-        func="wgs.workflows.cohort_qc.create_cohort_qc_report",
-        axes=("cohort_label",),
-        args=(
-            mgd.InputInstance("cohort_label",),
-            out_dir,
-            mgd.InputFile('cohort_maf_oncogenic_filtered', 'cohort_label', fnames=cohort_maf_oncogenic_filtered),
-            mgd.InputFile('cna_table', 'cohort_label', fnames=cna_table),
-            mgd.OutputFile('report_path', 'cohort_label', fnames=report_path)
-        ),
-    )   
+   workflow.subworkflow(
+       name="make_plots_and_report",
+       func="wgs.workflows.cohort_qc.create_cohort_qc_report",
+       axes=("cohort_label",),
+       args=(
+           mgd.InputInstance("cohort_label",),
+           out_dir,
+           mgd.InputFile('cohort_maf_oncogenic_filtered', 'cohort_label', fnames=cohort_maf_oncogenic_filtered),
+           mgd.TempInputFile('cna_maftools_table', 'cohort_label'),
+           mgd.OutputFile('report_path', 'cohort_label', fnames=report_path)
+       ),
+   )   
 
 
     pypeline.run(workflow)
