@@ -607,15 +607,3 @@ def generate_and_upload_metadata(
     generate_meta_yaml_file(
         output, filepaths=filepaths, metadata=metadata, root_dir=root_dir
     )
-
-
-def load_qc_input_yaml_flat(path):
-    data= {}
-    yaml = load_yaml(path)
-
-    for cohort, cohort_data in yaml.items():
-        for sample, sample_data in cohort_data.items():
-            data[(cohort, sample)] = {data_label: data 
-                for data_label, data in sample_data.items()
-            }
-    return data
