@@ -1,13 +1,12 @@
-import random
-import vcf
-import gzip
 import os
-import consensus
-import pypeliner
-from shutil import copyfile
-import csv
+import random
 from collections import namedtuple
+
+import consensus
 import pandas as pd
+import pypeliner
+import vcf
+
 
 def _get_test_record():
     '''
@@ -17,7 +16,7 @@ def _get_test_record():
     Returns
     -------
     '''
-    test_record = [1, '.', "a", 'b', 34, 'a',1,2,3]
+    test_record = [1, '.', "a", 'b', 34, 'a', 1, 2, 3]
     chrom = random.choice(list(map(str, list(range(1, 23)) + ["X"])))
     pos = random.randint(0, 100000)
     alt = random.choice(["A", "T", "C", "G"])
@@ -37,24 +36,25 @@ def _get_indel():
     chrom = random.choice(list(map(str, list(range(1, 23)) + ["X"])))
     pos = random.randint(0, 100000)
     id_count = random.randint(0, 100000)
-    test_record = [[ ".", ".", 1, 2, 3, 4, 5, 6, id_count], "T", "TC"]
+    test_record = [[".", ".", 1, 2, 3, 4, 5, 6, id_count], "T", "TC"]
     return chrom, pos, id_count, test_record
 
 
 def _get_test_model_call():
-    #make example  call
+    # make example  call
     Call = namedtuple("Call", "DP RO AO RC AC AD TAR TIR TU NoneU")
 
-    normal_data = vcf.model._Call(None, "normal", Call(1,1,2,1,2, [1,2], [3],[4], [5], [6]) )
-    tumor_data = vcf.model._Call(None, "tumor", Call(1,1,2,1,2, [1,2], [3],[4],[5], [6]) )
+    normal_data = vcf.model._Call(None, "normal", Call(1, 1, 2, 1, 2, [1, 2], [3], [4], [5], [6]))
+    tumor_data = vcf.model._Call(None, "tumor", Call(1, 1, 2, 1, 2, [1, 2], [3], [4], [5], [6]))
 
-    freebayes_museq_rtg_example = vcf.model._Record("1", 10, 1, "T", [None], 1, 1, 
-        None, None, None, [normal_data, tumor_data])
+    freebayes_museq_rtg_example = vcf.model._Record("1", 10, 1, "T", [None], 1, 1,
+                                                    None, None, None, [normal_data, tumor_data])
 
-    samtools_example = vcf.model._Record("1", 10, 1, "T", [None], 1, 1, {"DP":1}, 
-        None, None, [normal_data, tumor_data])
+    samtools_example = vcf.model._Record("1", 10, 1, "T", [None], 1, 1, {"DP": 1},
+                                         None, None, [normal_data, tumor_data])
 
     return freebayes_museq_rtg_example, samtools_example
+
 
 ##################################
 # test consensus.snv_consensus() #
@@ -74,18 +74,18 @@ def test_snv_consensus_case_1():
 
     museq = test_record
     strelka = test_record
-    mutect =[]
+    mutect = []
 
-    consensus_data = consensus.snv_consensus(museq, strelka,mutect)
-    
-    consensus_data = pd.DataFrame(consensus_data, 
-        columns = ["chrom", "pos", "ref", "alt", "id_count", "qual", "filter", 
-        "tr", "ta", "td", "nr", "na", "nd"]
-    )
+    consensus_data = consensus.snv_consensus(museq, strelka, mutect)
+
+    consensus_data = pd.DataFrame(consensus_data,
+                                  columns=["chrom", "pos", "ref", "alt", "id_count", "qual", "filter",
+                                           "tr", "ta", "td", "nr", "na", "nd"]
+                                  )
 
     consensus_data = consensus_data.astype({"chrom": "str"})
-    
-    assert not consensus_data[(consensus_data.pos==pos) & (consensus_data["chrom"]==chrom)].empty
+
+    assert not consensus_data[(consensus_data.pos == pos) & (consensus_data["chrom"] == chrom)].empty
 
 
 def test_snv_consensus_case_2():
@@ -104,16 +104,15 @@ def test_snv_consensus_case_2():
     strelka = []
     mutect = test_record
 
-    consensus_data = consensus.snv_consensus(museq, strelka,mutect)
-    
-    
-    consensus_data = pd.DataFrame(consensus_data, 
-        columns = ["chrom", "pos", "ref", "alt", "id_count", "qual", "filter", 
-        "tr", "ta", "td", "nr", "na", "nd"])    
+    consensus_data = consensus.snv_consensus(museq, strelka, mutect)
+
+    consensus_data = pd.DataFrame(consensus_data,
+                                  columns=["chrom", "pos", "ref", "alt", "id_count", "qual", "filter",
+                                           "tr", "ta", "td", "nr", "na", "nd"])
 
     consensus_data = consensus_data.astype({"chrom": "str"})
-    
-    assert not consensus_data[(consensus_data.pos==pos) & (consensus_data["chrom"]==chrom)].empty
+
+    assert not consensus_data[(consensus_data.pos == pos) & (consensus_data["chrom"] == chrom)].empty
 
 
 def test_snv_consensus_case_3():
@@ -132,15 +131,15 @@ def test_snv_consensus_case_3():
     strelka = test_record
     mutect = test_record
 
-    consensus_data = consensus.snv_consensus(museq, strelka,mutect)
-    
-    consensus_data = pd.DataFrame(consensus_data, 
-        columns = ["chrom", "pos", "ref", "alt", "id_count", "qual", "filter", 
-        "tr", "ta", "td", "nr", "na", "nd"])    
+    consensus_data = consensus.snv_consensus(museq, strelka, mutect)
+
+    consensus_data = pd.DataFrame(consensus_data,
+                                  columns=["chrom", "pos", "ref", "alt", "id_count", "qual", "filter",
+                                           "tr", "ta", "td", "nr", "na", "nd"])
 
     consensus_data = consensus_data.astype({"chrom": "str"})
-    
-    assert not consensus_data[(consensus_data.pos==pos) & (consensus_data["chrom"]==chrom)].empty
+
+    assert not consensus_data[(consensus_data.pos == pos) & (consensus_data["chrom"] == chrom)].empty
 
 
 def test_snv_consensus_case_4():
@@ -158,7 +157,6 @@ def test_snv_consensus_case_4():
     strelka = {(chrom, pos + 2, ref, alt): record}
 
     mutect = {(chrom, pos + 3, ref, alt): record}
-
 
     consensus_data = consensus.snv_consensus(museq, strelka, mutect)
 
@@ -199,15 +197,15 @@ def test_indel_consensus_case_1():
     mutect = test_record
 
     consensus_data = consensus.indel_consensus(strelka, mutect)
-    
-    consensus_data = pd.DataFrame(consensus_data, 
-        columns = ["chrom", "pos", "ref", "alt", "id_count", "qual", "filter", 
-        "tr", "ta", "td", "nr", "na", "nd"]
-    )
 
-    consensus_data = consensus_data.astype({"chrom":"str"})
-    
-    assert not consensus_data[(consensus_data.pos==pos) & (consensus_data["chrom"]==chrom)].empty
+    consensus_data = pd.DataFrame(consensus_data,
+                                  columns=["chrom", "pos", "ref", "alt", "id_count", "qual", "filter",
+                                           "tr", "ta", "td", "nr", "na", "nd"]
+                                  )
+
+    consensus_data = consensus_data.astype({"chrom": "str"})
+
+    assert not consensus_data[(consensus_data.pos == pos) & (consensus_data["chrom"] == chrom)].empty
 
 
 def test_indel_consensus_case_2():
@@ -370,7 +368,6 @@ def test_normalization_case_7():
     assert consensus_alt == "GTA"
 
 
-
 ####################################
 # test consensus.write_vcf() #
 ####################################
@@ -386,7 +383,7 @@ def test_write_vcf_case_1(testdir):
     '''
     chrom, pos, ref, alt, record = _get_test_record()
 
-    writeable_record = [chrom,pos,ref,alt] + record
+    writeable_record = [chrom, pos, ref, alt] + record
 
     vcf = os.path.join(testdir, "vcf")
     counts = os.path.join(testdir, "counts")
@@ -397,29 +394,28 @@ def test_write_vcf_case_1(testdir):
     assert os.path.exists(counts)
 
     vcf = pd.read_csv(vcf, sep="\t")
-    vcf = vcf.astype({"#CHROM": str, "FILTER":str})
+    vcf = vcf.astype({"#CHROM": str, "FILTER": str})
 
     assert vcf.columns.tolist() == ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
 
     assert len(vcf) == 1
 
-    assert vcf.values.tolist()[0] == [writeable_record[0], writeable_record[1], 
-        writeable_record[4], writeable_record[2], writeable_record[3],
-        writeable_record[5], writeable_record[6], '.']
+    assert vcf.values.tolist()[0] == [writeable_record[0], writeable_record[1],
+                                      writeable_record[4], writeable_record[2], writeable_record[3],
+                                      writeable_record[5], writeable_record[6], '.']
 
     counts = pd.read_csv(counts, sep="\t")
     counts = counts.astype({"chrom": str})
 
     assert counts.columns.tolist() == ["chrom", "pos", "ID", "TR", "TA", "TD", "NR", "NA", "ND"]
 
-    assert counts.values.tolist()[0]  == [writeable_record[0], writeable_record[1], writeable_record[4], 
-    writeable_record[7], writeable_record[8], writeable_record[9], writeable_record[10],
-                    writeable_record[11], writeable_record[12]]
+    assert counts.values.tolist()[0] == [writeable_record[0], writeable_record[1], writeable_record[4],
+                                         writeable_record[7], writeable_record[8], writeable_record[9],
+                                         writeable_record[10],
+                                         writeable_record[11], writeable_record[12]]
 
     pypeliner.commandline.execute("rm", os.path.join(testdir, "vcf"))
     pypeliner.commandline.execute("rm", os.path.join(testdir, "counts"))
-
-
 
 
 ####################################
@@ -434,7 +430,7 @@ def test_get_counts_case_1():
     Returns
     -------
     '''
-    test1,_  = _get_test_model_call()
+    test1, _ = _get_test_model_call()
     assert consensus.get_counts(test1, "museq_snv", "normal", "tumor", test1.REF, test1.ALT) == (1, [2], 1, 1, [2], 1)
 
 
@@ -446,7 +442,7 @@ def test_get_counts_case_2():
     Returns
     -------
     '''
-    test1,_  = _get_test_model_call()
+    test1, _ = _get_test_model_call()
 
     assert consensus.get_counts(test1, "strelka_snv", "normal", "tumor", test1.REF, test1.ALT) == (5, [6], 1, 5, [6], 1)
 
@@ -459,9 +455,10 @@ def test_get_counts_case_3():
     Returns
     -------
     '''
-    test1,_  = _get_test_model_call()
+    test1, _ = _get_test_model_call()
 
-    assert consensus.get_counts(test1, "strelka_indel", "normal", "tumor", test1.REF, test1.ALT) == (3, [4], 1, 3, [4], 1)
+    assert consensus.get_counts(test1, "strelka_indel", "normal", "tumor", test1.REF, test1.ALT) == (
+    3, [4], 1, 3, [4], 1)
 
 
 def test_get_counts_case_4():
@@ -472,8 +469,6 @@ def test_get_counts_case_4():
     Returns
     -------
     '''
-    test1,_  = _get_test_model_call()
+    test1, _ = _get_test_model_call()
 
     assert consensus.get_counts(test1, "mutect", "normal", "tumor", test1.REF, test1.ALT) == (1, [2], 1, 1, [2], 1)
-
-
