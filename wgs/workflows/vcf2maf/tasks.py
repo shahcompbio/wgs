@@ -64,7 +64,7 @@ def update_ids(infile, tumour_id, normal_id, output):
         maf_header = infile_read.readline()
     assert maf_header.startswith('#version 2.4')
 
-    df = pd.read_csv(infile, skiprows=1, sep='\t')
+    df = pd.read_csv(infile, dtype='str', skiprows=1, sep='\t')
 
     assert len(df['Tumor_Sample_Barcode'].unique()) == 1
     assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
