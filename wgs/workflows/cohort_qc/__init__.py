@@ -1,4 +1,3 @@
-import logging
 import os
 
 import pypeliner
@@ -6,10 +5,17 @@ import pypeliner.managed as mgd
 from wgs.config import config
 
 
-def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbio_cna_table, gtf):
+def cna_annotation_workflow(
+        remixt_dict,
+        output_table,
+        segmental_copynumber,
+        cbio_cna_table,
+        gtf
+):
     workflow = pypeliner.workflow.Workflow(
         ctx={'docker_image': config.containers('wgs')}
     )
+
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
         value=list(remixt_dict.keys()),
@@ -26,6 +32,26 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
             mgd.TempSpace('annotated_maf_tmp', 'sample_label'),
             mgd.TempOutputFile('amps', 'sample_label'),
             mgd.TempOutputFile('dels', 'sample_label'),
+        ),
+    )
+
+    workflow.transform(
+        name='generate_segmental_copynumber',
+        func='wgs.workflows.cohort_qc.tasks.generate_segmental_copynumber',
+        axes=("sample_label",),
+        args=(
+            mgd.InputFile('remixt', 'sample_label', fnames=remixt_dict),
+            mgd.TempOutputFile('segmental_cn', 'sample_label'),
+            mgd.InputInstance('sample_label')
+        ),
+    )
+
+    workflow.transform(
+        name='merge_segmental_cn',
+        func='wgs.workflows.cohort_qc.tasks.merge_segmental_cn',
+        args=(
+            mgd.TempInputFile('segmental_cn', 'sample_label', axes_origin=[]),
+            mgd.OutputFile(segmental_copynumber)
         ),
     )
 
@@ -67,32 +93,15 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
         ),
     )
 
-    workflow.transform(
-        name='generate_segmental_copynumber',
-        func='wgs.workflows.cohort_qc.tasks.generate_segmental_copynumber',
-        axes=("sample_label",),
-        args=(
-            mgd.InputFile('remixt', 'sample_label', fnames=remixt_dict),
-            mgd.TempOutputFile('segmental_cn', 'sample_label'),
-            mgd.InputInstance('sample_label')
-        ),
-    )
-
-    workflow.transform(
-        name='merge_segmental_cn',
-        func='wgs.workflows.cohort_qc.tasks.merge_segmental_cn',
-        args=(
-            mgd.TempInputFile('segmental_cn', 'sample_label', axes_origin=[]),
-            mgd.OutputFile(segmental_copynumber)
-        ),
-    )
-
     return workflow
 
 
-def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotated_maf, api_key
+def preprocess_mafs_workflow(
+        germline_maf_dict,
+        somatic_maf_dict,
+        merged_annotated_maf,
+        api_key
 ):
-
     workflow = pypeliner.workflow.Workflow(
         ctx={'docker_image': config.containers('wgs')}
     )
@@ -136,23 +145,23 @@ def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotat
 
     workflow.transform(
         name='annotate_germline_class',
-        func='wgs.workflows.cohort_qc.tasks.annotate_germline_somatic',
+        func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
         axes=("sample_label",),
         args=(
             mgd.TempInputFile('filtered_germline_maf', 'sample_label'),
             mgd.TempOutputFile("filtered_class_labeled_germline_maf", 'sample_label'),
-            True
+            {'is_germline': True}
         ),
     )
 
     workflow.transform(
         name='annotate_somatic_class',
-        func='wgs.workflows.cohort_qc.tasks.annotate_germline_somatic',
+        func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
         axes=("sample_label",),
         args=(
             mgd.TempInputFile('annotated_somatic_maf', 'sample_label'),
             mgd.TempOutputFile("class_labeled_somatic_maf", 'sample_label'),
-            False
+            {'is_germline': False}
         ),
     )
 
@@ -170,29 +179,28 @@ def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotat
 
 
 def create_cohort_qc_report(
-    cohort_label, out_dir, filtered_cohort_maf, cna_table, report_path
+        cohort_label,
+        out_dir,
+        filtered_cohort_maf,
+        cna_table,
+        report_path
 ):
-
-    oncoplot = os.path.join(
-        out_dir, cohort_label, "cohort_oncoplot.png"
-    )
+    oncoplot = os.path.join(out_dir, cohort_label, "cohort_oncoplot.png")
     somatic_interactions_plot = os.path.join(
         out_dir, cohort_label, "somatic_interactions.png"
     )
-    summary_plot = os.path.join(
-        out_dir, cohort_label, "summary.png"
-    )
-    burden_plot = os.path.join(
-        out_dir, cohort_label, "mutation_burden.png"
-    )
-
+    summary_plot = os.path.join(out_dir, cohort_label, "summary.png")
+    burden_plot = os.path.join(out_dir, cohort_label, "mutation_burden.png")
 
     workflow = pypeliner.workflow.Workflow(
         ctx={'docker_image': config.containers('wgs')}
     )
 
-    non_synonymous_labels=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-        "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation", 
+
+    ## TODO: move these to config
+    non_synonymous_labels = [
+        "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
+        "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation",
         "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation"
     ]
 
@@ -207,7 +215,6 @@ def create_cohort_qc_report(
             mgd.TempOutputFile("vcNames")
         ),
     )
-
 
     workflow.transform(
         name='burden_plot',
@@ -226,6 +233,7 @@ def create_cohort_qc_report(
             mgd.TempOutputFile("genelist")
         ),
     )
+
     workflow.transform(
         name='make_cohort_plots',
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
@@ -239,7 +247,7 @@ def create_cohort_qc_report(
             mgd.TempInputFile("genelist")
 
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") },
+        kwargs={'docker_image': config.containers("wgs_qc_html")},
     )
 
     workflow.transform(
@@ -253,7 +261,7 @@ def create_cohort_qc_report(
             mgd.InputFile(burden_plot),
             mgd.OutputFile(report_path),
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") }
+        kwargs={'docker_image': config.containers("wgs_qc_html")}
     )
 
     return workflow

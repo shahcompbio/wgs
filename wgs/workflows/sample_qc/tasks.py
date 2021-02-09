@@ -8,14 +8,17 @@ from wgs_qc_utils.reader import read_titan, read_remixt
 
 
 def get_gene_annotations(outfile):
+    ##TODO: get chroms from config, chroms can change if data is mouse for instance
     chroms = list(map(str, range(1, 22))) + ["X"]
     annotations = pd.concat([gene_annotation_plotting.get_gene_annotation_data(chrom) for chrom in chroms])
     annotations.to_csv(outfile, sep="\t", index=False)
 
 
-def circos(titan_calls, sample_id, sv_calls, remixt_calls,
-           circos_plot_remixt, circos_plot_titan,
-           docker_image=None):
+def circos(
+        titan_calls, sample_id, sv_calls, remixt_calls,
+        circos_plot_remixt, circos_plot_titan,
+        docker_image=None
+):
     cmd = [
         "circos.R", titan_calls, remixt_calls, sv_calls,
         circos_plot_remixt, circos_plot_titan, sample_id
@@ -24,8 +27,10 @@ def circos(titan_calls, sample_id, sv_calls, remixt_calls,
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def prep_data_for_circos(titan, remixt, sample_id, prepped_titan_calls,
-                         prepped_remixt_calls):
+def prep_data_for_circos(
+        titan, remixt, sample_id, prepped_titan_calls,
+        prepped_remixt_calls
+):
     read_titan.make_for_circos(titan, prepped_titan_calls)
 
     read_remixt.make_for_circos(remixt, sample_id, prepped_remixt_calls)
@@ -80,11 +85,13 @@ def generate_coverage_bed(ref, bins_out, chromosomes, bins_per_chrom=2000):
 
 
 def prep_sv_for_circos(sv_calls, outfile):
-    svs = pd.read_csv(sv_calls, sep=",", dtype={'chromosome_1': str, 'chromosome_2': str})
+    svs = pd.read_csv(
+        sv_calls, sep=",", dtype={'chromosome_1': str, 'chromosome_2': str}
+    )
 
-    svs = svs[[
-        'chromosome_1', 'position_1', 'chromosome_2', 'position_2',
-        'rearrangement_type']
+    svs = svs[
+        ['chromosome_1', 'position_1', 'chromosome_2',
+         'position_2', 'rearrangement_type']
     ]
 
     types = [
