@@ -61,7 +61,7 @@ class GetFileHandle(object):
             return "plain-text"
 
 
-def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=None):
+def get_default_ctx(memory=4, walltime='06:00', ncpus=1, disk=8, docker_image=None):
     ctx = {
         'mem': memory,
         'walltime': walltime,

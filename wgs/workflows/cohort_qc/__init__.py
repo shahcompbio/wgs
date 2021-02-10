@@ -3,7 +3,7 @@ import os
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.config import config
-
+from wgs.utils import helpers
 
 def cna_annotation_workflow(
         remixt_dict,
@@ -23,6 +23,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='classify_remixt',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.classify_remixt',
         axes=("sample_label",),
         args=(
@@ -37,6 +41,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='generate_segmental_copynumber',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.generate_segmental_copynumber',
         axes=("sample_label",),
         args=(
@@ -48,6 +56,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='merge_segmental_cn',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.merge_segmental_cn',
         args=(
             mgd.TempInputFile('segmental_cn', 'sample_label', axes_origin=[]),
@@ -57,6 +69,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='merge_amp_tables',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.merge_cna_tables',
         args=(
             mgd.TempInputFile('amps', 'sample_label', axes_origin=[]),
@@ -66,6 +82,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='merge_del_tables',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.merge_cna_tables',
         args=(
             mgd.TempInputFile('dels', 'sample_label', axes_origin=[]),
@@ -75,6 +95,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='make_cbio_cna_table',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.make_cbio_cna_table',
         args=(
             mgd.TempInputFile('merged_amps'),
@@ -85,6 +109,10 @@ def cna_annotation_workflow(
 
     workflow.transform(
         name='make_maftools_cna_table',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.make_maftools_cna_table',
         args=(
             mgd.TempInputFile('merged_amps'),
@@ -113,6 +141,10 @@ def preprocess_mafs_workflow(
 
     workflow.transform(
         name='annotate_germline_mafs',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.annotate_maf_with_oncokb',
         axes=("sample_label",),
         args=(
@@ -124,6 +156,10 @@ def preprocess_mafs_workflow(
     )
     workflow.transform(
         name='filter_germline_mafs',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.filter_maf',
         axes=("sample_label",),
         args=(
@@ -133,6 +169,10 @@ def preprocess_mafs_workflow(
     )
     workflow.transform(
         name='annotate_somatic_mafs',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.annotate_maf_with_oncokb',
         axes=("sample_label",),
         args=(
@@ -145,6 +185,10 @@ def preprocess_mafs_workflow(
 
     workflow.transform(
         name='annotate_germline_class',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
         axes=("sample_label",),
         args=(
@@ -156,6 +200,10 @@ def preprocess_mafs_workflow(
 
     workflow.transform(
         name='annotate_somatic_class',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
         axes=("sample_label",),
         args=(
@@ -167,6 +215,10 @@ def preprocess_mafs_workflow(
 
     workflow.transform(
         name='merge_filtered_germline_somatic',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.merge_mafs',
         args=(
             mgd.TempInputFile('filtered_class_labeled_germline_maf', 'sample_label', axes_origin=[]),
@@ -196,7 +248,6 @@ def create_cohort_qc_report(
         ctx={'docker_image': config.containers('wgs')}
     )
 
-
     ## TODO: move these to config
     non_synonymous_labels = [
         "Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
@@ -206,6 +257,10 @@ def create_cohort_qc_report(
 
     workflow.transform(
         name='postprocess_maf',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.prepare_maf_for_maftools',
         args=(
             cohort_label,
@@ -218,6 +273,10 @@ def create_cohort_qc_report(
 
     workflow.transform(
         name='burden_plot',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.plot_mutation_burden',
         args=(
             mgd.InputFile(filtered_cohort_maf),
@@ -227,6 +286,10 @@ def create_cohort_qc_report(
 
     workflow.transform(
         name='build_gene_list',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='6:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.build_gene_list',
         args=(
             mgd.InputFile(cna_table),
@@ -236,6 +299,10 @@ def create_cohort_qc_report(
 
     workflow.transform(
         name='make_cohort_plots',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
         args=(
             mgd.TempInputFile("prepared_maf"),
@@ -252,6 +319,10 @@ def create_cohort_qc_report(
 
     workflow.transform(
         name='make_report',
+        ctx=helpers.get_default_ctx(
+            memory=8,
+            walltime='24:00',
+        ),
         func='wgs.workflows.cohort_qc.tasks.make_report',
         args=(
             cohort_label,

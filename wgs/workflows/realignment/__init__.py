@@ -21,7 +21,7 @@ def realign_bam_files(inputs, outputs, metrics_output, metrics_tar, refdir, samp
     workflow.transform(
         name='bam_to_fastq',
         ctx=helpers.get_default_ctx(
-            walltime='72:00',
+            walltime='96:00',
             disk=500
         ),
         func="wgs.workflows.realignment.tasks.split_by_rg",
@@ -36,6 +36,9 @@ def realign_bam_files(inputs, outputs, metrics_output, metrics_tar, refdir, samp
 
     workflow.transform(
         name='get_sample_info',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func="wgs.workflows.realignment.tasks.get_read_group",
         axes=('sample_id',),
         ret=mgd.TempOutputObj('sample_info', 'sample_id'),

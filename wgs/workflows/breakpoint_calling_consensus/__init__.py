@@ -23,7 +23,7 @@ def create_consensus_workflow(
         name='parse_lumpy',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00',
+            walltime='16:00',
         ),
         func='wgs.workflows.breakpoint_calling_consensus.tasks.parse_lumpy_task',
         args=(
@@ -38,7 +38,7 @@ def create_consensus_workflow(
         name='parse_destruct',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00',
+            walltime='16:00',
         ),
         func='wgs.workflows.breakpoint_calling_consensus.tasks.parse_destruct_task',
         args=(
@@ -53,7 +53,7 @@ def create_consensus_workflow(
         name='consensus_breakpoint_calling',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00',
+            walltime='16:00',
         ),
         func='wgs.workflows.breakpoint_calling_consensus.tasks.consensus_calls',
         args=(

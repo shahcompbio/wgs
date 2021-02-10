@@ -25,11 +25,14 @@ def create_strelka_workflow(
     workflow = Workflow(
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='4:00'),
+            walltime='6:00'),
     )
 
     workflow.transform(
         name='generate_intervals',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.mutationseq.tasks.generate_intervals',
         ret=mgd.OutputChunks('regions'),
         args=(
@@ -41,6 +44,9 @@ def create_strelka_workflow(
 
     workflow.transform(
         name='count_fasta_bases',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func="wgs.workflows.strelka.tasks.count_fasta_bases",
         args=(
             reference,
@@ -51,6 +57,9 @@ def create_strelka_workflow(
 
     workflow.transform(
         name="get_chrom_sizes",
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func="wgs.workflows.strelka.tasks.get_known_chromosome_sizes",
         ret=pypeliner.managed.TempOutputObj('known_sizes'),
         args=(
@@ -62,6 +71,9 @@ def create_strelka_workflow(
     if single_node:
         workflow.transform(
             name='strelka_one_node',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='96:00'),
             func="wgs.workflows.strelka.tasks.strelka_one_node",
             args=(
                 pypeliner.managed.InputFile(normal_bam_file, extensions=['.bai']),
@@ -82,6 +94,9 @@ def create_strelka_workflow(
     else:
         workflow.transform(
             name='get_chromosome_depths',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='6:00'),
             axes=('regions',),
             func="wgs.workflows.strelka.tasks.get_chromosome_depth",
             args=(
@@ -95,6 +110,9 @@ def create_strelka_workflow(
 
         workflow.transform(
             name='merge_chromosome_depths',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='6:00'),
             func="wgs.workflows.strelka.tasks.merge_chromosome_depths",
             args=(
                 mgd.TempInputFile('chrom_depth.txt', 'regions', axes_origin=[]),
@@ -104,6 +122,9 @@ def create_strelka_workflow(
 
         workflow.transform(
             name='call_genome_segment',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='24:00'),
             axes=('regions',),
             func="wgs.workflows.strelka.tasks.call_genome_segment",
             args=(
@@ -125,6 +146,9 @@ def create_strelka_workflow(
 
         workflow.transform(
             name='merge_indels',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='6:00'),
             func='wgs.workflows.strelka.tasks.concatenate_vcf',
             args=(
                 mgd.TempInputFile('indels.vcf', 'regions'),
@@ -136,6 +160,9 @@ def create_strelka_workflow(
 
         workflow.transform(
             name='merge_snvs',
+            ctx=helpers.get_default_ctx(
+                memory=5,
+                walltime='6:00'),
             func='wgs.workflows.strelka.tasks.concatenate_vcf',
             args=(
                 mgd.TempInputFile('snvs.vcf', 'regions'),
@@ -147,6 +174,9 @@ def create_strelka_workflow(
 
     workflow.transform(
         name='filter_vcf_indel',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.strelka.tasks.filter_vcf',
         args=(
             mgd.TempInputFile('indels.vcf.gz', extensions=['.tbi', '.csi']),
@@ -157,6 +187,9 @@ def create_strelka_workflow(
 
     workflow.transform(
         name='filter_vcf_snv',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.strelka.tasks.filter_vcf',
         args=(
             mgd.TempInputFile('snvs.vcf.gz', extensions=['.tbi', '.csi']),
@@ -167,6 +200,9 @@ def create_strelka_workflow(
 
     workflow.subworkflow(
         name="strelka_snv_maf",
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
         args=(
             mgd.InputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
@@ -178,6 +214,9 @@ def create_strelka_workflow(
 
     workflow.subworkflow(
         name="strelka_indel_maf",
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
         args=(
             mgd.InputFile(indel_vcf_file, extensions=['.tbi', '.csi']),

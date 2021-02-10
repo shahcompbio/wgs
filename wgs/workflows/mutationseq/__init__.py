@@ -36,14 +36,16 @@ def create_museq_workflow(
 
     params = config.default_params('variant_calling')
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
+    workflow = pypeliner.workflow.Workflow(
+        ctx={'docker_image': config.containers('wgs')}
+    )
 
     workflow.transform(
         name='generate_intervals',
         func='wgs.workflows.mutationseq.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='1:00',
+            walltime='6:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
@@ -105,7 +107,7 @@ def create_museq_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='8:00',
+                walltime='6:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
@@ -119,7 +121,7 @@ def create_museq_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
@@ -133,7 +135,7 @@ def create_museq_workflow(
         name='run_museqportrait',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.workflows.mutationseq.tasks.run_museqportrait',
         args=(

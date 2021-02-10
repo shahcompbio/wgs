@@ -17,8 +17,8 @@ def get_coverage_data(
             name='generate_coverage_bed',
             func='wgs.workflows.sample_qc.tasks.generate_coverage_bed',
             ctx=helpers.get_default_ctx(
-                memory=5
-            ),
+                memory=5,
+                walltime='24:00'),
             args=(
                 reference,
                 mgd.TempOutputFile('coverage_bed.bed'),
@@ -30,8 +30,8 @@ def get_coverage_data(
             name='samtools_coverage',
             func='wgs.workflows.sample_qc.tasks.samtools_coverage',
             ctx=helpers.get_default_ctx(
-                memory=5
-            ),
+                memory=5,
+                walltime='24:00'),
             args=(
                 mgd.InputFile(input_bam),
                 mgd.TempInputFile('coverage_bed.bed'),
@@ -51,8 +51,8 @@ def get_coverage_data(
             name='generate_coverage_bed',
             func='wgs.workflows.sample_qc.tasks.generate_coverage_bed',
             ctx=helpers.get_default_ctx(
-                memory=5
-            ),
+                memory=5,
+                walltime='24:00'),
             axes=('chromosome',),
             args=(
                 reference,
@@ -65,8 +65,8 @@ def get_coverage_data(
             name='samtools_coverage',
             func='wgs.workflows.sample_qc.tasks.samtools_coverage',
             ctx=helpers.get_default_ctx(
-                memory=5
-            ),
+                memory=5,
+                walltime='24:00'),
             axes=('chromosome',),
             args=(
                 mgd.InputFile(input_bam),
@@ -81,8 +81,8 @@ def get_coverage_data(
             name='merge_data',
             func='wgs.utils.csvutils.concatenate_csv',
             ctx=helpers.get_default_ctx(
-                memory=5
-            ),
+                memory=5,
+                walltime='6:00'),
             args=(
                 mgd.TempInputFile('per_interval.txt', 'chromosome', axes_origin=[]),
                 mgd.OutputFile(output),
@@ -145,8 +145,8 @@ def create_sample_qc_workflow(
     workflow.transform(
         name='parse_roh',
         ctx=helpers.get_default_ctx(
-            memory=5
-        ),
+            memory=5,
+            walltime='6:00'),
         func="wgs.workflows.sample_qc.tasks.parse_roh",
         args=(
             mgd.InputFile(roh),
@@ -157,8 +157,8 @@ def create_sample_qc_workflow(
     workflow.transform(
         name='generate_genome_wide_plot',
         ctx=helpers.get_default_ctx(
-            memory=10,
-        ),
+            memory=5,
+            walltime='24:00'),
         func="wgs.workflows.sample_qc.tasks.genome_wide",
         args=(
             sample_id,

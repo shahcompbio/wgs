@@ -21,7 +21,7 @@ def create_hmmcopy_workflow(
         name='hmmcopy_readcounter',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='2:00', ),
+            walltime='6:00'),
         func='wgs.workflows.hmmcopy.tasks.hmmcopy_readcounter',
         args=(
             mgd.InputFile(bam_file, extensions=['.bai']),
@@ -33,6 +33,9 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='calc_corr',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.hmmcopy.tasks.calc_corr',
         args=(
             mgd.TempInputFile('infile.wig'),
@@ -47,6 +50,9 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='run_hmmcopy',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='24:00'),
         func='wgs.workflows.hmmcopy.tasks.run_hmmcopy',
         args=(
             mgd.TempInputFile('infile_copy.obj'),
@@ -62,6 +68,9 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='plot_hmm',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='24:00'),
         func='wgs.workflows.hmmcopy.tasks.plot_hmm',
         args=(
             mgd.TempInputFile('infile_copy.obj'),
@@ -77,6 +86,9 @@ def create_hmmcopy_workflow(
 
     workflow.transform(
         name='annot_hmm',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.hmmcopy.tasks.annot_hmm',
         args=(
             mgd.TempInputFile('hmmcopy_segments.txt'),

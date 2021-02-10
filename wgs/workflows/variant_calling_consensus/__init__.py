@@ -34,7 +34,7 @@ def create_consensus_workflow(
         name='parse_strelka_indel',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
             mgd.InputFile(strelka_indel, extensions=['.csi', '.tbi']),
@@ -52,7 +52,7 @@ def create_consensus_workflow(
         name='parse_museq_snv',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
             mgd.InputFile(museq_snv, extensions=['.csi', '.tbi']),
@@ -70,7 +70,7 @@ def create_consensus_workflow(
         name='parse_strelka_snv',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.parse_vcf',
         args=(
             mgd.InputFile(strelka_snv, extensions=['.csi', '.tbi']),
@@ -88,7 +88,7 @@ def create_consensus_workflow(
         name='merge_snvs',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
             [mgd.TempInputFile('strelka_snv.csv', extensions=['.yaml']),
@@ -101,7 +101,7 @@ def create_consensus_workflow(
         name='merge_snpeff',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
             [mgd.TempInputFile('strelka_snv_snpeff.csv', extensions=['.yaml']),
@@ -115,7 +115,7 @@ def create_consensus_workflow(
         name='merge_ma',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
             [mgd.TempInputFile('strelka_snv_ma.csv', extensions=['.yaml']),
@@ -129,7 +129,7 @@ def create_consensus_workflow(
         name='merge_ids',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.variant_calling_consensus.tasks.merge_overlap',
         args=(
             [mgd.TempInputFile('strelka_snv_ids.csv', extensions=['.yaml']),

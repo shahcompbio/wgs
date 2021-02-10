@@ -63,7 +63,7 @@ def create_destruct_wgs_workflow(
             name='destruct_parallel',
             ctx=helpers.get_default_ctx(
                 docker_image=config.containers('destruct'),
-                walltime="48:00",
+                walltime="72:00",
             ),
             # refers to seperate destruct package
             func='destruct.workflow.create_destruct_workflow',
@@ -83,7 +83,7 @@ def create_destruct_wgs_workflow(
         ctx=helpers.get_default_ctx(
             docker_image=config.containers('destruct'),
             memory=8,
-            walltime='8:00'
+            walltime='24:00'
         ),
         args=(
             'destruct',
@@ -101,7 +101,7 @@ def create_destruct_wgs_workflow(
         name='mappability_annotate_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func='wgs.workflows.destruct_wgs.flag_mappability.main',
         args=(
@@ -115,7 +115,7 @@ def create_destruct_wgs_workflow(
         name='finalize_raw_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
@@ -128,7 +128,7 @@ def create_destruct_wgs_workflow(
         name='finalize_raw_library',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
@@ -141,7 +141,7 @@ def create_destruct_wgs_workflow(
         name='finalize_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
@@ -154,7 +154,7 @@ def create_destruct_wgs_workflow(
         name='finalize_library',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
@@ -167,7 +167,7 @@ def create_destruct_wgs_workflow(
         name='reheader_reads',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.workflows.destruct_wgs.tasks.reheader_reads",
         args=(
@@ -180,7 +180,7 @@ def create_destruct_wgs_workflow(
         name='finalize_reads',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='8:00'
+            walltime='6:00'
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(

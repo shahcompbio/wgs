@@ -29,7 +29,7 @@ def create_rtg_germline_workflow(
         func='wgs.workflows.rtg_germline.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='1:00',
+            walltime='6:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
@@ -66,7 +66,7 @@ def create_rtg_germline_workflow(
             name='rtg_caller',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='24:00',
+                walltime='36:00',
             ),
             axes=('interval',),
             func='wgs.workflows.rtg_germline.tasks.run_rtg_germline',
@@ -86,7 +86,7 @@ def create_rtg_germline_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='8:00',
+                walltime='6:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
@@ -100,7 +100,7 @@ def create_rtg_germline_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(

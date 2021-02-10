@@ -29,7 +29,7 @@ def create_samtools_germline_workflow(
         func='wgs.workflows.samtools_germline.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='1:00',
+            walltime='6:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
@@ -44,7 +44,7 @@ def create_samtools_germline_workflow(
             name='samtools_germline',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='48:00',
+                walltime='72:00',
                 ncpus=8,
                 disk=600
             ),
@@ -66,7 +66,7 @@ def create_samtools_germline_workflow(
             name='samtools_germline',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='24:00',
+                walltime='36:00',
             ),
             axes=('interval',),
             func='wgs.workflows.samtools_germline.tasks.run_samtools_germline',
@@ -86,7 +86,7 @@ def create_samtools_germline_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='8:00',
+                walltime='12:00',
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
@@ -100,7 +100,7 @@ def create_samtools_germline_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
@@ -113,7 +113,7 @@ def create_samtools_germline_workflow(
     workflow.transform(
         name='roh_calling',
         ctx=helpers.get_default_ctx(
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.workflows.samtools_germline.tasks.roh_calling',
         args=(

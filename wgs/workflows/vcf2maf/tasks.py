@@ -36,10 +36,9 @@ def run_vcf2maf(
     else:
         vcf_unzipped = input_vcf
 
-
     assert vcf_unzipped.endswith('.vcf')
     vcf_unzipped_vep = vcf_unzipped[:-4]
-    vcf_unzipped_vep = vcf_unzipped_vep+'.vep.vcf'
+    vcf_unzipped_vep = vcf_unzipped_vep + '.vep.vcf'
 
     if os.path.exists(vcf_unzipped_vep):
         os.remove(vcf_unzipped_vep)

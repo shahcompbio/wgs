@@ -30,7 +30,7 @@ def create_mutect_workflow(
         func='wgs.workflows.mutect.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='1:00',
+            walltime='6:00',
         ),
         ret=mgd.OutputChunks('interval'),
         args=(
@@ -68,7 +68,7 @@ def create_mutect_workflow(
             name='mutect_caller',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='24:00',
+                walltime='36:00',
             ),
             axes=('interval',),
             func='wgs.workflows.mutect.tasks.run_mutect',
@@ -89,7 +89,7 @@ def create_mutect_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='8:00',
+                walltime='6:00',
             ),
             func='wgs.workflows.mutect.tasks.merge_vcfs',
             args=(
@@ -103,7 +103,7 @@ def create_mutect_workflow(
     workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
-            walltime='8:00',
+            walltime='6:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(

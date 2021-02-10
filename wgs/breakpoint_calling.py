@@ -34,7 +34,6 @@ def breakpoint_calling_workflow(args):
 
     svaba_vcf = os.path.join(sv_outdir, '{sample_id}_svaba.vcf')
 
-
     single_node = args['single_node']
 
     refdir_paths = config.refdir_data(args['refdir'])['paths']

@@ -48,7 +48,7 @@ def create_remixt_workflow(
         func='wgs.workflows.remixt.tasks.filter_destruct_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='4:00'),
+            walltime='6:00'),
         args=(
             mgd.InputFile(breakpoints),
             mgd.TempOutputFile('filtered_breakpoints.csv'),
@@ -81,7 +81,7 @@ def create_remixt_workflow(
             name='remixt',
             func="remixt.workflow.create_remixt_bam_workflow",
             ctx={'docker_image': config.containers('remixt'),
-                 'walltime': '48:00'},
+                 'walltime': '72:00'},
             args=(
                 mgd.TempInputFile('filtered_breakpoints.csv'),
                 {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),
@@ -98,6 +98,9 @@ def create_remixt_workflow(
 
     workflow.transform(
         name='parse_remixt',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.remixt.tasks.parse_remixt_file',
         args=(
             mgd.InputFile(remixt_results_filename),

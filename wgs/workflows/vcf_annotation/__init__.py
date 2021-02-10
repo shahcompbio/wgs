@@ -35,7 +35,7 @@ def create_annotation_workflow(
         name='run_snpeff',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_snpeff',
         args=(
             mgd.InputFile(input_vcf),
@@ -50,7 +50,7 @@ def create_annotation_workflow(
         name='run_mutation_assessor',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_mutation_assessor',
         args=(
             mgd.TempInputFile('annotSnpEff.vcf'),
@@ -63,7 +63,7 @@ def create_annotation_workflow(
         name='run_DBSNP',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_DBSNP',
         args=(
             mgd.TempInputFile('annotMA.vcf'),
@@ -76,7 +76,7 @@ def create_annotation_workflow(
         name='run_1000gen',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_1000gen',
         args=(
             mgd.TempInputFile('flagDBsnp.vcf'),
@@ -89,7 +89,7 @@ def create_annotation_workflow(
         name='run_cosmic',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.vcf_annotation.tasks.run_cosmic',
         args=(
             mgd.TempInputFile('flag1000gen.vcf'),
@@ -103,7 +103,7 @@ def create_annotation_workflow(
         func='wgs.workflows.vcf_annotation.tasks.flag_low_mappability',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         args=(
             mgd.TempInputFile('cosmic.vcf'),
             mgd.TempOutputFile('low_mapp.vcf'),
@@ -115,7 +115,7 @@ def create_annotation_workflow(
         name='finalize',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00', ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
             mgd.TempInputFile('low_mapp.vcf'),

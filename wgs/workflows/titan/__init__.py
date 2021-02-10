@@ -1,5 +1,3 @@
-import os
-
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.config import config
@@ -32,7 +30,7 @@ def create_titan_workflow(
         func='wgs.workflows.titan.tasks.generate_intervals',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='2:00', ),
+            walltime='6:00', ),
         ret=mgd.OutputChunks('interval'),
         args=(
             reference,
@@ -92,7 +90,7 @@ def create_titan_workflow(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
                 memory=15,
-                walltime='4:00', ),
+                walltime='6:00'),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
                 mgd.TempInputFile('museq.vcf', 'interval'),
@@ -106,7 +104,7 @@ def create_titan_workflow(
         name='convert_museq_vcf2counts',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='4:00', ),
+            walltime='6:00'),
         func='wgs.workflows.titan.tasks.convert_museq_vcf2counts',
         args=(
             mgd.InputFile(museq_vcf),
@@ -119,7 +117,7 @@ def create_titan_workflow(
         name='run_readcounter_tumour',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='16:00',
+            walltime='24:00',
             disk=200
         ),
         func='wgs.workflows.titan.tasks.run_readcounter',
@@ -135,7 +133,7 @@ def create_titan_workflow(
         name='run_readcounter_normal',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='16:00',
+            walltime='24:00',
             disk=200
         ),
         func='wgs.workflows.titan.tasks.run_readcounter',
@@ -151,7 +149,7 @@ def create_titan_workflow(
         name='calc_correctreads_wig',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='4:00', ),
+            walltime='6:00'),
         func='wgs.workflows.titan.tasks.calc_correctreads_wig',
         args=(
             mgd.TempInputFile('tumour.wig'),
@@ -194,7 +192,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='16:00', ),
+            walltime='16:00'),
         func='wgs.workflows.titan.tasks.plot_titan',
         args=(
             mgd.TempInputFile('titan.Rdata', 'numclusters', 'ploidy'),
@@ -214,7 +212,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='4:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.titan.tasks.calc_cnsegments_titan',
         args=(
             mgd.TempInputFile('titan_outfile', 'numclusters', 'ploidy'),
@@ -230,7 +228,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='4:00', ),
+            walltime='24:00', ),
         func='wgs.workflows.titan.tasks.annot_pygenes',
         args=(
             mgd.TempInputFile('segs.csv', 'numclusters', 'ploidy'),
@@ -244,7 +242,7 @@ def create_titan_workflow(
         axes=('numclusters', 'ploidy'),
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='4:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.titan.tasks.parse_titan_data',
         args=(
             mgd.TempInputFile('titan_segs.csv', 'numclusters', 'ploidy'),
@@ -258,7 +256,7 @@ def create_titan_workflow(
         name="select_optimal_solution",
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='4:00', ),
+            walltime='6:00', ),
         func="wgs.workflows.titan.tasks.select_optimal_solution",
         args=(
             chunks,
@@ -281,7 +279,7 @@ def create_titan_workflow(
         name='tar_all_data',
         ctx=helpers.get_default_ctx(
             memory=5,
-            walltime='4:00', ),
+            walltime='6:00', ),
         func="wgs.workflows.titan.tasks.tar_all_data",
         args=(
             mgd.TempInputFile('titan_params', 'numclusters', 'ploidy', axes_origin=[]),

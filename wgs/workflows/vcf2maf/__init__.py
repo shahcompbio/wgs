@@ -7,6 +7,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 from wgs.config import config
+from wgs.utils import helpers
 
 
 def create_vcf2maf_workflow(
@@ -22,6 +23,9 @@ def create_vcf2maf_workflow(
 
     workflow.transform(
         name='vcf2maf',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='96:00'),
         func='wgs.workflows.vcf2maf.tasks.run_vcf2maf',
         args=(
             mgd.InputFile(vcf_file),
@@ -38,6 +42,9 @@ def create_vcf2maf_workflow(
 
     workflow.transform(
         name='update_ids',
+        ctx=helpers.get_default_ctx(
+            memory=5,
+            walltime='6:00'),
         func='wgs.workflows.vcf2maf.tasks.update_ids',
         args=(
             mgd.TempInputFile('maf_file.maf'),

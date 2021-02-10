@@ -28,7 +28,7 @@ def create_somatic_consensus_workflow(
         name='snv_consensus',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='24:00'),
         func='wgs.workflows.somatic_calling_consensus.consensus.main',
         args=(
             mgd.InputFile(museq_snv_vcf),
@@ -56,7 +56,7 @@ def create_somatic_consensus_workflow(
         name='maf_counts',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00', ),
         func='wgs.workflows.somatic_calling_consensus.tasks.update_maf_counts',
         args=(
             mgd.TempInputFile('consensus.maf'),

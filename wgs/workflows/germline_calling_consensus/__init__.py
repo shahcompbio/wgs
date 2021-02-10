@@ -30,7 +30,7 @@ def create_germline_consensus_workflow(
         name='germline_consensus',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00'),
         func='wgs.workflows.germline_calling_consensus.consensus.main',
         args=(
             mgd.InputFile(museq_vcf),
@@ -47,7 +47,7 @@ def create_germline_consensus_workflow(
         name='split_vcf',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00'),
         func='wgs.workflows.germline_calling_consensus.tasks.split_vcf_by_chr',
         axes=('chrom',),
         args=(
@@ -73,7 +73,7 @@ def create_germline_consensus_workflow(
         name='merge_maf',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00'),
         func='wgs.workflows.germline_calling_consensus.tasks.merge_mafs',
         args=(
             mgd.TempInputFile('consensus_chrom.maf', 'chrom'),
@@ -85,7 +85,7 @@ def create_germline_consensus_workflow(
         name='maf_counts',
         ctx=helpers.get_default_ctx(
             memory=15,
-            walltime='8:00', ),
+            walltime='6:00'),
         func='wgs.workflows.germline_calling_consensus.tasks.update_maf_counts',
         args=(
             mgd.TempInputFile('consensus.maf'),

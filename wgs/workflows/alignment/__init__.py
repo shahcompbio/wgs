@@ -114,8 +114,8 @@ def collect_bam_metrics(
         func='wgs.workflows.alignment.tasks.bam_collect_all_metrics',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='4:00',
-            disk=400
+            walltime='6:00',
+            disk=40
         ),
         args=(
             mgd.InputFile(flagstat_metrics),
@@ -247,7 +247,7 @@ def align_samples(
         name='merge_tumour_lanes',
         ctx=helpers.get_default_ctx(
             memory=10,
-            walltime='24:00',
+            walltime='72:00',
             disk=400
         ),
         func="wgs.workflows.alignment.tasks.merge_bams",
@@ -267,7 +267,7 @@ def align_samples(
         name='markdups_reheader',
         ctx=helpers.get_default_ctx(
             memory=12,
-            walltime='24:00',
+            walltime='48:00',
             ncpus=1,
             disk=300
         ),
@@ -310,6 +310,12 @@ def align_samples(
 
     workflow.transform(
         name='tar',
+        ctx=helpers.get_default_ctx(
+            memory=12,
+            walltime='24:00',
+            ncpus=1,
+            disk=30
+        ),
         func='wgs.utils.helpers.make_tar_from_files',
         axes=('sample_id',),
         args=(
@@ -345,7 +351,7 @@ def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_
         name='align_bwa_mem',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='48:00',
+            walltime='72:00',
             ncpus='8',
             disk=300
         ),
@@ -369,7 +375,7 @@ def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_
         name='sort',
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='48:00',
+            walltime='72:00',
             ncpus='8',
             disk=300
         ),
@@ -446,7 +452,7 @@ def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id,
         axes=('split',),
         ctx=helpers.get_default_ctx(
             memory=8,
-            walltime='16:00',
+            walltime='48:00',
             ncpus=8,
         ),
         func='wgs.workflows.alignment.tasks.align_bwa_mem',
@@ -470,7 +476,7 @@ def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id,
         axes=('split',),
         ctx=helpers.get_default_ctx(
             memory=4,
-            walltime='16:00',
+            walltime='48:00',
         ),
         func='wgs.workflows.alignment.tasks.bam_sort',
         args=(
