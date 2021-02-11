@@ -1,16 +1,16 @@
 import os
-
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.config import config
 from wgs.utils import helpers
 
+
 def cna_annotation_workflow(
-        remixt_dict,
-        output_table,
-        segmental_copynumber,
-        cbio_cna_table,
-        gtf
+    remixt_dict,
+    cbio_cna,
+    maftools_cna,
+    segments,
+    gtf
 ):
     workflow = pypeliner.workflow.Workflow(
         ctx={'docker_image': config.containers('wgs')}
@@ -63,7 +63,7 @@ def cna_annotation_workflow(
         func='wgs.workflows.cohort_qc.tasks.merge_segmental_cn',
         args=(
             mgd.TempInputFile('segmental_cn', 'sample_label', axes_origin=[]),
-            mgd.OutputFile(segmental_copynumber)
+            mgd.OutputFile(segments)
         ),
     )
 
@@ -103,7 +103,7 @@ def cna_annotation_workflow(
         args=(
             mgd.TempInputFile('merged_amps'),
             mgd.TempInputFile('merged_dels'),
-            mgd.OutputFile(cbio_cna_table),
+            mgd.OutputFile(cbio_cna)
         ),
     )
 
@@ -117,7 +117,7 @@ def cna_annotation_workflow(
         args=(
             mgd.TempInputFile('merged_amps'),
             mgd.TempInputFile('merged_dels'),
-            output_table
+            mgd.OutputFile(maftools_cna)
         ),
     )
 
@@ -127,7 +127,8 @@ def cna_annotation_workflow(
 def preprocess_mafs_workflow(
         germline_maf_dict,
         somatic_maf_dict,
-        merged_annotated_maf,
+        merged_germline,
+        merged_somatic,
         api_key
 ):
     workflow = pypeliner.workflow.Workflow(
@@ -148,12 +149,15 @@ def preprocess_mafs_workflow(
         func='wgs.workflows.cohort_qc.tasks.annotate_maf_with_oncokb',
         axes=("sample_label",),
         args=(
-            mgd.InputFile('germlne_maf', 'sample_label', fnames=germline_maf_dict),
+            mgd.InputFile(
+                'germlne_maf', 'sample_label', fnames=germline_maf_dict
+            ),
             api_key,
             mgd.TempSpace("annotated_germline_maf_tmp", 'sample_label'),
             mgd.TempOutputFile("annotated_germline_maf", 'sample_label'),
         ),
     )
+
     workflow.transform(
         name='filter_germline_mafs',
         ctx=helpers.get_default_ctx(
@@ -167,6 +171,7 @@ def preprocess_mafs_workflow(
             mgd.TempOutputFile("filtered_germline_maf", "sample_label")
         ),
     )
+
     workflow.transform(
         name='annotate_somatic_mafs',
         ctx=helpers.get_default_ctx(
@@ -182,62 +187,41 @@ def preprocess_mafs_workflow(
             mgd.TempOutputFile("annotated_somatic_maf", 'sample_label'),
         ),
     )
-
     workflow.transform(
-        name='annotate_germline_class',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='24:00',
-        ),
-        func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
-        axes=("sample_label",),
-        args=(
-            mgd.TempInputFile('filtered_germline_maf', 'sample_label'),
-            mgd.TempOutputFile("filtered_class_labeled_germline_maf", 'sample_label'),
-            {'is_germline': True}
-        ),
-    )
-
-    workflow.transform(
-        name='annotate_somatic_class',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='6:00',
-        ),
-        func='wgs.workflows.cohort_qc.tasks.annotate_maf_file',
-        axes=("sample_label",),
-        args=(
-            mgd.TempInputFile('annotated_somatic_maf', 'sample_label'),
-            mgd.TempOutputFile("class_labeled_somatic_maf", 'sample_label'),
-            {'is_germline': False}
-        ),
-    )
-
-    workflow.transform(
-        name='merge_filtered_germline_somatic',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='24:00',
-        ),
+        name='merge_germline_mafs',
         func='wgs.workflows.cohort_qc.tasks.merge_mafs',
         args=(
-            mgd.TempInputFile('filtered_class_labeled_germline_maf', 'sample_label', axes_origin=[]),
-            mgd.TempInputFile('class_labeled_somatic_maf', 'sample_label', axes_origin=[]),
-            mgd.OutputFile(merged_annotated_maf),
+            mgd.TempInputFile(
+                "filtered_germline_maf", 'sample_label',  axes_origin=[]
+            ),
+            mgd.OutputFile(merged_germline)
+        ),
+    )
+    workflow.transform(
+        name='merge_somatic_mafs',
+        func='wgs.workflows.cohort_qc.tasks.merge_mafs',
+        args=(
+            mgd.TempInputFile(
+                "annotated_somatic_maf", 'sample_label', axes_origin=[]
+            ),
+            mgd.OutputFile(merged_somatic)
         ),
     )
 
     return workflow
 
 
+
 def create_cohort_qc_report(
         cohort_label,
         out_dir,
-        filtered_cohort_maf,
-        cna_table,
-        report_path
+        filtered_germline,
+        annotated_somatic,
+        maftools_cna,
+        maftools_maf,
+        report_path,
+        cohort_oncoplot
 ):
-    oncoplot = os.path.join(out_dir, cohort_label, "cohort_oncoplot.png")
     somatic_interactions_plot = os.path.join(
         out_dir, cohort_label, "somatic_interactions.png"
     )
@@ -263,13 +247,14 @@ def create_cohort_qc_report(
         ),
         func='wgs.workflows.cohort_qc.tasks.prepare_maf_for_maftools',
         args=(
-            cohort_label,
-            mgd.InputFile(filtered_cohort_maf),
-            mgd.TempOutputFile("prepared_maf"),
+            mgd.InputFile(filtered_germline),
+            mgd.InputFile(annotated_somatic),
+            mgd.OutputFile(maftools_maf),
             non_synonymous_labels,
             mgd.TempOutputFile("vcNames")
         ),
     )
+
 
     workflow.transform(
         name='burden_plot',
@@ -279,7 +264,7 @@ def create_cohort_qc_report(
         ),
         func='wgs.workflows.cohort_qc.tasks.plot_mutation_burden',
         args=(
-            mgd.InputFile(filtered_cohort_maf),
+            mgd.InputFile(maftools_maf),
             mgd.OutputFile(burden_plot),
         ),
     )
@@ -292,7 +277,7 @@ def create_cohort_qc_report(
         ),
         func='wgs.workflows.cohort_qc.tasks.build_gene_list',
         args=(
-            mgd.InputFile(cna_table),
+            mgd.InputFile(maftools_cna),
             mgd.TempOutputFile("genelist")
         ),
     )
@@ -305,9 +290,9 @@ def create_cohort_qc_report(
         ),
         func='wgs.workflows.cohort_qc.tasks.make_R_cohort_plots',
         args=(
-            mgd.TempInputFile("prepared_maf"),
-            mgd.InputFile(cna_table),
-            mgd.OutputFile(oncoplot),
+            mgd.InputFile(maftools_maf),
+            mgd.InputFile(maftools_cna),
+            mgd.OutputFile(cohort_oncoplot),
             mgd.OutputFile(somatic_interactions_plot),
             mgd.OutputFile(summary_plot),
             mgd.TempInputFile("vcNames"),
@@ -326,7 +311,7 @@ def create_cohort_qc_report(
         func='wgs.workflows.cohort_qc.tasks.make_report',
         args=(
             cohort_label,
-            mgd.InputFile(oncoplot),
+            mgd.InputFile(cohort_oncoplot),
             mgd.InputFile(somatic_interactions_plot),
             mgd.InputFile(summary_plot),
             mgd.InputFile(burden_plot),
