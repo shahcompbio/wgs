@@ -76,15 +76,34 @@ def make_cbio_cna_table(amps, dels, cbio_table):
 
 
 def make_maftools_cna_table(amps, dels, maftools_table):
-    amps = pd.read_csv(amps, sep="\t", usecols=["gene_name", "sample", "cn_type", "pass_filter"])
-    amps = amps.rename(columns={"gene_name": "Gene", "cn_type": "CN", "sample": "Sample_Name"})
+    """Transform amps, dels to maftools-readable format/
+
+    Args:
+        amps ([dict]): [amps]
+        dels ([dict]): [dels]
+        maftools_table ([str]): [output path]
+    """
+    amps = pd.read_csv(
+        amps, sep="\t", usecols=["gene_name", "sample",
+        "cn_type", "pass_filter"]
+    )
+    amps = amps.rename(
+        columns={"gene_name": "Gene", "cn_type": "CN",
+            "sample": "Sample_name"}
+        )
     amps = amps[amps.pass_filter == True]
 
-    dels = pd.read_csv(dels, sep="\t", usecols=["gene_name", "sample", "cn_type", "pass_filter"])
-    dels = dels.rename(columns={"gene_name": "Gene", "cn_type": "CN", "sample": "Sample_Name"})
+    dels = pd.read_csv(
+        dels,  sep="\t", usecols=["gene_name", "sample",
+            "cn_type", "pass_filter"]
+    )
+    dels = dels.rename(
+        columns={"gene_name": "Gene", "cn_type": "CN", "sample": "Sample_name"}
+    )
     dels = dels[dels.pass_filter == True]
 
     out = pd.concat([amps, dels])
+    out = out[["Gene", "Sample_name", "CN"]]
     out.to_csv(maftools_table, index=False, sep="\t")
 
 
@@ -108,7 +127,16 @@ def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels, docker_im
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-def merge_mafs(germline_mafs, somatic_mafs, merged_maf):
+def merge_mafs(mafs, merged_maf):
+    """Write maf m to path merged_maf with label label (append).
+
+    Args:
+        mafs ([dict]): [sample: maf path]
+        merged_maf ([str]): [output path]
+
+    Yields:
+        [type]: [description]
+    """
     def _read_maf_chunk(maf_file, label):
         maf = pd.read_csv(maf_file, sep="\t", dtype='str', chunksize=1e7)
         for maf_chunk in maf:
@@ -118,22 +146,14 @@ def merge_mafs(germline_mafs, somatic_mafs, merged_maf):
     if os.path.exists(merged_maf):
         os.remove(merged_maf)
 
-    for label, maf_file in somatic_mafs.items():
+    for label, maf_file in mafs.items():
         for i, chunk in enumerate(_read_maf_chunk(maf_file, label)):
             header = True if i == 0 else False
-            chunk.to_csv(merged_maf, sep="\t", index=False, header=header, mode='a', na_rep="")
+            chunk.to_csv(
+                merged_maf, sep="\t", index=False, header=header,
+                mode='a', na_rep=""
+            )
 
-    for label, maf_file in germline_mafs.items():
-        for chunk in _read_maf_chunk(maf_file, label):
-            chunk.to_csv(merged_maf, sep="\t", index=False, header=False, mode='a', na_rep="")
-
-
-## TODO: class_label unused
-## TODO: what's the point of this function?
-def annotate_maf(
-        maf, annotated_maf, api_key, tempspace, class_label="", docker_image=None
-):
-    annotate_maf_with_oncokb(maf, api_key, tempspace, annotated_maf, docker_image)
 
 
 def annotate_maf_with_oncokb(
@@ -144,7 +164,9 @@ def annotate_maf_with_oncokb(
     cmd = [
         "MafAnnotator.py", "-i", maf, "-o", annotated_maf, "-b", api_key
     ]
+
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
 
 
 ## TODO: mode is 'a', check if file exists before appending
@@ -152,7 +174,7 @@ def filter_maf(annotated_maf, filtered_maf, write_header=True):
     oncogenic_annotations = ["Oncogenic", "Likely Oncogenic", "Predicted Oncogenic"]
     maf = pd.read_csv(annotated_maf, sep="\t", dtype='str', chunksize=1e7)
     for chunk in maf:
-        chunk = chunk[chunk.oncogenic.isin(oncogenic_annotations)]
+        chunk = chunk[chunk.ONCOGENIC.isin(oncogenic_annotations)]
         chunk.to_csv(filtered_maf, sep="\t", index=False, header=write_header, mode='a')
 
         write_header = False
@@ -174,23 +196,45 @@ def label_germline_somatic(row):
     return row.Variant_Classification + "_" + "somatic"
 
 
-## TODO: cohort label unused
-## TODO: vcNames is not pep-8
 def prepare_maf_for_maftools(
-        cohort_label, filtered_maf, prepared_maf, non_synonymous_labels, vcNames
+    germline, somatic, prepared_maf, non_synonymous_labels, vcNames
 ):
     '''
-    filter on non synonymous labels
-    add germline/somatic annotate to variant classification
-    add group/patient labels
-    write out vcNames
+    format maf for intake in maftools
+    Parameters
+    ----------
+    filtered_maf: label of filtered_maf
+    prepared_maf: new formatted maf
+    non_synonymous_labels: set of non_synonymous variant types to include
+    vcNames: set of non_synonymous variant types existing in maf, passed to maftools
+
+    Returns
+    -------
     '''
-    maf = pd.read_csv(filtered_maf, sep="\t", dtype='str')
-    maf = maf[maf.Variant_Classification.isin(non_synonymous_labels)]
-    maf["Variant_Classification"] = maf.apply(lambda row: label_germline_somatic(row), axis=1)
-    nonsynclasses = pd.DataFrame({"Variant_Classification": maf.Variant_Classification.unique().tolist()})
+    germline = pd.read_csv(germline, sep="\t")
+    germline = germline[
+        germline.Variant_Classification.isin(non_synonymous_labels)
+    ]
+    germline["Variant_Classification"] = germline.Variant_Classification.apply(
+        lambda vc: vc + "_germline"
+    )
+
+    somatic = pd.read_csv(somatic, sep="\t")
+    somatic = somatic[
+        somatic.Variant_Classification.isin(non_synonymous_labels)
+    ]
+    somatic["Variant_Classification"] = somatic.Variant_Classification.apply(
+        lambda vc: vc + "_somatic"
+    )
+
+    combined = pd.concat([germline, somatic])
+
+    nonsynclasses = pd.DataFrame(
+        {"Variant_Classification": combined.Variant_Classification.unique().tolist()}
+    )
     nonsynclasses.to_csv(vcNames, index=False)
-    maf.to_csv(prepared_maf, sep="\t", index=False)
+
+    combined.to_csv(prepared_maf, sep="\t", index=False)
 
 
 def plot_mutation_burden(maf, burden_plot_path):
