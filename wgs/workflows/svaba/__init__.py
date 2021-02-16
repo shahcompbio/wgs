@@ -2,6 +2,7 @@ import pypeliner
 import pypeliner.managed as mgd
 
 from wgs.config import config
+from wgs.utils import helpers
 
 
 def create_svaba_workflow(
@@ -14,6 +15,12 @@ def create_svaba_workflow(
 
     workflow.transform(
         name='run_svaba',
+        ctx=helpers.get_default_ctx(
+            memory=10,
+            walltime='72:00',
+            ncpus='8',
+            disk=300
+        ),
         func='wgs.workflows.svaba.tasks.run_svaba',
         args=(
             mgd.InputFile(tumour_bam),
@@ -34,7 +41,5 @@ def create_svaba_workflow(
             'docker_image': config.containers('svaba')
         }
     )
-
-
 
     return workflow
