@@ -90,6 +90,12 @@ def parse_args():
     sv_calling = subparsers.add_parser("breakpoint_calling")
     sv_calling.set_defaults(which='breakpoint_calling')
     add_global_args(sv_calling)
+    sv_calling.add_argument(
+        "--svaba",
+        default=False,
+        action='store_true',
+        help='''svaba'''
+    )
 
     # ================
     # copy number calling

@@ -89,17 +89,19 @@ def breakpoint_calling_workflow(args):
         },
     )
 
-    workflow.subworkflow(
-        name='svaba',
-        func=svaba.create_svaba_workflow,
-        axes=('sample_id',),
-        args=(
-            mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours, extensions=['.bai'], axes_origin=[]),
-            mgd.InputFile("normal.bam", 'sample_id', fnames=normals, extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile('svaba_vcf', 'sample_id', template=svaba_vcf),
-            refdir_paths['reference'],
-        ),
-    )
+
+    if args['svaba']:
+        workflow.subworkflow(
+            name='svaba',
+            func=svaba.create_svaba_workflow,
+            axes=('sample_id',),
+            args=(
+                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours, extensions=['.bai'], axes_origin=[]),
+                mgd.InputFile("normal.bam", 'sample_id', fnames=normals, extensions=['.bai'], axes_origin=[]),
+                mgd.OutputFile('svaba_vcf', 'sample_id', template=svaba_vcf),
+                refdir_paths['reference'],
+            ),
+        )
 
     workflow.subworkflow(
         name="consensus_calling",
@@ -120,9 +122,11 @@ def breakpoint_calling_workflow(args):
         destruct_raw_library,
         destruct_reads,
         lumpy_vcf,
-        svaba_vcf,
         parsed_csv
     ]
+
+    if args['svaba']:
+        filenames.append(svaba_vcf)
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
 
