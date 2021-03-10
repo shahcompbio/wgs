@@ -5,6 +5,7 @@ import pysam
 from wgs.workflows.sample_qc import genome_wide_plot
 from wgs_qc_utils.plotter import gene_annotation_plotting
 from wgs_qc_utils.reader import read_titan, read_remixt
+import gzip
 
 
 def get_gene_annotations(outfile):
@@ -98,9 +99,11 @@ def prep_sv_for_circos(sv_calls, outfile):
     svs.to_csv(outfile, index=False, header=True, sep="\t")
 
 
-def parse_roh(roh_calls, parsed):
-    lines = [l for l in open(roh_calls) if "ST" in l]
-
+ def parse_roh(roh_calls, parsed): 
+    if roh_calls.endswith(".gz"):
+        lines = [l for l in gzip.open(roh_calls, "rt") if "ST" in l]
+    else:
+        lines = [l for l in open(roh_calls) if "ST" in l]
     with open(parsed, 'w') as f:
         for line in lines:
             f.write("%s\n" % line)
