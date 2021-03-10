@@ -150,13 +150,13 @@ def genome_wide_plot(
     """
 
     pdf = matplotlib.backends.backend_pdf.PdfPages(pdf)
-
+ 
     remixt = read_remixt.read(remixt, remixt_label)
 
     titan = read_titan.read(titan)
 
     roh = read_roh.read(roh)
-
+    
     germline_calls = read_variant_calls.read(germline_calls)
     if  somatic_calls.endswith(".maf"):
         somatic_calls = read_variant_calls.read(somatic_calls)
@@ -206,7 +206,7 @@ def genome_wide_plot(
         for i, ax in enumerate(axes):
             if i not in [0, 1, 2, 3, 4, 5, 6, 7, 8, 14]:
                 ax.axis("off")
-
+        
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,
                                   normal_coverage, breakpoints, snv_copynumber,
