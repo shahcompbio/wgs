@@ -1,4 +1,4 @@
-FROM quay.io/wgspipeline/singularity_base:v0.0.1
+FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
@@ -11,6 +11,9 @@ RUN pip install networkx==2.1
 RUN conda install -c bioconda svaba
 
 
+
+
+
 RUN conda create --name lumpy python=2.7
 SHELL ["conda", "run", "-n", "lumpy", "/bin/bash", "-c"]
 RUN conda install -c componc -c bioconda  lumpy-sv=0.2.12
@@ -18,7 +21,7 @@ RUN conda install -c bioconda sambamba
 RUN echo "aliasawk=gawk" >> ~/.bashrc
 RUN cp /app/lumpy_extractSplitReads_BwaMem  /opt/conda/envs/lumpy/bin/lumpy_extractSplitReads_BwaMem
 ENV PATH="${PATH}:/opt/conda/envs/lumpy/bin"
-
+SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
 RUN pip install git+https://github.com/shahcompbio/pypeliner.git@master
@@ -27,4 +30,4 @@ RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
-RUN pip pyvcf intervaltree
+RUN pip install pyvcf intervaltree
