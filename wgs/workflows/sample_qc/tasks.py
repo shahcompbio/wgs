@@ -100,10 +100,10 @@ def prep_sv_for_circos(sv_calls, outfile):
 
 
  def parse_roh(roh_calls, parsed): 
-+    if roh_calls.endswith(".gz"):
-+        lines = [l for l in gzip.open(roh_calls, "rt") if "ST" in l]
-+    else:
-+        lines = [l for l in open(roh_calls) if "ST" in l]
+    if roh_calls.endswith(".gz"):
+        lines = [l for l in gzip.open(roh_calls, "rt") if "ST" in l]
+    else:
+        lines = [l for l in open(roh_calls) if "ST" in l]
     with open(parsed, 'w') as f:
         for line in lines:
             f.write("%s\n" % line)
