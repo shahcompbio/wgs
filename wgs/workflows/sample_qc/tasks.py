@@ -99,7 +99,7 @@ def prep_sv_for_circos(sv_calls, outfile):
     svs.to_csv(outfile, index=False, header=True, sep="\t")
 
 
- def parse_roh(roh_calls, parsed): 
+def parse_roh(roh_calls, parsed): 
     if roh_calls.endswith(".gz"):
         lines = [l for l in gzip.open(roh_calls, "rt") if "ST" in l]
     else:
