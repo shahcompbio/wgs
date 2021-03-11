@@ -3,4 +3,6 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - cd docker/alignment/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
       - cd docker/breakpoint/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
+
