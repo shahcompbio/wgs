@@ -1,4 +1,4 @@
-FROM quay.io/wgspipeline/singularity_base:v0.0.1
+FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
