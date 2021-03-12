@@ -4,6 +4,53 @@ from wgs.config import config
 from wgs.utils import helpers
 
 
+def circos_plot(titan_calls, remixt_calls, sample_id, breakpoints,
+           circos_plot_remixt, circos_plot_titan):
+    workflow = pypeliner.workflow.Workflow()
+
+    workflow.transform(
+        name='prep_titan',
+        func='wgs_qc_utils.reader.read_titan.make_for_circos',
+        ctx=helpers.get_default_ctx(
+            memory=5
+        ),
+        args=(
+            mgd.InputFile(titan_calls),
+            mgd.TempOutputFile("titan_prepped"),
+        )
+    )
+
+    workflow.transform(
+        name='prep_remixt',
+        func='wgs_qc_utils.reader.read_remixt.make_for_circos',
+        ctx=helpers.get_default_ctx(
+            memory=5
+        ),
+        args=(
+            mgd.InputFile(remixt_calls),
+            sample_id,
+            mgd.TempOutputFile("remixt_prepped"),
+        )
+    )
+    workflow.transform(
+        name='circos_plot',
+        func='wgs.workflows.sample_qc.tasks.circos',
+        ctx=helpers.get_default_ctx(
+            memory=5
+        ),
+        args=(
+            mgd.TempInputFile("titan_prepped"),
+            mgd.TempInputFile("remixt_prepped"),
+            sample_id,
+            breakpoints,
+            mgd.OutputFile(circos_plot_remixt),
+            mgd.OutputFile(circos_plot_titan),
+            mgd.TempSpace("circos")
+        )
+    )
+
+    return workflow
+
 def get_coverage_data(
         input_bam, output, refdir, chromosomes,
         mapping_qual, bins, single_node=False

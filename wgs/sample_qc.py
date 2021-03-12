@@ -69,11 +69,35 @@ def sample_qc_workflow(args):
         kwargs={'single_node': args['single_node']}
     )
 
+
+    workflow.subworkflow(
+        name='generate_circos_plot',
+        ctx=helpers.get_default_ctx(
+            memory=10,
+            walltime='24:00',
+            disk=400
+        ),
+        axes=('sample_id',),
+        func=sample_qc.circos_plot,
+        args=(
+            mgd.InputFile('titan', 'sample_id', fnames=titan_files),
+            mgd.InputFile('remixt', 'sample_id', fnames=remixt_files),
+            mgd.InputInstance("sample_id"),
+            mgd.InputFile(
+                'breakpoints_consensus', 'sample_id', 
+                fnames=breakpoints_consensus_files),
+            mgd.OutputFile(
+                'circos_remixt', 'sample_id', 
+                template=circos_plot_remixt),
+            mgd.OutputFile('circos_titan', 'sample_id', template=circos_plot_titan),
+        ),
+    )
+
     outputted_filenames = helpers.expand_list(
         [circos_plot_remixt, circos_plot_titan, 
         normal_coverage, tumour_coverage,genome_wide_plot],
-        samples, "sample_id"
-    )
+        samples, "sample_id")
+
     meta_yaml = os.path.join(out_dir, 'pipeline_metadata.yaml')
     input_yaml_blob = os.path.join(out_dir, 'input.yaml')
 
