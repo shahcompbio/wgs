@@ -70,7 +70,8 @@ def sample_qc_workflow(args):
     )
 
     outputted_filenames = helpers.expand_list(
-        [circos_plot_remixt, circos_plot_titan, genome_wide_plot],
+        [circos_plot_remixt, circos_plot_titan, 
+        normal_coverage, tumour_coverage,genome_wide_plot],
         samples, "sample_id"
     )
     meta_yaml = os.path.join(out_dir, 'pipeline_metadata.yaml')
