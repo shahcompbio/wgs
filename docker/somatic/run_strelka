@@ -1,0 +1,29 @@
+#!/bin/bash
+
+CONFIG=$STRELKA_SHARE_DIR/bin/configureStrelkaSomaticWorkflow.py.ini
+INDEL_MODEL=$STRELKA_SHARE_DIR/share/config/somaticIndelScoringModels.json
+SNV_MODEL=$STRELKA_SHARE_DIR/share/config/somaticSNVScoringModels.json
+
+
+NORMAL_BAM=$1
+TUMOR_BAM=$2
+SOMATIC_INDEL=$3
+SOMATIC_SNV=$4
+STATS=$5
+REGION=$6
+REF_GENOME=$7
+GENOME_SIZE=$8
+
+EXTRA_ARGS="${@:9}"
+
+CMD="strelka2 --normal-align-file $NORMAL_BAM --tumor-align-file $TUMOR_BAM
+     --somatic-indel-file $SOMATIC_INDEL --somatic-snv-file $SOMATIC_SNV 
+     --stats-file $STATS --region $REGION --ref $REF_GENOME -genome-size $GENOME_SIZE
+     --somatic-snv-scoring-model-file $SNV_MODEL
+     --somatic-indel-scoring-model-file $INDEL_MODEL
+     $EXTRA_ARGS"
+
+
+echo "running:" $CMD
+
+$CMD

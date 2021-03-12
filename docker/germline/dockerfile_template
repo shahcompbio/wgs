@@ -1,0 +1,27 @@
+FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
+
+ADD . /app
+
+RUN conda install -c bioconda -c conda-forge samtools cryptography
+RUN conda install -c bioconda -c conda-forge bcftools cryptography
+RUN conda install -c bioconda freebayes
+RUN conda install -c shahcompbio -c bioconda vcf2maf_shahcompbio
+RUN  mkdir /usr/share/man/man1/ && apt-get update && apt-get install -y libltdl7 parallel default-jdk && rm -rf /var/lib/apt/lists/*
+RUN cp -r /app/rtg/* /opt/conda/bin/
+RUN conda install -c bioconda vcftools tabix bcftools snpeff
+RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
+
+RUN conda create --name museq python=2.7
+SHELL ["conda", "run", "-n", "museq", "/bin/bash", "-c"]
+RUN conda install -c conda-forge -c shahcompbio museq intervaltree museqportrait==0.99.13 -y
+SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
+
+RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@master
+RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
+RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
+RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
+RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
+RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
+
+ENV PATH="${PATH}:/opt/conda/envs/museq/bin"
