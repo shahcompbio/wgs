@@ -6,7 +6,8 @@ from wgs.workflows.sample_qc import genome_wide_plot
 from wgs_qc_utils.plotter import gene_annotation_plotting
 from wgs_qc_utils.reader import read_titan, read_remixt
 import gzip
-
+from wgs.utils import helpers
+import os
 
 def get_gene_annotations(outfile):
     chroms = list(map(str, range(1, 22))) + ["X"]
@@ -14,15 +15,28 @@ def get_gene_annotations(outfile):
     annotations.to_csv(outfile, sep="\t", index=False)
 
 
-def circos(titan_calls, sample_id, sv_calls, remixt_calls,
-           circos_plot_remixt, circos_plot_titan,
-           docker_image=None):
-    cmd = [
-        "circos.R", titan_calls, remixt_calls, sv_calls,
-        circos_plot_remixt, circos_plot_titan, sample_id
-    ]
+def circos(titan_calls, remixt_calls, sample_id, sv_calls,
+           circos_plot_remixt, circos_plot_titan, tempdir, docker_image=None):
+
+    helpers.makedirs(tempdir)
+
+    script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'scripts','circos.R')
+
+    cmd = ['Rscript',script_path, titan_calls, remixt_calls, sv_calls,
+           circos_plot_remixt, circos_plot_titan, sample_id]
 
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+# def circos(titan_calls, sample_id, sv_calls, remixt_calls,
+#            circos_plot_remixt, circos_plot_titan,
+#            docker_image=None):
+#     cmd = [
+#         "circos.R", titan_calls, remixt_calls, sv_calls,
+#         circos_plot_remixt, circos_plot_titan, sample_id
+#     ]
+
+#     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def prep_data_for_circos(titan, remixt, sample_id, prepped_titan_calls,
