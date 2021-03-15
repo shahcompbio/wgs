@@ -5,7 +5,6 @@ import pypeliner
 import pypeliner.managed as mgd
 from wgs.config import config
 from wgs.utils import helpers
-from wgs.workflows import hmmcopy
 from wgs.workflows import remixt
 from wgs.workflows import titan
 
@@ -13,12 +12,10 @@ from wgs.workflows import titan
 def copynumber_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
-    run_hmmcopy = args['hmmcopy']
     run_titan = args['titan']
     run_remixt = args['remixt']
 
-    if not run_hmmcopy and not run_titan and not run_remixt:
-        run_hmmcopy = True
+    if not run_titan and not run_remixt:
         run_titan = True
         run_remixt = True
 
@@ -46,20 +43,6 @@ def copynumber_calling_workflow(args):
     titan_plots = os.path.join(titan_raw_dir, '{sample_id}_titan_plots.pdf')
     titan_tar_outputs = os.path.join(titan_raw_dir, '{sample_id}_data_all_parameters.tar.gz')
     museq_vcf = os.path.join(titan_raw_dir, '{sample_id}_museq.vcf')
-
-    hmmcopy_normal_raw_dir = os.path.join(cna_outdir, 'hmmcopy_normal')
-    normal_bias_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_bias.pdf')
-    normal_correction_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_correction.pdf')
-    normal_hmmcopy_pdf = os.path.join(hmmcopy_normal_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
-    normal_correction_table = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_correctreads_with_state.txt')
-    normal_pygenes = os.path.join(hmmcopy_normal_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
-
-    hmmcopy_tumour_raw_dir = os.path.join(cna_outdir, 'hmmcopy_tumour')
-    tumour_bias_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_bias.pdf')
-    tumour_correction_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_correction.pdf')
-    tumour_hmmcopy_pdf = os.path.join(hmmcopy_tumour_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
-    tumour_correction_table = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_correctreads_with_state.txt')
-    tumour_pygenes = os.path.join(hmmcopy_tumour_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
 
     remixt_outdir = os.path.join(args['out_dir'], 'remixt', '{sample_id}')
     remixt_outfile = os.path.join(remixt_outdir, '{sample_id}_remixt.h5')
@@ -139,47 +122,6 @@ def copynumber_calling_workflow(args):
             kwargs={'single_node': args['single_node']}
         )
 
-    if run_hmmcopy:
-        workflow.subworkflow(
-            name='hmmcopy_normal',
-            func=hmmcopy.create_hmmcopy_workflow,
-            axes=('sample_id',),
-            args=(
-                mgd.InputFile("normal.bam", 'sample_id', fnames=normals,
-                              extensions=['.bai']),
-                mgd.InputInstance('sample_id'),
-                mgd.OutputFile('normal_bias', 'sample_id', template=normal_bias_pdf),
-                mgd.OutputFile('normal_correction', 'sample_id', template=normal_correction_pdf),
-                mgd.OutputFile('normal_hmmcopy', 'sample_id', template=normal_hmmcopy_pdf),
-                mgd.OutputFile('normal_correction_table', 'sample_id', template=normal_correction_table),
-                mgd.OutputFile('normal_pygenes', 'sample_id', template=normal_pygenes),
-                chromosomes,
-                refdir_paths['map_wig'],
-                refdir_paths['gc_wig'],
-                refdir_paths['gtf']
-            ),
-        )
-
-        workflow.subworkflow(
-            name='hmmcopy_tumour',
-            func=hmmcopy.create_hmmcopy_workflow,
-            axes=('sample_id',),
-            args=(
-                mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
-                              extensions=['.bai']),
-                mgd.InputInstance('sample_id'),
-                mgd.OutputFile('tumour_bias', 'sample_id', template=tumour_bias_pdf),
-                mgd.OutputFile('tumour_correction', 'sample_id', template=tumour_correction_pdf),
-                mgd.OutputFile('tumour_hmmcopy', 'sample_id', template=tumour_hmmcopy_pdf),
-                mgd.OutputFile('tumour_correction_table', 'sample_id', template=tumour_correction_table),
-                mgd.OutputFile('tumour_pygenes', 'sample_id', template=tumour_pygenes),
-                chromosomes,
-                refdir_paths['map_wig'],
-                refdir_paths['gc_wig'],
-                refdir_paths['gtf']
-            ),
-        )
-
     filenames = []
 
     if run_remixt:
@@ -203,19 +145,6 @@ def copynumber_calling_workflow(args):
             titan_plots,
             titan_tar_outputs,
             museq_vcf,
-        ]
-    if run_hmmcopy:
-        filenames += [
-            normal_bias_pdf,
-            normal_correction_pdf,
-            normal_hmmcopy_pdf,
-            normal_correction_table,
-            normal_pygenes,
-            tumour_bias_pdf,
-            tumour_correction_pdf,
-            tumour_hmmcopy_pdf,
-            tumour_correction_table,
-            tumour_pygenes
         ]
 
     outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")

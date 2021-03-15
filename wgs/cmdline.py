@@ -122,6 +122,15 @@ def parse_args():
         help='''remixt'''
     )
 
+
+    # ================
+    # germline copy number calling
+    # ================
+    ss_cna_calling = subparsers.add_parser("single_sample_copynumber_calling")
+    ss_cna_calling.set_defaults(which='single_sample_copynumber_calling')
+    add_global_args(ss_cna_calling)
+
+
     # ================
     # sample_qc
     # ================
