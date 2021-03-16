@@ -9,6 +9,7 @@ from wgs.cmdline import parse_args
 from wgs.cohort_qc import cohort_qc_workflow
 from wgs.config import batch_config
 from wgs.copynumber_calling import copynumber_calling_workflow
+from wgs.single_sample_copynumber_calling import single_sample_copynumber_calling_workflow
 from wgs.germline_calling import germline_calling_workflow
 from wgs.realign import realign_bam_workflow
 from wgs.sample_qc import sample_qc_workflow
@@ -54,6 +55,10 @@ def main():
     if args["which"] == "copynumber_calling":
         args = generate_config(args)
         copynumber_calling_workflow(args)
+
+    if args["which"] == "single_sample_copynumber_calling":
+        args = generate_config(args)
+        single_sample_copynumber_calling_workflow(args)
 
     if args["which"] == "realignment":
         args = generate_config(args)
