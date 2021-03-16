@@ -40,8 +40,7 @@ RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
-RUN pip install pyvcf intervaltree fpdf
-RUN pip install PyPDF2==1.26.0
+RUN pip install pyvcf intervaltree fpdf pysam PyPDF2==1.26.0
 
 ENV PATH="${PATH}:/opt/conda/envs/titan/bin:/opt/conda/envs/hmmcopy/bin:/opt/conda/envs/museq/bin"
 
