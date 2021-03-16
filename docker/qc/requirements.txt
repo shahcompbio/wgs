@@ -28,7 +28,7 @@ python-slugify==1.1.2
 pytz==2018.4
 PyVCF==0.6.8
 PyYAML==5.3
-requests==2.19.1
+requests==2.20.0
 scipy==1.6.1
 six==1.11.0
 tables==3.6.1
