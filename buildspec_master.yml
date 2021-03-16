@@ -16,3 +16,4 @@ phases:
       - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/breakpoint/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
       - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/germline/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
       - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/somatic/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/qc/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
