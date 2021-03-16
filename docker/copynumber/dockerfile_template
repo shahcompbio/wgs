@@ -15,6 +15,7 @@ RUN pip install git+https://github.com/amcpherson/remixt.git@master
 
 RUN conda install -c bioconda vcftools tabix bcftools snpeff
 RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
+RUN conda install -c dranew pygenes
 
 
 RUN conda create --name titan python=2.7
