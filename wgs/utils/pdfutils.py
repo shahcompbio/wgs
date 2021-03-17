@@ -1,9 +1,8 @@
 import os
 
-from wgs.utils import helpers
-
+from PyPDF2 import PdfFileMerger
 from fpdf import FPDF
-from PyPDF2 import PdfFileMerger, PdfFileWriter, PdfFileReader
+from wgs.utils import helpers
 
 
 def merge_titan_pngs(plots_dir, plot, num_clusters, chromosomes):
@@ -21,7 +20,6 @@ def merge_titan_pngs(plots_dir, plot, num_clusters, chromosomes):
     pdf.output(plot, "F")
 
 
-
 def merge_pdfs(infiles, outfile):
     if isinstance(infiles, dict):
         infiles = infiles.values()
@@ -37,3 +35,18 @@ def merge_pdfs(infiles, outfile):
 
     with open(outfile, 'wb') as fout:
         merger.write(fout)
+
+
+def merge_jpgs(infiles, outfile):
+    if isinstance(infiles, dict):
+        infiles = infiles.values()
+
+    x, y, w, h = 0, 0, 200, 250
+
+    pdf = FPDF('P', 'mm', 'A4')
+    # imagelist is the list with all image filenames
+    for image in infiles:
+        pdf.add_page()
+        pdf.image(image, x, y, w, h)
+
+    pdf.output(outfile, "F")
