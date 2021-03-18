@@ -15,6 +15,7 @@ RUN pip install git+https://github.com/amcpherson/remixt.git@master
 
 RUN conda install -c bioconda vcftools tabix bcftools snpeff
 RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
+RUN conda install -c dranew pygenes
 
 
 RUN conda create --name titan python=2.7
@@ -34,14 +35,13 @@ RUN conda install -c conda-forge -c shahcompbio museq intervaltree museqportrait
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/shahcompbio/pypeliner.git@master
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.5.29
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
-RUN pip install pyvcf intervaltree fpdf
-RUN pip install PyPDF2==1.26.0
+RUN pip install pyvcf intervaltree fpdf pysam PyPDF2==1.26.0
 
 ENV PATH="${PATH}:/opt/conda/envs/titan/bin:/opt/conda/envs/hmmcopy/bin:/opt/conda/envs/museq/bin"
 

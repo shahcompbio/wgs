@@ -103,8 +103,8 @@ def plot_hmm(
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
     correction_pdfs = [os.path.join(correction_plots_dir, f)
-                       for f in os.listdir(correction_plots_dir) if f.endswith('.pdf')]
-    pdfutils.merge_pdfs(correction_pdfs, correction_pdf)
+                       for f in os.listdir(correction_plots_dir) if f.endswith('.jpg')]
+    pdfutils.merge_jpgs(correction_pdfs, correction_pdf)
 
     all_hmmcopy_pdfs = [os.path.join(hmmcopy_plots_dir, pdf)
                             for pdf in os.listdir(hmmcopy_plots_dir)]
