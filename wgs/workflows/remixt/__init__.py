@@ -5,12 +5,13 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-
-from wgs.utils import helpers
 from wgs.config import config
+from wgs.utils import helpers
+
 
 class MissingInputs(Exception):
     pass
+
 
 def create_remixt_workflow(
         tumour_path,
@@ -38,6 +39,8 @@ def create_remixt_workflow(
     remixt_config = {
         'genome_fasta_template': reference,
         'genome_fai_template': reference + '.fai',
+        'max_copy_number': 10,
+        'max_ploidy': 7
     }
 
     if breakpoints is None:
