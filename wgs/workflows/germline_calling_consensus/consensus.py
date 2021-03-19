@@ -138,7 +138,6 @@ def fetch_vcf(filename, chromosome, caller):
                         snv_data[(chrom, pos + i, rb, ab)] = data
                         id_counter += 1
             else:
-                ref, alt = normalize(ref, alt)
                 indel_data[(chrom, pos, ref, alt)] = data
                 id_counter += 1
 
@@ -190,33 +189,6 @@ def snv_consensus(museq, freebayes, rtg, samtools):
         ])
 
     return consensus
-
-
-def normalize(ref, alt):
-    if not ref and not alt:
-        return ref, alt
-
-    if len(ref) == 1 or len(alt) == 1:
-        return ref, alt
-
-    if not ref[0] == alt[0]:
-        return ref, alt
-
-    common_base = ref[0]
-    ref = ref[1:]
-    alt = alt[1:]
-
-    for i, (ref_v, alt_v) in enumerate(zip(ref[::-1], alt[::-1])):
-        if not ref_v == alt_v:
-            break
-
-    ref = ref[i + 1:]
-    alt = alt[i + 1:]
-
-    ref = common_base + ref
-    alt = common_base + alt
-
-    return ref, alt
 
 
 def indel_consensus(freebayes, rtg, samtools):
