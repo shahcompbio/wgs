@@ -146,10 +146,35 @@ def create_strelka_workflow(
         )
 
     workflow.transform(
+        name='bcftools_normalize_snv',
+        ctx=helpers.get_default_ctx(
+            walltime='8:00',
+        ),
+        func='wgs.utils.vcfutils.bcftools_normalize',
+        args=(
+            mgd.TempInputFile('indels.vcf.gz'),
+            mgd.TempOutputFile('normalized_indels.vcf'),
+            reference,
+        )
+    )
+    workflow.transform(
+        name='bcftools_normalize_indel',
+        ctx=helpers.get_default_ctx(
+            walltime='8:00',
+        ),
+        func='wgs.utils.vcfutils.bcftools_normalize',
+        args=(
+            mgd.TempInputFile('snvs.vcf.gz'),
+            mgd.TempOutputFile('normalized_snvs.vcf'),
+            reference,
+        )
+    )
+
+    workflow.transform(
         name='filter_vcf_indel',
         func='wgs.workflows.strelka.tasks.filter_vcf',
         args=(
-            mgd.TempInputFile('indels.vcf.gz', extensions=['.tbi', '.csi']),
+            mgd.TempInputFile('normalized_indels.vcf', extensions=['.tbi', '.csi']),
             mgd.OutputFile(indel_vcf_file, extensions=['.tbi', '.csi']),
         ),
         kwargs={'docker_image': config.containers('vcftools')}
@@ -159,7 +184,7 @@ def create_strelka_workflow(
         name='filter_vcf_snv',
         func='wgs.workflows.strelka.tasks.filter_vcf',
         args=(
-            mgd.TempInputFile('snvs.vcf.gz', extensions=['.tbi', '.csi']),
+            mgd.TempInputFile('normalized_snvs.vcf', extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
         ),
         kwargs={'docker_image': config.containers('vcftools')}
