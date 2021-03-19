@@ -4,19 +4,6 @@ ADD . /app
 
 RUN apt-get update && apt install build-essential gcc libfontconfig1 -y && rm -rf /var/lib/apt/lists/*
 
-RUN conda create --name igvtools
-SHELL ["conda", "run", "-n", "igvtools", "/bin/bash", "-c"]
-RUN conda install -c bioconda -c conda-forge igvtools openjdk=11.0.8
-SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
-
-RUN conda create --name picard
-SHELL ["conda", "run", "-n", "picard", "/bin/bash", "-c"]
-RUN conda install --file /app/picard_reqs.txt
-SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
-
-ENV PATH="/opt/conda/envs/igvtools/bin:/opt/conda/envs/picard/bin:$PATH"
-
-
 RUN conda install -c bioconda bwa
 RUN conda install -c bioconda -c conda-forge samtools cryptography
 RUN conda install -c conda-forge freetype -y
@@ -27,3 +14,17 @@ RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
 RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.5.29
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
+RUN pip install pysam
+
+RUN conda create --name igvtools
+SHELL ["conda", "run", "-n", "igvtools", "/bin/bash", "-c"]
+RUN conda install -c bioconda -c conda-forge igvtools openjdk=11.0.8
+SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
+
+RUN conda create --name picard
+SHELL ["conda", "run", "-n", "picard", "/bin/bash", "-c"]
+RUN conda install --file /app/picard_reqs.txt
+SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
+
+ENV PATH="$PATH:/opt/conda/envs/igvtools/bin:/opt/conda/envs/picard/bin"
+
