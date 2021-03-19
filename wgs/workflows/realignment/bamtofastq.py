@@ -101,7 +101,7 @@ def close_outfiles(outfiles):
         fastqs[1].close()
 
 
-def bam_to_fastq(infile, outdir):
+def bam_to_fastq(infile, outdir, ignore_bamtofastq_exception):
     readgroups = get_read_groups(infile)
 
     outfiles = get_outfiles(outdir,readgroups)
@@ -155,7 +155,10 @@ def bam_to_fastq(infile, outdir):
                 write_to_fastq(al, 2, RG2, fastq_r2)
             del read_data[key]
     if len(read_data) != 0:
-        sys.stderr.write('Warning: %s unmatched name groups\n' % len(read_data))
+        if ignore_bamtofastq_exception:
+            sys.stderr.write('Warning: %s unmatched name groups\n' % len(read_data))
+        else:
+            raise Exception('Warning: %s unmatched name groups\n' % len(read_data))
 
     close_outfiles(outfiles)
 
@@ -173,6 +176,11 @@ def parse_args():
         help='output directory'
     )
 
+    parser.add_argument(
+        '--ignore_bamtofastq_exception',
+        help='ignore exception'
+    )
+
     args = parser.parse_args()
 
     args = vars(args)
@@ -181,7 +189,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    bam_to_fastq(args['input'], args['outdir'])
+    bam_to_fastq(args['input'], args['outdir'], args['ignore_bamtofastq_exception'])
 
 
 if __name__ == '__main__':

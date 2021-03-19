@@ -63,6 +63,13 @@ def parse_args():
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
     add_global_args(realignment)
+    realignment.add_argument(
+        "--ignore_bamtofastq_exception",
+        default=False,
+        action='store_true',
+        help='''ignore the exception from bamtofastq'''
+    )
+
 
     # ================
     # variant calling
