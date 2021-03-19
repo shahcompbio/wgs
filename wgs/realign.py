@@ -9,7 +9,11 @@ from wgs.utils import helpers
 from wgs.workflows import realignment
 
 
-def realign_bams(samples, inputs, outputs, metrics, metrics_tar, refdir, single_node=False):
+def realign_bams(
+        samples, inputs, outputs, metrics,
+        metrics_tar, refdir, ignore_bamtofastq_exception,
+        single_node=False
+):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
     inputs = dict([(sampid, inputs[sampid])
@@ -35,9 +39,12 @@ def realign_bams(samples, inputs, outputs, metrics, metrics_tar, refdir, single_
             mgd.OutputFile("output.txt", "sample_id", axes_origin=[], fnames=metrics),
             mgd.OutputFile("output.tar", "sample_id", axes_origin=[], fnames=metrics_tar),
             refdir,
-            samples
+            samples,
         ),
-        kwargs={'single_node': single_node}
+        kwargs={
+            'single_node': single_node,
+            'ignore_bamtofastq_exception': ignore_bamtofastq_exception
+        }
     )
 
     return workflow
@@ -80,6 +87,7 @@ def realign_bam_workflow(args):
             mgd.OutputFile("realigned.tar", 'sample_id', template=metrics_tar,
                            extensions=['.bai'], axes_origin=[]),
             args['refdir'],
+            args['ignore_bamtofastq_exception']
         ),
         kwargs={'single_node': args['single_node']}
     )

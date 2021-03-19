@@ -4,7 +4,12 @@ from wgs.utils import helpers
 from wgs.workflows import alignment
 
 
-def realign_bam_files(inputs, outputs, metrics_output, metrics_tar, refdir, samples, single_node=False):
+def realign_bam_files(
+        inputs, outputs, metrics_output,
+        metrics_tar, refdir, samples,
+        single_node=False,
+        ignore_bamtofastq_exception=False
+):
     inputs = dict([(sample, inputs[sample]) for sample in samples])
     outputs = dict([(sample, outputs[sample]) for sample in samples])
     outputs_tdf = dict([(sample, outputs[sample]+'.tdf') for sample in samples])
@@ -30,7 +35,8 @@ def realign_bam_files(inputs, outputs, metrics_output, metrics_tar, refdir, samp
             mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
             mgd.TempOutputFile("inputdata_read1.fastq.gz", 'sample_id', "readgroup"),
             mgd.TempOutputFile("inputdata_read2.fastq.gz", 'sample_id', "readgroup", axes_origin=[]),
-            mgd.TempSpace("bamtofastq", 'sample_id')
+            mgd.TempSpace("bamtofastq", 'sample_id'),
+            ignore_bamtofastq_exception
         )
     )
 
