@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 import vcf
 
@@ -48,6 +50,16 @@ def parse_vcf_group(data):
             if len(out_record) == 2:
                 yield out_record
                 out_record = []
+        elif record['SVTYPE'] == 'INV':
+            mate1 = copy.deepcopy(record)
+            mate2 = copy.deepcopy(record)
+
+            mate1['STRANDS'] = mate1['STRANDS'].split(';')[0]
+            mate2['STRANDS'] = mate2['STRANDS'].split(';')[1]
+
+            yield (mate1,)
+            yield (mate2,)
+
         else:
             yield (record,)
 
@@ -78,6 +90,7 @@ def create_data(vcfdata):
 
             strands = record['STRANDS'].split(':')[0]
             assert len(strands) == 2
+
             out_record['strand_1'] = strands[0]
             out_record['strand_2'] = strands[1]
 
@@ -151,5 +164,3 @@ def filter_calls(data, filters):
 
 def write(output, data):
     data.to_csv(output, index=False)
-
-
