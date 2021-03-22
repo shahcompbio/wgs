@@ -186,16 +186,6 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
             '>', output,
             **kwargs)
     else:
-        try:
-            readgroup_literal = '"' + readgroup + '"'
-            pypeliner.commandline.execute(
-                'bwa', 'mem', '-M', '-R', readgroup_literal,
-                '-t', numthreads,
-                reference, fastq1, fastq2,
-                '|', 'samtools', 'view', '-bSh', '-',
-                '>', output,
-                **kwargs)
-        except pypeliner.commandline.CommandLineException:
             pypeliner.commandline.execute(
                 'bwa', 'mem', '-M', '-R', readgroup,
                 '-t', numthreads,
