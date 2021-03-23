@@ -28,17 +28,6 @@ def circos(titan_calls, remixt_calls, sample_id, sv_calls,
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
-# def circos(titan_calls, sample_id, sv_calls, remixt_calls,
-#            circos_plot_remixt, circos_plot_titan,
-#            docker_image=None):
-#     cmd = [
-#         "circos.R", titan_calls, remixt_calls, sv_calls,
-#         circos_plot_remixt, circos_plot_titan, sample_id
-#     ]
-
-#     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
-
-
 def prep_data_for_circos(titan, remixt, sample_id, prepped_titan_calls,
                          prepped_remixt_calls):
     read_titan.make_for_circos(titan, prepped_titan_calls)
@@ -113,15 +102,28 @@ def prep_sv_for_circos(sv_calls, outfile):
     svs.to_csv(outfile, index=False, header=True, sep="\t")
 
 
-def parse_roh(roh_calls, parsed): 
+def roh_needs_parse(roh_calls):
+
     if roh_calls.endswith(".gz"):
-        lines = [l for l in gzip.open(roh_calls, "rt") if "ST" in l]
+        header = next(gzip.open(roh_calls, "rt"))
     else:
-        lines = [l for l in open(roh_calls) if "ST" in l]
-    with open(parsed, 'w') as f:
-        for line in lines:
-            f.write("%s\n" % line)
-    f.close()
+        header = next(open(roh_calls))
+
+    if header.startswith("#"):
+        return True
+    
+    return False
+
+def parse_roh(roh_calls, parsed): 
+    if roh_needs_parse(roh_calls):
+        lines = [l for l in open(roh_calls) if "ST" in l and "#" not in l]
+        with open(parsed, 'w') as f:
+            f.write("%s\n" % "type,sample,chromosome,start,state,quality")
+            for line in lines: 
+                line = line.replace("\t", ",")
+                f.write("%s" % line)
+        f.close()
+
 
 
 def samtools_coverage(
@@ -146,9 +148,15 @@ def clear_header_label(f):
 
 def genome_wide(
         sample_id, titan, roh, germline_calls, somatic_calls, remixt,
-        tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf
+        tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf, normal_only=False
 ):
-    genome_wide_plot.genome_wide_plot(
-        remixt, sample_id, titan, roh, germline_calls, somatic_calls,
-        tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf
-    )
+    if normal_only:
+        genome_wide_plot.genome_wide_plot(
+            None, sample_id, None, roh, germline_calls, None,
+            None, normal_coverage, None, chromosomes, pdf, normal_only=normal_only
+        )
+    else:
+        genome_wide_plot.genome_wide_plot(
+            remixt, sample_id, titan, roh, germline_calls, somatic_calls,
+            tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf, normal_only=normal_only
+        )

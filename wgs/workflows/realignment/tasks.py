@@ -18,7 +18,10 @@ def split_by_rg(
 ):
     helpers.makedirs(tempdir)
 
-    cmd = ['wgs_bamtofastq', infile, tempdir, ignore_bamtofastq_exception]
+    cmd = ['wgs_bamtofastq', infile, tempdir]
+
+    if ignore_bamtofastq_exception:
+        cmd.append('--ignore_bamtofastq_exception')
     pypeliner.commandline.execute(*cmd)
 
     try:

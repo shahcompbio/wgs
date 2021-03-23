@@ -77,6 +77,18 @@ def create_museq_workflow(
                 'vcftools_docker_image': config.containers('vcftools')
             }
         )
+        workflow.transform(
+            name='fix_vcf_merged',
+            ctx=helpers.get_default_ctx(
+                memory=15,
+                walltime='8:00',
+            ),
+            func='wgs.workflows.mutationseq.tasks.fix_museq_vcf',
+            args=(
+                mgd.TempInputFile('merged.vcf'),
+                mgd.TempOutputFile('merged_fixed.vcf'),
+            ),
+        )
     else:
         workflow.transform(
             name=name,
@@ -100,7 +112,19 @@ def create_museq_workflow(
                 'docker_image': config.containers('mutationseq'),
             }
         )
-
+        workflow.transform(
+            name='fix_vcf',
+            ctx=helpers.get_default_ctx(
+                memory=15,
+                walltime='8:00',
+            ),
+            axes=('interval',),
+            func='wgs.workflows.mutationseq.tasks.fix_museq_vcf',
+            args=(
+                mgd.TempInputFile('museq.vcf', 'interval'),
+                mgd.TempOutputFile('museq_fixed.vcf', 'interval'),
+            ),
+        )
         workflow.transform(
             name='merge_vcfs',
             ctx=helpers.get_default_ctx(
@@ -109,8 +133,8 @@ def create_museq_workflow(
             ),
             func='wgs.utils.museq_utils.merge_vcfs',
             args=(
-                mgd.TempInputFile('museq.vcf', 'interval'),
-                mgd.TempOutputFile('merged.vcf'),
+                mgd.TempInputFile('museq_fixed.vcf', 'interval'),
+                mgd.TempOutputFile('merged_fixed.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
             kwargs={'docker_image': config.containers('vcftools')}
@@ -123,7 +147,7 @@ def create_museq_workflow(
         ),
         func='wgs.utils.vcfutils.bcftools_normalize',
         args=(
-            mgd.TempInputFile('merged.vcf'),
+            mgd.TempInputFile('merged_fixed.vcf'),
             mgd.TempOutputFile('normalized.vcf'),
             reference,
         )
