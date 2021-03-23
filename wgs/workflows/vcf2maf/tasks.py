@@ -66,18 +66,19 @@ def update_ids(infile, tumour_id, normal_id, output):
 
     df = pd.read_csv(infile, dtype='str', skiprows=1, sep='\t')
 
-    assert len(df['Tumor_Sample_Barcode'].unique()) == 1
-    assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
+    if len(df)>1:
+        assert len(df['Tumor_Sample_Barcode'].unique()) == 1
+        assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
 
-    assert len(df['Matched_Norm_Sample_Barcode'].unique()) == 1
-    assert df['Matched_Norm_Sample_Barcode'].unique()[0] == 'NORMAL'
+        assert len(df['Matched_Norm_Sample_Barcode'].unique()) == 1
+        assert df['Matched_Norm_Sample_Barcode'].unique()[0] == 'NORMAL'
 
-    df['Matched_Norm_Sample_Barcode'] = normal_id
+        df['Matched_Norm_Sample_Barcode'] = normal_id
 
-    # for germlines tumour will be none
-    if tumour_id is None:
-        tumour_id = 'NA'
-    df['Tumor_Sample_Barcode'] = tumour_id
+        # for germlines tumour will be none
+        if tumour_id is None:
+            tumour_id = 'NA'
+        df['Tumor_Sample_Barcode'] = tumour_id
 
     with open(output, 'wt') as outfile:
         outfile.write(maf_header)

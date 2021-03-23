@@ -75,3 +75,11 @@ def run_museqportrait(
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
                out_pdf, '--output-txt', out_txt, infile]
         pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+
+
+def fix_museq_vcf(infile, output):
+    with open(infile, 'rt') as reader, open(output, 'wt') as writer:
+        for line in reader:
+            if line.startswith('#'):
+                line = line.replace('##FORMAT=<ID=PL,Number=3', '##FORMAT=<ID=PL,Number=G')
+            writer.write(line)
