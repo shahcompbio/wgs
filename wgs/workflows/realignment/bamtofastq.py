@@ -178,6 +178,8 @@ def parse_args():
 
     parser.add_argument(
         '--ignore_bamtofastq_exception',
+        default=False,
+        action='store_true',
         help='ignore exception'
     )
 
