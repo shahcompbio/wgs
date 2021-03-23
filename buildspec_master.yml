@@ -11,9 +11,9 @@ phases:
 
   post_build:
     commands:
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/alignment/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/copynumber/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/breakpoint/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/germline/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/somatic/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
-      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/qc/ && bash build.sh quay.io wgspipeline $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/alignment/ && bash deploy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/copynumber/ && bash deploy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/breakpoint/ && bash delpoy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/germline/ && bash deploy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/somatic/ && bash deploy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi
+      - if [ $CODEBUILD_BUILD_SUCCEEDING = 1 ]; then cd docker/qc/ && bash deploy.sh quay.io wgspipeline wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../; fi

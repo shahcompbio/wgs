@@ -2,13 +2,11 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN apt-get update && apt install build-essential gcc libfontconfig1 -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt install build-essential gcc libfontconfig1 samtools -y && rm -rf /var/lib/apt/lists/*
 
 RUN conda install -c bioconda bwa
-RUN conda install -c bioconda -c conda-forge samtools cryptography
 RUN conda install -c conda-forge freetype -y
-RUN conda install -c bioconda fastqc
-RUN conda install -c bioconda picard
+RUN conda install -c bioconda -c conda-forge fastqc openjdk=11.0.8
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
 RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.5.29
@@ -27,4 +25,3 @@ RUN conda install --file /app/picard_reqs.txt
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 ENV PATH="$PATH:/opt/conda/envs/igvtools/bin:/opt/conda/envs/picard/bin"
-
