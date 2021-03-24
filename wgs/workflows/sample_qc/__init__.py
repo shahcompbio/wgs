@@ -2,7 +2,7 @@ import pypeliner
 import pypeliner.managed as mgd
 from wgs.config import config
 from wgs.utils import helpers
-
+from wgs.workflows.sample_qc import tasks
 
 def circos_plot(titan_calls, remixt_calls, sample_id, breakpoints,
            circos_plot_remixt, circos_plot_titan):
@@ -139,6 +139,8 @@ def get_coverage_data(
     return workflow
 
 
+
+
 def create_sample_qc_workflow(
         sample_id,
         refdir,
@@ -188,18 +190,22 @@ def create_sample_qc_workflow(
         ),
         kwargs={'single_node': single_node}
     )
+    if tasks.roh_needs_parse(roh): 
+        workflow.transform(
+            name='parse_roh',
+            ctx=helpers.get_default_ctx(
+                memory=5
+            ),
+            func="wgs.workflows.sample_qc.tasks.parse_roh",
+            args=(
+                mgd.InputFile(roh),
+                mgd.TempOutputFile("ROH_parsed"),
+            ),
+        )
+        roh_input =  mgd.TempInputFile("ROH_parsed")
+    else:
+        roh_input = mgd.InputFile(roh)
 
-    workflow.transform(
-        name='parse_roh',
-        ctx=helpers.get_default_ctx(
-            memory=5
-        ),
-        func="wgs.workflows.sample_qc.tasks.parse_roh",
-        args=(
-            mgd.InputFile(roh),
-            mgd.TempOutputFile("ROH_parsed"),
-        ),
-    )
 
     workflow.transform(
         name='generate_genome_wide_plot',
@@ -210,7 +216,7 @@ def create_sample_qc_workflow(
         args=(
             sample_id,
             mgd.InputFile(titan),
-            mgd.TempInputFile("ROH_parsed"),
+            roh_input,
             mgd.InputFile(germline_calls),
             mgd.InputFile(somatic_calls),
             mgd.InputFile(remixt),
@@ -220,6 +226,77 @@ def create_sample_qc_workflow(
             chromosomes,
             mgd.OutputFile(genome_wide_plot),
         ),
+    )
+
+    return workflow
+
+
+def create_sample_qc_workflow_normal_only(
+        sample_id,
+        refdir,
+        normal_bam,
+        roh,
+        germline_calls,
+        genome_wide_plot,
+        normal_coverage,
+        chromosomes,
+        bins,
+        mapping_qual_threshold,
+        single_node=False
+):
+
+    workflow = pypeliner.workflow.Workflow()
+
+    workflow.subworkflow(
+        name='coverage_normal_data',
+        func=get_coverage_data,
+        args=(
+            mgd.InputFile(normal_bam),
+            mgd.OutputFile(normal_coverage),
+            refdir,
+            chromosomes,
+            mapping_qual_threshold,
+            bins,
+        ),
+        kwargs={'single_node': single_node}
+    )
+
+    if tasks.roh_needs_parse(roh): 
+        workflow.transform(
+            name='parse_roh',
+            ctx=helpers.get_default_ctx(
+                memory=5
+            ),
+            func="wgs.workflows.sample_qc.tasks.parse_roh",
+            args=(
+                mgd.InputFile(roh),
+                mgd.TempOutputFile("ROH_parsed"),
+            ),
+        )
+        roh_input =  mgd.TempInputFile("ROH_parsed")
+    else:
+        roh_input = mgd.InputFile(roh)
+
+    workflow.transform(
+        name='generate_genome_wide_plot',
+        ctx=helpers.get_default_ctx(
+            memory=10,
+        ),
+        func="wgs.workflows.sample_qc.tasks.genome_wide",
+        args=(
+            sample_id,
+            None,
+            roh_input,
+            mgd.InputFile(germline_calls),
+            None,
+            None,
+            None,
+            mgd.InputFile(normal_coverage),
+            None,
+            chromosomes,
+            mgd.OutputFile(genome_wide_plot),
+        ),
+        kwargs={"normal_only":True}
     )
 
     return workflow

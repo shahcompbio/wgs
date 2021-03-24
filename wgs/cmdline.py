@@ -63,13 +63,6 @@ def parse_args():
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
     add_global_args(realignment)
-    realignment.add_argument(
-        "--ignore_bamtofastq_exception",
-        default=False,
-        action='store_true',
-        help='''ignore the exception from bamtofastq'''
-    )
-
 
     # ================
     # variant calling
@@ -129,15 +122,6 @@ def parse_args():
         help='''remixt'''
     )
 
-
-    # ================
-    # germline copy number calling
-    # ================
-    ss_cna_calling = subparsers.add_parser("single_sample_copynumber_calling")
-    ss_cna_calling.set_defaults(which='single_sample_copynumber_calling')
-    add_global_args(ss_cna_calling)
-
-
     # ================
     # sample_qc
     # ================
@@ -151,6 +135,11 @@ def parse_args():
     sample_qc.add_argument(
         '--mapping_qual_threshold',
         default=0
+    )
+    sample_qc.add_argument(
+        '--normal_only',
+        action='store_true',
+        default=False
     )
 
     # ================
