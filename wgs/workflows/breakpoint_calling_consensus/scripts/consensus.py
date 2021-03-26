@@ -2,7 +2,6 @@ from collections import defaultdict
 
 import pandas as pd
 from intervaltree import IntervalTree
-
 from wgs.utils import csvutils
 
 
@@ -42,7 +41,6 @@ def load_data(infile):
 
 def load_lumpy_into_tree(lumpy_df, confidence_interval=None):
     # Add lumpy breakpoint id to each zipped entry
- 
     if confidence_interval:
         confidence_interval = '-{},{}'.format(confidence_interval, confidence_interval)
         data = list(
@@ -83,5 +81,3 @@ def consensus(destruct_infile, lumpy_infile, consensus, confidence_interval=None
     destruct = filter_destruct_on_lumpy(destruct, lumpy)
 
     write(destruct, consensus)
-
-

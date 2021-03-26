@@ -101,13 +101,26 @@ def create_mutect_workflow(
         )
 
     workflow.transform(
+        name='bcftools_normalize',
+        ctx=helpers.get_default_ctx(
+            walltime='8:00',
+        ),
+        func='wgs.utils.vcfutils.bcftools_normalize',
+        args=(
+            mgd.TempInputFile('merged.vcf'),
+            mgd.TempOutputFile('normalized.vcf'),
+            reference,
+        )
+    )
+
+    workflow.transform(
         name='finalise_snvs',
         ctx=helpers.get_default_ctx(
             walltime='8:00',
         ),
         func='wgs.utils.vcf_tasks.finalise_vcf',
         args=(
-            mgd.TempInputFile('merged.vcf'),
+            mgd.TempInputFile('normalized.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
         kwargs={'docker_image': config.containers('vcftools')}

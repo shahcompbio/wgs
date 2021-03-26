@@ -12,21 +12,17 @@ import time
 from wgs.utils import helpers
 
 
-def split_by_rg(infile, read1_output, read2_output, tempdir):
+def split_by_rg(
+        infile, read1_output, read2_output,
+        tempdir, ignore_bamtofastq_exception
+):
     helpers.makedirs(tempdir)
 
-    print("***********")
-    print(tempdir)
-    print(os.listdir(tempdir))
-    print("***********")
-
     cmd = ['wgs_bamtofastq', infile, tempdir]
-    pypeliner.commandline.execute(*cmd)
 
-    print("***********")
-    print(tempdir)
-    print(os.listdir(tempdir))
-    print("***********")
+    if ignore_bamtofastq_exception:
+        cmd.append('--ignore_bamtofastq_exception')
+    pypeliner.commandline.execute(*cmd)
 
     try:
         readgroups = os.listdir(tempdir)

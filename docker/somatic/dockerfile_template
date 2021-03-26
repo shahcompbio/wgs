@@ -2,7 +2,7 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN conda install -c bioconda -c conda-forge samtools cryptography
+RUN apt-get update && apt-get install -y  samtools && rm -rf /var/lib/apt/lists/*
 RUN conda install -c bioconda -c conda-forge bcftools cryptography
 RUN conda install -c bioconda gatk4
 RUN cp /app/run_strelka /opt/conda/bin && chmod 777 /opt/conda/bin/run_strelka
@@ -10,7 +10,9 @@ RUN conda install -c shahcompbio -c bioconda vcf2maf_shahcompbio
 
 RUN conda create --name museq python=2.7
 SHELL ["conda", "run", "-n", "museq", "/bin/bash", "-c"]
-RUN conda install -c conda-forge -c shahcompbio museq intervaltree museqportrait==0.99.13 -y
+RUN conda install -c shahcompbio museq -y
+RUN pip install intervaltree
+RUN conda install -c shahcompbio museqportrait==0.99.13 -y
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN conda create --name strelka python=2.7
@@ -27,6 +29,10 @@ RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
+RUN pip install pandas numpy pysam matplotlib seaborn pyvcf
+RUN conda install -c bioconda vcftools tabix bcftools snpeff
+RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
+RUN rm /opt/conda/bin/samtools
 
 ENV PATH="${PATH}:/opt/conda/envs/museq/bin:/opt/conda/envs/strelka/share/strelka-2.8.2-0/libexec/"
 ENV STRELKA_SHARE_DIR '/opt/conda/envs/strelka/share/strelka-2.8.2-0/'

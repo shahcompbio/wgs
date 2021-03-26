@@ -18,7 +18,7 @@ RUN conda create --name lumpy python=2.7
 SHELL ["conda", "run", "-n", "lumpy", "/bin/bash", "-c"]
 RUN conda install -c componc -c bioconda  lumpy-sv=0.2.12
 RUN conda install -c bioconda sambamba
-RUN echo "aliasawk=gawk" >> ~/.bashrc
+RUN echo "alias awk=gawk" >> ~/.bashrc
 RUN cp /app/lumpy_extractSplitReads_BwaMem  /opt/conda/envs/lumpy/bin/lumpy_extractSplitReads_BwaMem
 ENV PATH="${PATH}:/opt/conda/envs/lumpy/bin"
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]

@@ -87,3 +87,11 @@ def update_germline_header_sample_ids(infile, outfile, sample_id):
                     outdata.write(line)
                 else:
                     outdata.write(line)
+
+
+def bcftools_normalize(infile, outfile, reference):
+    cmd = [
+        'bcftools', 'norm', infile, '-d', 'all',
+        '--fasta-ref', reference, '>', outfile
+    ]
+    pypeliner.commandline.execute(*cmd)

@@ -136,27 +136,6 @@ def snv_consensus(museq, strelka, mutect):
     return consensus
 
 
-def normalize(ref, alt):
-    if len(ref) == 1 or len(alt) == 1:
-        return ref, alt
-
-    assert ref[0] == alt[0]
-    common_base = ref[0]
-    ref = ref[1:]
-    alt = alt[1:]
-
-    for i, (ref_v, alt_v) in enumerate(zip(ref[::-1], alt[::-1])):
-        assert ref_v == alt_v
-
-    ref = ref[i + 1:]
-    alt = alt[i + 1:]
-
-    ref = common_base + ref
-    alt = common_base + alt
-
-    return ref, alt
-
-
 def indel_consensus(strelka_indel, mutect_indel):
     consensus = []
 
@@ -165,9 +144,6 @@ def indel_consensus(strelka_indel, mutect_indel):
             chrom, pos, id_count = k
             mutect_data, mutect_ref, mutect_alt = mutect_indel[k]
             strelka_data, strelka_ref, strelka_alt = strelka_indel[k]
-
-            mutect_ref, mutect_alt = normalize(mutect_ref, mutect_alt)
-            strelka_ref, strelka_alt = normalize(strelka_ref, strelka_alt)
 
             if mutect_ref == strelka_ref and mutect_alt == strelka_alt:
                 qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = mutect_data
