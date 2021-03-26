@@ -190,21 +190,17 @@ def create_sample_qc_workflow(
         ),
         kwargs={'single_node': single_node}
     )
-    if tasks.roh_needs_parse(roh): 
-        workflow.transform(
-            name='parse_roh',
-            ctx=helpers.get_default_ctx(
-                memory=5
-            ),
-            func="wgs.workflows.sample_qc.tasks.parse_roh",
-            args=(
-                mgd.InputFile(roh),
-                mgd.TempOutputFile("ROH_parsed"),
-            ),
-        )
-        roh_input =  mgd.TempInputFile("ROH_parsed")
-    else:
-        roh_input = mgd.InputFile(roh)
+    workflow.transform(
+        name='parse_roh',
+        ctx=helpers.get_default_ctx(
+            memory=5
+        ),
+        func="wgs.workflows.sample_qc.tasks.parse_roh",
+        args=(
+            mgd.InputFile(roh),
+            mgd.TempOutputFile("ROH_parsed"),
+        ),
+    )
 
 
     workflow.transform(
@@ -215,17 +211,18 @@ def create_sample_qc_workflow(
         func="wgs.workflows.sample_qc.tasks.genome_wide",
         args=(
             sample_id,
-            mgd.InputFile(titan),
-            roh_input,
+            mgd.TempInputFile("ROH_parsed"),
             mgd.InputFile(germline_calls),
-            mgd.InputFile(somatic_calls),
-            mgd.InputFile(remixt),
-            mgd.InputFile(tumour_coverage),
             mgd.InputFile(normal_coverage),
-            mgd.InputFile(breakpoints_consensus),
             chromosomes,
             mgd.OutputFile(genome_wide_plot),
         ),
+        kwargs={"titan": mgd.InputFile(titan),
+            "somatic": mgd.InputFile(somatic_calls),
+            "remixt": mgd.InputFile(remixt),
+            "tumour": mgd.InputFile(tumour_coverage),
+            "breakpoints": mgd.InputFile(breakpoints_consensus)
+        }
     )
 
     return workflow
@@ -261,21 +258,18 @@ def create_sample_qc_workflow_normal_only(
         kwargs={'single_node': single_node}
     )
 
-    if tasks.roh_needs_parse(roh): 
-        workflow.transform(
-            name='parse_roh',
-            ctx=helpers.get_default_ctx(
-                memory=5
-            ),
-            func="wgs.workflows.sample_qc.tasks.parse_roh",
-            args=(
-                mgd.InputFile(roh),
-                mgd.TempOutputFile("ROH_parsed"),
-            ),
-        )
-        roh_input =  mgd.TempInputFile("ROH_parsed")
-    else:
-        roh_input = mgd.InputFile(roh)
+    workflow.transform(
+        name='parse_roh',
+        ctx=helpers.get_default_ctx(
+            memory=5
+        ),
+        func="wgs.workflows.sample_qc.tasks.parse_roh",
+        args=(
+            mgd.InputFile(roh),
+            mgd.TempOutputFile("ROH_parsed"),
+        ),
+    )
+
 
     workflow.transform(
         name='generate_genome_wide_plot',
@@ -285,14 +279,9 @@ def create_sample_qc_workflow_normal_only(
         func="wgs.workflows.sample_qc.tasks.genome_wide",
         args=(
             sample_id,
-            None,
-            roh_input,
+            mgd.TempInputFile("ROH_parsed"),
             mgd.InputFile(germline_calls),
-            None,
-            None,
-            None,
             mgd.InputFile(normal_coverage),
-            None,
             chromosomes,
             mgd.OutputFile(genome_wide_plot),
         ),
