@@ -8,6 +8,8 @@ from wgs_qc_utils.reader import read_titan, read_remixt
 import gzip
 from wgs.utils import helpers
 import os
+import shutil 
+
 
 def get_gene_annotations(outfile):
     chroms = list(map(str, range(1, 22))) + ["X"]
@@ -24,7 +26,7 @@ def circos(titan_calls, remixt_calls, sample_id, sv_calls,
 
     cmd = ['Rscript',script_path, titan_calls, remixt_calls, sv_calls,
            circos_plot_remixt, circos_plot_titan, sample_id]
-
+    
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
@@ -115,7 +117,9 @@ def roh_needs_parse(roh_calls):
     return False
 
 def parse_roh(roh_calls, parsed): 
-    if roh_needs_parse(roh_calls):
+    if not roh_needs_parse(roh_calls):
+        shutil.copyfile(roh_calls, parsed)
+    else:
         lines = [l for l in open(roh_calls) if "ST" in l and "#" not in l]
         with open(parsed, 'w') as f:
             f.write("%s\n" % "type,sample,chromosome,start,state,quality")
@@ -123,8 +127,6 @@ def parse_roh(roh_calls, parsed):
                 line = line.replace("\t", ",")
                 f.write("%s" % line)
         f.close()
-
-
 
 def samtools_coverage(
         bam_file, bed_file, output,
@@ -147,9 +149,12 @@ def clear_header_label(f):
 
 
 def genome_wide(
-        sample_id, titan, roh, germline_calls, somatic_calls, remixt,
-        tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf, normal_only=False
+        sample_id, roh, germline_calls,
+        normal_coverage, chromosomes, pdf, 
+        titan=False, somatic=False, remixt=False,
+        tumour=False, breakpoints=False, normal_only=False
 ):
+
     if normal_only:
         genome_wide_plot.genome_wide_plot(
             None, sample_id, None, roh, germline_calls, None,
