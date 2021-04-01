@@ -75,6 +75,12 @@ def parse_args():
         type=int,
         help='''picard mem usage'''
     )
+    realignment.add_argument(
+        "--ignore_bamtofastq_exception",
+        default=False,
+        action='store_true',
+        help='''ignore the exception from bamtofastq'''
+    )
 
     # ================
     # variant calling
