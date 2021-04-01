@@ -68,7 +68,13 @@ def parse_args():
     # ================
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
-    add_global_args(realignment)
+    realignment = add_global_args(realignment)
+    realignment.add_argument(
+        "--picard_mem",
+        default=8,
+        type=int,
+        help='''picard mem usage'''
+    )
 
     # ================
     # variant calling

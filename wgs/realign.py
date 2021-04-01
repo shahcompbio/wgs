@@ -89,7 +89,10 @@ def realign_bam_workflow(args):
             args['refdir'],
             args['ignore_bamtofastq_exception']
         ),
-        kwargs={'single_node': args['single_node']}
+        kwargs={
+            'single_node': args['single_node'],
+            'picard_mem': args['picard_mem']
+        }
     )
 
     outputted_filenames = helpers.expand_list([output_bams, metrics, metrics_tar], samples, 'sample_id')
