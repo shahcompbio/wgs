@@ -12,7 +12,7 @@ from wgs.workflows import realignment
 def realign_bams(
         samples, inputs, outputs, metrics,
         metrics_tar, refdir, ignore_bamtofastq_exception,
-        single_node=False
+        single_node=False, picard_mem=8
 ):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
@@ -43,7 +43,8 @@ def realign_bams(
         ),
         kwargs={
             'single_node': single_node,
-            'ignore_bamtofastq_exception': ignore_bamtofastq_exception
+            'ignore_bamtofastq_exception': ignore_bamtofastq_exception,
+            'picard_mem': picard_mem
         }
     )
 
