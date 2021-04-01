@@ -45,7 +45,8 @@ def alignment_workflow(args):
             sample_info,
             args['refdir']
         ),
-        kwargs={'single_node': args['single_node']}
+        kwargs={'single_node': args['single_node'],
+                'picard_mem': args['picard_mem']}
     )
 
     outputted_filenames = helpers.expand_list(
