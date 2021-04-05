@@ -3,9 +3,9 @@ Created on Feb 19, 2018
 
 @author: dgrewal
 '''
-import argparse
 import json
 
+import argparse
 import pypeliner
 
 from wgs import __version__
@@ -55,14 +55,32 @@ def parse_args():
     # ================
     alignment = subparsers.add_parser("alignment")
     alignment.set_defaults(which='alignment')
-    add_global_args(alignment)
+    alignment = add_global_args(alignment)
+    alignment.add_argument(
+        "--picard_mem",
+        default=8,
+        type=int,
+        help='''picard mem usage'''
+    )
 
     # ================
     # realignment
     # ================
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
-    add_global_args(realignment)
+    realignment = add_global_args(realignment)
+    realignment.add_argument(
+        "--picard_mem",
+        default=8,
+        type=int,
+        help='''picard mem usage'''
+    )
+    realignment.add_argument(
+        "--ignore_bamtofastq_exception",
+        default=False,
+        action='store_true',
+        help='''ignore the exception from bamtofastq'''
+    )
 
     # ================
     # variant calling

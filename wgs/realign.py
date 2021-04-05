@@ -12,7 +12,7 @@ from wgs.workflows import realignment
 def realign_bams(
         samples, inputs, outputs, metrics,
         metrics_tar, refdir, ignore_bamtofastq_exception,
-        single_node=False
+        single_node=False, picard_mem=8
 ):
     outputs = dict([(sampid, outputs[sampid])
                     for sampid in samples])
@@ -43,7 +43,8 @@ def realign_bams(
         ),
         kwargs={
             'single_node': single_node,
-            'ignore_bamtofastq_exception': ignore_bamtofastq_exception
+            'ignore_bamtofastq_exception': ignore_bamtofastq_exception,
+            'picard_mem': picard_mem
         }
     )
 
@@ -89,7 +90,10 @@ def realign_bam_workflow(args):
             args['refdir'],
             args['ignore_bamtofastq_exception']
         ),
-        kwargs={'single_node': args['single_node']}
+        kwargs={
+            'single_node': args['single_node'],
+            'picard_mem': args['picard_mem']
+        }
     )
 
     outputted_filenames = helpers.expand_list([output_bams, metrics, metrics_tar], samples, 'sample_id')

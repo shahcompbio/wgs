@@ -9,7 +9,7 @@ def collect_bam_metrics(
         bam, markdups_metrics, sample_id, refdir,
         metrics, picard_insert_metrics, picard_insert_pdf,
         flagstat_metrics, picard_gc_metrics, picard_gc_summary,
-        picard_gc_pdf, picard_wgs_metrics, bam_tdf
+        picard_gc_pdf, picard_wgs_metrics, bam_tdf, picard_mem=8
 ):
     '''
     calculates bam metrics in bams
@@ -52,7 +52,7 @@ def collect_bam_metrics(
         kwargs={
             'picard_docker': config.containers('picard'),
             'samtools_docker': config.containers('samtools'),
-            'mem': '8G'
+            'mem': '{}G'.format(picard_mem)
         }
     )
 
@@ -72,7 +72,10 @@ def collect_bam_metrics(
             mgd.OutputFile(picard_gc_pdf),
             mgd.TempSpace('picard_gc')
         ),
-        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
+        kwargs={
+            'docker_image': config.containers('picard'),
+            'mem': '{}G'.format(picard_mem)
+        }
     )
 
     workflow.transform(
@@ -90,7 +93,10 @@ def collect_bam_metrics(
             picard_wgs_params,
             mgd.TempSpace('picard_wgs')
         ),
-        kwargs={'docker_image': config.containers('picard'), 'mem': '8G'}
+        kwargs={
+            'docker_image': config.containers('picard'),
+            'mem': '{}G'.format(picard_mem)
+        }
     )
 
     workflow.transform(
@@ -187,7 +193,8 @@ def align_samples(
         bam_tdf,
         sample_info,
         refdir,
-        single_node=False
+        single_node=False,
+        picard_mem=8,
 ):
     if single_node:
         align_func = align_sample_no_split
@@ -240,7 +247,8 @@ def align_samples(
             mgd.InputInstance("lane_id"),
             mgd.TempInputObj('sampleinfo', 'sample_id'),
             refdir
-        )
+        ),
+        kwargs={'picard_mem': picard_mem}
     )
 
     workflow.transform(
@@ -259,7 +267,8 @@ def align_samples(
         ),
         kwargs={
             'picard_docker_image': config.containers('picard'),
-            'samtools_docker_image': config.containers('samtools')
+            'samtools_docker_image': config.containers('samtools'),
+            'mem': picard_mem
         }
     )
 
@@ -282,7 +291,7 @@ def align_samples(
         kwargs={
             'picard_docker': config.containers('picard'),
             'samtools_docker': config.containers('samtools'),
-            'mem': '8G',
+            'mem': '{}G'.format(picard_mem),
             'reheader': True,
         }
     )
@@ -334,7 +343,12 @@ def align_samples(
     return workflow
 
 
-def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id, lane_id, sample_info, refdir):
+def align_sample_no_split(
+        fastq_1, fastq_2, out_file,
+        samtools_flagstat, sample_id,
+        lane_id, sample_info, refdir,
+        picard_mem=None
+):
     ref_genome = config.refdir_data(refdir)['paths']['reference']
 
     out_bai = out_file + '.bai'
@@ -382,6 +396,7 @@ def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_
         kwargs={
             'docker_image': config.containers('picard'),
             'threads': '8',
+            'mem': '{}G'.format(picard_mem)
         }
     )
 
@@ -404,7 +419,12 @@ def align_sample_no_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_
     return workflow
 
 
-def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id, lane_id, sample_info, refdir):
+def align_sample_split(
+        fastq_1, fastq_2, out_file,
+        samtools_flagstat, sample_id,
+        lane_id, sample_info, refdir,
+        picard_mem=2
+):
     ref_genome = config.refdir_data(refdir)['paths']['reference']
 
     split_size = config.default_params('alignment')['split_size']
@@ -480,6 +500,7 @@ def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id,
         ),
         kwargs={
             'docker_image': config.containers('samtools'),
+            'mem': '{}G'.format(picard_mem)
         }
     )
 
@@ -497,7 +518,8 @@ def align_sample_split(fastq_1, fastq_2, out_file, samtools_flagstat, sample_id,
         ),
         kwargs={
             'picard_docker_image': config.containers('picard'),
-            'samtools_docker_image': config.containers('samtools')
+            'samtools_docker_image': config.containers('samtools'),
+            'mem': picard_mem
         }
     )
 
