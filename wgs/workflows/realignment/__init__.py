@@ -27,7 +27,7 @@ def realign_bam_files(
     workflow.transform(
         name='bam_to_fastq',
         ctx=helpers.get_default_ctx(
-            walltime='72:00',
+            walltime='96:00',
             disk=500
         ),
         func="wgs.workflows.realignment.tasks.split_by_rg",
