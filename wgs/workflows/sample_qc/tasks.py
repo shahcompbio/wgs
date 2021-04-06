@@ -104,30 +104,6 @@ def prep_sv_for_circos(sv_calls, outfile):
     svs.to_csv(outfile, index=False, header=True, sep="\t")
 
 
-def roh_needs_parse(roh_calls):
-
-    if roh_calls.endswith(".gz"):
-        header = next(gzip.open(roh_calls, "rt"))
-    else:
-        header = next(open(roh_calls))
-
-    if header.startswith("#"):
-        return True
-    
-    return False
-
-def parse_roh(roh_calls, parsed): 
-    if not roh_needs_parse(roh_calls):
-        shutil.copyfile(roh_calls, parsed)
-    else:
-        lines = [l for l in open(roh_calls) if "ST" in l and "#" not in l]
-        with open(parsed, 'w') as f:
-            f.write("%s\n" % "type,sample,chromosome,start,state,quality")
-            for line in lines: 
-                line = line.replace("\t", ",")
-                f.write("%s" % line)
-        f.close()
-
 def samtools_coverage(
         bam_file, bed_file, output,
         mapping_qual, docker_image=None
@@ -162,6 +138,7 @@ def genome_wide(
         )
     else:
         genome_wide_plot.genome_wide_plot(
-            remixt, sample_id, titan, roh, germline_calls, somatic_calls,
-            tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf, normal_only=normal_only
+            remixt, sample_id, titan, roh, germline_calls, somatic,
+            tumour, normal_coverage, breakpoints, chromosomes, pdf, 
+            normal_only=normal_only
         )

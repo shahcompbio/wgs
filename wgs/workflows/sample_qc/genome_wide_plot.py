@@ -77,7 +77,7 @@ def plot_chrom_on_axes(
 
         axes[0] = variant_plotting.plot_fill(
             prepped_germline_calls.location, prepped_germline_calls.n_events,
-            axes[0], "Germline \n Alteration \n Frequency", chrom_max
+            axes[0], "Germline \n Alteration \n Frequency", chrom_max, "germline"
         )
         axes[1] = coverage_plotting.plot(
             prepped_normal_coverage.start, prepped_normal_coverage.coverage,
@@ -95,11 +95,11 @@ def plot_chrom_on_axes(
     else:
         axes[0] = variant_plotting.plot_fill(
             prepped_somatic_calls.location, prepped_somatic_calls.n_events,
-            axes[0], "Somatic \n Alteration \n Frequency", chrom_max
+            axes[0], "Somatic \n Alteration \n Frequency", chrom_max, "somatic"
         )
         axes[1] = variant_plotting.plot_fill(
             prepped_germline_calls.location, prepped_germline_calls.n_events,
-            axes[1], "Germline \n Alteration \n Frequency", chrom_max
+            axes[1], "Germline \n Alteration \n Frequency", chrom_max, "germline"
         )
         axes[2] = coverage_plotting.plot(
             prepped_tumour_coverage.start, prepped_tumour_coverage.coverage,
@@ -121,7 +121,6 @@ def plot_chrom_on_axes(
             prepped_remxit.start, prepped_remxit.major_raw,
             prepped_remxit.minor_raw, axes[5], chrom_max
         )
-
         axes[5] = snv_cn.plot_scatter(
             prepped_snv_cn.pos, prepped_snv_cn.frac_cn, axes[5])
 
