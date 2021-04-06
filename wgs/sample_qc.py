@@ -136,7 +136,7 @@ def sample_qc_workflow(args):
             normal_coverage, tumour_coverage,genome_wide_plot],
             samples, "sample_id")
 
-    meta_yaml = os.path.join(out_dir, 'pipeline_metadata.yaml')
+    meta_yaml = os.path.join(out_dir, 'metadata.yaml')
     input_yaml_blob = os.path.join(out_dir, 'input.yaml')
 
     workflow.transform(
