@@ -26,7 +26,7 @@ RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
 RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.5.29
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
-RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.5
+RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.6
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
 RUN pip install pandas numpy pysam matplotlib seaborn pyvcf
