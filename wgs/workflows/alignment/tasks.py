@@ -99,7 +99,7 @@ def cleanup_header(current_header, fixed_header):
             outwriter.write(line)
 
 
-def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None, reheader=False):
+def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
@@ -117,18 +117,6 @@ def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samt
     pypeliner.commandline.execute(*cmd, docker_image=picard_docker)
 
     index(output, output + '.bai', docker_image=samtools_docker)
-
-    if reheader:
-        header_sam = os.path.join(tempdir, 'header.sam')
-        cmd = ['samtools', 'view', '-H', output, '>', header_sam]
-        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
-
-        header_fixed = os.path.join(tempdir, 'fixed_header.sam')
-        cleanup_header(header_sam, header_fixed)
-
-        cmd = ['samtools', 'reheader', header_fixed, output]
-
-        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
 
 
 def picard_merge_bams(inputs, output, tempdir, mem="2G", docker_image=None):
