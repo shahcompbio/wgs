@@ -273,7 +273,7 @@ def align_samples(
     )
 
     workflow.transform(
-        name='markdups_reheader',
+        name='markdups',
         ctx=helpers.get_default_ctx(
             memory=12,
             walltime='24:00',
@@ -292,7 +292,6 @@ def align_samples(
             'picard_docker': config.containers('picard'),
             'samtools_docker': config.containers('samtools'),
             'mem': '{}G'.format(picard_mem),
-            'reheader': True,
         }
     )
 

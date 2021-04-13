@@ -99,7 +99,7 @@ def cleanup_header(current_header, fixed_header):
             outwriter.write(line)
 
 
-def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None, reheader=False):
+def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samtools_docker=None):
     cmd = ['picard', '-Xmx' + mem, '-Xms' + mem,
            '-XX:ParallelGCThreads=1',
            'MarkDuplicates',
@@ -110,24 +110,13 @@ def markdups(input, output, metrics, tempdir, mem="2G", picard_docker=None, samt
            'ASSUME_SORTED=True',
            'VALIDATION_STRINGENCY=LENIENT',
            'TMP_DIR=' + tempdir,
-           'MAX_RECORDS_IN_RAM=150000'
+           'MAX_RECORDS_IN_RAM=150000',
+           'QUIET=true'
            ]
 
     pypeliner.commandline.execute(*cmd, docker_image=picard_docker)
 
     index(output, output + '.bai', docker_image=samtools_docker)
-
-    if reheader:
-        header_sam = os.path.join(tempdir, 'header.sam')
-        cmd = ['samtools', 'view', '-H', output, '>', header_sam]
-        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
-
-        header_fixed = os.path.join(tempdir, 'fixed_header.sam')
-        cleanup_header(header_sam, header_fixed)
-
-        cmd = ['samtools', 'reheader', header_fixed, output]
-
-        pypeliner.commandline.execute(*cmd, docker_image=samtools_docker)
 
 
 def picard_merge_bams(inputs, output, tempdir, mem="2G", docker_image=None):
@@ -143,6 +132,7 @@ def picard_merge_bams(inputs, output, tempdir, mem="2G", docker_image=None):
            'VALIDATION_STRINGENCY=LENIENT',
            'MAX_RECORDS_IN_RAM=150000',
            'TMP_DIR=' + tempdir,
+           'QUIET=true'
            ]
 
     for bamfile in inputs:
@@ -190,13 +180,13 @@ def bwa_mem_paired_end(fastq1, fastq2, output,
             '>', output,
             **kwargs)
     else:
-            pypeliner.commandline.execute(
-                'bwa', 'mem', '-M', '-R', readgroup,
-                '-t', numthreads,
-                reference, fastq1, fastq2,
-                '|', 'samtools', 'view', '-bSh', '-',
-                '>', output,
-                **kwargs)
+        pypeliner.commandline.execute(
+            'bwa', 'mem', '-M', '-R', readgroup,
+            '-t', numthreads,
+            reference, fastq1, fastq2,
+            '|', 'samtools', 'view', '-bSh', '-',
+            '>', output,
+            **kwargs)
 
 
 def get_readgroup(sample_info, sample_id, lane_id):
@@ -240,7 +230,6 @@ def align_bwa_mem(
 
 
 def bam_sort(bam_filename, sorted_bam_filename, tempdir, threads=1, mem="2G", docker_image=None):
-
     helpers.makedirs(tempdir)
 
     prefix = os.path.join(tempdir, 'samtools_sort')
@@ -277,6 +266,7 @@ def bam_collect_wgs_metrics(bam_filename, ref_genome, metrics_filename,
                   ('True' if config['count_unpaired'] else 'False'),
                   'TMP_DIR=' + tempdir,
         'MAX_RECORDS_IN_RAM=150000',
+        'QUIET=true',
         docker_image=docker_image
     )
 
@@ -298,6 +288,7 @@ def bam_collect_gc_metrics(bam_filename, ref_genome, metrics_filename,
         'VALIDATION_STRINGENCY=LENIENT',
                   'TMP_DIR=' + tempdir,
         'MAX_RECORDS_IN_RAM=150000',
+        'QUIET=true',
         docker_image=docker_image
     )
 
@@ -354,6 +345,7 @@ def bam_collect_insert_metrics(bam_filename, flagstat_metrics_filename,
         'VALIDATION_STRINGENCY=LENIENT',
                   'TMP_DIR=' + tempdir,
         'MAX_RECORDS_IN_RAM=150000',
+        'QUIET=true',
         docker_image=picard_docker
     )
 
