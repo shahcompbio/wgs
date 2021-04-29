@@ -11,7 +11,7 @@ RUN apt-get update \
 RUN conda install -c dranew remixt && rm -rf /opt/conda/lib/python2.7/site-packages/remixt*
 RUN apt-get update && apt-get install libc-dev libz-dev -y && apt-get install build-essential -y && rm -rf /var/lib/apt/lists/* && conda install -c bioconda cython
 RUN rm -rf /opt/conda/lib/python2.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/amcpherson/remixt.git@master
+RUN pip install git+https://github.com/amcpherson/remixt.git@v0.5.16
 
 RUN conda install -c bioconda vcftools tabix bcftools snpeff
 RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
