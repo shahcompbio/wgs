@@ -79,28 +79,21 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=No
     return ctx
 
 
-def get_fastqs(inputs, samples, sample_type):
+def get_fastqs(inputs):
     fq1 = {}
     fq2 = {}
 
-    for sample in samples:
-        if sample_type:
-            fastqs = inputs[sample]['fastqs'][sample_type]
-        else:
-            fastqs = inputs[sample]['fastqs']
-        for lane in fastqs:
-            fq1[(sample, lane)] = fastqs[lane]['fastq1']
-            fq2[(sample, lane)] = fastqs[lane]['fastq2']
+    fastqs = inputs['fastqs']
+
+    for lane in fastqs:
+        fq1[lane] = fastqs[lane]['fastq1']
+        fq2[lane] = fastqs[lane]['fastq2']
 
     return fq1, fq2
 
 
 def get_sample_info(inputs):
-    sample_info = {}
-    for sample in inputs:
-        assert sample not in sample_info
-        sample_info[sample] = inputs[sample]['readgroup_info']
-    return sample_info
+    return inputs['readgroup_info']
 
 
 def build_shell_script(command, tag, tempdir):

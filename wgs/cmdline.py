@@ -20,13 +20,6 @@ def add_global_args(subparser):
                            required=True,
                            help='''Path to output directory.''')
 
-    subparser.add_argument("--config_file",
-                           help='''Path to the config file.''')
-
-    subparser.add_argument("--config_override",
-                           type=json.loads,
-                           help='''json string to override the defaults in config''')
-
     subparser.add_argument("--single_node",
                            default=False,
                            action='store_true',
@@ -62,6 +55,35 @@ def parse_args():
         type=int,
         help='''picard mem usage'''
     )
+
+    # ================
+    # alignment metrics
+    # ================
+    alignment_metrics = subparsers.add_parser("alignment_metrics")
+    alignment_metrics.set_defaults(which='alignment_metrics')
+    alignment_metrics.add_argument(
+        "--out_dir",
+        required=True,
+        help='''Path to output directory.'''
+    )
+    alignment_metrics.add_argument(
+        "--refdir",
+        required=True,
+        help='''reference data dir'''
+
+    )
+    alignment_metrics.add_argument(
+        "--sample_id",
+        required=True,
+        help='''reference data dir'''
+    )
+    alignment_metrics.add_argument(
+        "--input_bam",
+        required=True,
+        help='''reference data dir'''
+    )
+    pypeliner.app.add_arguments(alignment_metrics)
+
 
     # ================
     # realignment

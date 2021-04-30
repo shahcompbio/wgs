@@ -14,6 +14,7 @@ from wgs.germline_calling import germline_calling_workflow
 from wgs.realign import realign_bam_workflow
 from wgs.sample_qc import sample_qc_workflow
 from wgs.somatic_calling import somatic_calling_workflow
+from wgs.alignment_metrics import alignment_metrics_workflow
 
 
 def generate_config(args):
@@ -39,6 +40,10 @@ def main():
     if args["which"] == "alignment":
         args = generate_config(args)
         alignment_workflow(args)
+
+    if args["which"] == "alignment_metrics":
+        args = generate_config(args)
+        alignment_metrics_workflow(args)
 
     if args["which"] == "somatic_calling":
         args = generate_config(args)
