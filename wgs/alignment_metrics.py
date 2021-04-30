@@ -9,11 +9,17 @@ from wgs.workflows import alignment
 
 
 def alignment_metrics_workflow(args):
+    inputs = helpers.load_yaml(args['input_yaml'])
+
+    assert len(list(inputs.keys())) == 1
+
+    sample_id = list(inputs.keys())[0]
+    input_bam = inputs[sample_id]['bam']
+
     outdir = args['out_dir']
-    sample_id = args['sample_id']
-    input_bam = args['input_bam']
 
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
+    input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
     outputs_tdf = os.path.join(outdir, sample_id, '{}.bam.tdf'.format(sample_id))
     metrics_output = os.path.join(outdir, sample_id, '{}_metrics.csv'.format(sample_id))
@@ -48,6 +54,8 @@ def alignment_metrics_workflow(args):
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
+            'input_yaml_data': inputs,
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
             'metadata': {'type': 'alignment'}
         }
     )

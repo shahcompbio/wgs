@@ -54,24 +54,18 @@ def alignment_workflow(args):
                 'picard_mem': args['picard_mem']}
     )
 
-    outputted_filenames = helpers.expand_list(
-        [
-            outputs,
-            outputs_tdf,
-            metrics_output,
-            metrics_tar,
-
-        ],
-        [sample_id],
-        "sample_id"
-    )
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
             outdir,
-            outputted_filenames,
+            [
+                outputs,
+                outputs_tdf,
+                metrics_output,
+                metrics_tar,
+            ],
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

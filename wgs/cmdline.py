@@ -61,29 +61,7 @@ def parse_args():
     # ================
     alignment_metrics = subparsers.add_parser("alignment_metrics")
     alignment_metrics.set_defaults(which='alignment_metrics')
-    alignment_metrics.add_argument(
-        "--out_dir",
-        required=True,
-        help='''Path to output directory.'''
-    )
-    alignment_metrics.add_argument(
-        "--refdir",
-        required=True,
-        help='''reference data dir'''
-
-    )
-    alignment_metrics.add_argument(
-        "--sample_id",
-        required=True,
-        help='''reference data dir'''
-    )
-    alignment_metrics.add_argument(
-        "--input_bam",
-        required=True,
-        help='''reference data dir'''
-    )
-    pypeliner.app.add_arguments(alignment_metrics)
-
+    alignment_metrics = add_global_args(alignment_metrics)
 
     # ================
     # realignment
