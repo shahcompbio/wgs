@@ -74,31 +74,23 @@ class CollectMetrics(object):
         """
         extract from flagstat
         """
-
-        df = pd.read_csv(self.flagstat_metrics,
-                         sep=r'\s\+\s0\s',
-                         header=None,
-                         names=['value', 'type'],
-                         engine='python')
-
-        tot_reads = df[df['type'] == 'in total (QC-passed reads + QC-failed reads)']['value']
-        tot_mpd_reads = df[
-            (df['type'].str.contains('mapped') == True) & (df['type'].str.contains('mate mapped') == False)]
-        tot_dup_reads = df[df['type'] == 'duplicates']['value']
-        tot_prop_paired = df[df['type'].str.contains('properly paired')]
-
-        assert len(tot_reads) == 1
-        assert len(tot_mpd_reads) == 1
-        assert len(tot_dup_reads) == 1
-        assert len(tot_prop_paired) == 1
-
-        tot_reads = tot_reads.iloc[0]
-        tot_mpd_reads = tot_mpd_reads['value'].iloc[0]
-        tot_dup_reads = tot_dup_reads.iloc[0]
-        tot_prop_paired = tot_prop_paired['value'].iloc[0]
+        tot_reads = None
+        tot_mpd_reads = None
+        tot_dup_reads = None
+        tot_prop_paired = None
+        with open(self.flagstat_metrics, 'rt') as reader:
+            for line in reader:
+                if 'in total (QC-passed reads + QC-failed reads)' in line:
+                    tot_reads = int(line.split('+')[0])
+                elif 'mapped' in line and not 'mate mapped' in line:
+                    tot_mpd_reads = int(line.split('+')[0])
+                elif 'duplicates' in line:
+                    tot_dup_reads = int(line.split('+')[0])
+                elif 'properly paired' in line:
+                    tot_prop_paired = int(line.split('+')[0])
 
         return tot_reads, tot_mpd_reads, tot_dup_reads, tot_prop_paired
-
+    
     def extract_duplication_metrics(self):
         """
         extract from markdups
