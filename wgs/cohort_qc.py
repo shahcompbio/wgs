@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pypeliner
 import pypeliner.managed as mgd
@@ -70,5 +71,32 @@ def cohort_qc_workflow(args):
             mgd.OutputFile('report_path', 'cohort_label', fnames=report_path)
         ),
     )
+
+    meta_yaml = os.path.join(out_dir, 'metadata.yaml')
+    input_yaml_blob = os.path.join(out_dir, 'input.yaml')
+
+    cohort_labels = sorted(set([v[0] for v in inputs.keys()]))
+
+    outputted_filenames = helpers.expand_list(
+        [segmental_copynumber, cna_table,
+         cohort_maf_oncogenic_filtered, report_path],
+        cohort_labels, "cohort_label")
+
+    workflow.transform(
+        name='generate_meta_files_results',
+        func='wgs.utils.helpers.generate_and_upload_metadata',
+        args=(
+            sys.argv[0:],
+            args["out_dir"],
+            outputted_filenames,
+            mgd.OutputFile(meta_yaml)
+        ),
+        kwargs={
+            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
+            'input_yaml': mgd.OutputFile(input_yaml_blob),
+            'metadata': {'type': 'sample_qc'}
+        }
+    )
+
 
     pypeline.run(workflow)
