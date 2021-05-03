@@ -60,12 +60,8 @@ def alignment_workflow(args):
         args=(
             sys.argv[0:],
             outdir,
-            [
-                outputs,
-                outputs_tdf,
-                metrics_output,
-                metrics_tar,
-            ],
+            [outputs, outputs_tdf,
+             metrics_output, metrics_tar],
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

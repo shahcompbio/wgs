@@ -8,49 +8,6 @@ from wgs.config import config
 from wgs.utils import helpers
 from wgs.workflows import realignment
 
-
-def realign_bams(
-        samples, inputs, outputs, metrics,
-        metrics_tar, refdir, ignore_bamtofastq_exception,
-        single_node=False, picard_mem=8
-):
-    outputs = dict([(sampid, outputs[sampid])
-                    for sampid in samples])
-    inputs = dict([(sampid, inputs[sampid])
-                   for sampid in samples])
-
-    metrics = dict([(sampid, metrics[sampid])
-                    for sampid in samples])
-    metrics_tar = dict([(sampid, metrics_tar[sampid])
-                        for sampid in samples])
-
-    workflow = pypeliner.workflow.Workflow()
-
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples)
-
-    workflow.subworkflow(
-        name='realign_bam_file',
-        func=realignment.realign_bam_files,
-        args=(
-            mgd.InputFile("input.bam", "sample_id", axes_origin=[], fnames=inputs),
-            mgd.OutputFile("output.bam", "sample_id", axes_origin=[], fnames=outputs),
-            mgd.OutputFile("output.txt", "sample_id", axes_origin=[], fnames=metrics),
-            mgd.OutputFile("output.tar", "sample_id", axes_origin=[], fnames=metrics_tar),
-            refdir,
-            samples,
-        ),
-        kwargs={
-            'single_node': single_node,
-            'ignore_bamtofastq_exception': ignore_bamtofastq_exception,
-            'picard_mem': picard_mem
-        }
-    )
-
-    return workflow
-
-
 def realign_bam_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config.containers('wgs')))
@@ -59,44 +16,30 @@ def realign_bam_workflow(args):
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
     input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
-    yamldata = yaml.safe_load(open(args['input_yaml']))
+    input_bam = args['input_bam']
+    sample_id = args['sample_id']
 
-    samples = list(yamldata.keys())
-
-    input_bams = {sample: yamldata[sample]['input'] for sample in samples}
-
-    output_bams = os.path.join(outdir, '{sample_id}', '{sample_id}.bam')
-    metrics = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
-    metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}.tar')
-
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples)
+    output_bam = os.path.join(outdir, sample_id, '{}.bam'.format(sample_id))
+    metrics = os.path.join(outdir, sample_id, '{}_metrics.csv'.format(sample_id))
+    metrics_tar = os.path.join(outdir, sample_id, '{}.tar'.format(sample_id))
 
     workflow.subworkflow(
         name="realign",
-        func=realign_bams,
+        func=realignment.realign_bam_files,
         ctx=helpers.get_default_ctx(),
         args=(
-            samples,
-            mgd.InputFile("input.bam", 'sample_id', fnames=input_bams,
-                          extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile("realigned.bam", 'sample_id', template=output_bams,
-                           extensions=['.bai', '.tdf'], axes_origin=[]),
-            mgd.OutputFile("realigned.txt", 'sample_id', template=metrics,
-                           extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile("realigned.tar", 'sample_id', template=metrics_tar,
-                           extensions=['.bai'], axes_origin=[]),
+            mgd.InputFile(input_bam, extensions=['.bai']),
+            mgd.OutputFile(output_bam, extensions=['.bai']),
+            mgd.OutputFile(metrics),
+            mgd.OutputFile(metrics_tar),
             args['refdir'],
-            args['ignore_bamtofastq_exception']
         ),
         kwargs={
             'single_node': args['single_node'],
+            'ignore_bamtofastq_exception': args['ignore_bamtofastq_exception'],
             'picard_mem': args['picard_mem']
         }
     )
-
-    outputted_filenames = helpers.expand_list([output_bams, metrics, metrics_tar], samples, 'sample_id')
 
     workflow.transform(
         name='generate_meta_files_results',
@@ -104,7 +47,7 @@ def realign_bam_workflow(args):
         args=(
             sys.argv[0:],
             args["out_dir"],
-            outputted_filenames,
+            [output_bam, metrics, metrics_tar],
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

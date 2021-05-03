@@ -11,23 +11,33 @@ import pypeliner
 from wgs import __version__
 
 
-def add_global_args(subparser):
-    subparser.add_argument("--input_yaml",
-                           required=True,
-                           help='''yaml file with tumour, normal and sampleids''')
+def add_global_args(subparser, add_single_node=False, add_input_yaml=False):
+    subparser.add_argument(
+        "--out_dir",
+        required=True,
+        help='''Path to output directory.'''
+    )
 
-    subparser.add_argument("--out_dir",
-                           required=True,
-                           help='''Path to output directory.''')
+    if add_single_node:
+        subparser.add_argument(
+            "--single_node",
+            default=False,
+            action='store_true',
+            help='''azure specific mode'''
+        )
 
-    subparser.add_argument("--single_node",
-                           default=False,
-                           action='store_true',
-                           help='''azure specific mode''')
+    subparser.add_argument(
+        "--refdir",
+        required=True,
+        help='''reference data dir'''
+    )
 
-    subparser.add_argument("--refdir",
-                           required=True,
-                           help='''reference data dir''')
+    if add_input_yaml:
+        subparser.add_argument(
+            "--input_yaml",
+            required=True,
+            help='''yaml file with tumour, normal and sampleids'''
+        )
 
     pypeliner.app.add_arguments(subparser)
 
@@ -48,7 +58,7 @@ def parse_args():
     # ================
     alignment = subparsers.add_parser("alignment")
     alignment.set_defaults(which='alignment')
-    alignment = add_global_args(alignment)
+    add_global_args(alignment, add_input_yaml=True, add_single_node=True)
     alignment.add_argument(
         "--picard_mem",
         default=8,
@@ -56,19 +66,30 @@ def parse_args():
         help='''picard mem usage'''
     )
 
+
     # ================
     # alignment metrics
     # ================
     alignment_metrics = subparsers.add_parser("alignment_metrics")
     alignment_metrics.set_defaults(which='alignment_metrics')
-    alignment_metrics = add_global_args(alignment_metrics)
+    add_global_args(alignment_metrics)
+    alignment_metrics.add_argument(
+        "--sample_id",
+        required=True,
+        help='''reference data dir'''
+    )
+    alignment_metrics.add_argument(
+        "--input_bam",
+        required=True,
+        help='''reference data dir'''
+    )
 
     # ================
     # realignment
     # ================
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
-    realignment = add_global_args(realignment)
+    realignment = add_global_args(realignment, add_single_node=True)
     realignment.add_argument(
         "--picard_mem",
         default=8,
@@ -80,6 +101,11 @@ def parse_args():
         default=False,
         action='store_true',
         help='''ignore the exception from bamtofastq'''
+    )
+    alignment_metrics.add_argument(
+        "--input_bam",
+        required=True,
+        help='''reference data dir'''
     )
 
     # ================

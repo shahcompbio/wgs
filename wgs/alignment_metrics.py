@@ -9,12 +9,9 @@ from wgs.workflows import alignment
 
 
 def alignment_metrics_workflow(args):
-    inputs = helpers.load_yaml(args['input_yaml'])
 
-    assert len(list(inputs.keys())) == 1
-
-    sample_id = list(inputs.keys())[0]
-    input_bam = inputs[sample_id]['bam']
+    sample_id = args['sample_id']
+    input_bam = args['input_bam']
 
     outdir = args['out_dir']
 
