@@ -22,7 +22,6 @@ def merge_segmental_cn(segmental_cn, concats):
 
 
 def generate_segmental_copynumber(remixt, segmental_cn, sample):
-
     cn, stats = parsers.read_remixt_parsed_csv(remixt)
     cn = cn.astype({"chromosome":"str"})
 
@@ -36,52 +35,25 @@ def generate_segmental_copynumber(remixt, segmental_cn, sample):
     )
     aggregated_cn_data['copy'] = aggregated_cn_data['major_raw'] + aggregated_cn_data['minor_raw']
 
-
     transformations.generate_segmental_cn(segmental_cn, aggregated_cn_data, stats["ploidy"])
 
 
-def generate_gistic_outputs(gistic_data, hdel_data, cbio_table):
-    gistic_data['gistic_value'] = 2
-    gistic_data.loc[gistic_data['log_change'] < 1, 'gistic_value'] = 1
-    gistic_data.loc[gistic_data['log_change'] < 0.5, 'gistic_value'] = 0
-    gistic_data.loc[gistic_data['log_change'] < -0.5, 'gistic_value'] = -1
-    
-    # Merge hdels
-    hdel_data['is_hdel'] = 1
-    gistic_data = gistic_data.merge(hdel_data[['Hugo_Symbol', 'sample', 'is_hdel']], how='left')
-    gistic_data['is_hdel'] = gistic_data['is_hdel'].fillna(0).astype(int)
-    gistic_data.loc[gistic_data['is_hdel'] == 1, 'gistic_value'] = -2
-
-    # Gistic_data generation
-    gistic_data = gistic_data[['Hugo_Symbol', 'sample', 'gistic_value']]
+def make_cbio_cna_table(cn_change_filename, cbio_table):
+    gistic_data = pd.read_csv(cn_change_filename,  sep="\t", usecols=["gene_name", "sample", "gistic_value"])
+    gistic_data = gistic_data.rename(columns={"gene_name":"Hugo_Symbol"})
     gistic_data = gistic_data.drop_duplicates()
     gistic_data = gistic_data.astype({"gistic_value": "Int64"})
 
     gistic_matrix = gistic_data.set_index(['Hugo_Symbol', 'sample'])['gistic_value'].unstack()
     gistic_matrix.reset_index(inplace=True)
     gistic_matrix.to_csv(cbio_table, sep="\t", index=False, na_rep="NA")
-    
-
-def make_cbio_cna_table(amps, dels, cbio_table):
-    amps = pd.read_csv(amps,  sep="\t", usecols=["gene_name", "log_change", "sample"])
-    amps = amps.rename(columns={"gene_name":"Hugo_Symbol"})
-
-    dels = pd.read_csv(dels,  sep="\t", usecols=["gene_name", "sample"])
-    dels = dels.rename(columns={"gene_name":"Hugo_Symbol"})
-
-    generate_gistic_outputs(amps, dels, cbio_table)
 
 
-def make_maftools_cna_table(amps, dels, maftools_table):
-    amps = pd.read_csv(amps, sep="\t", usecols=["gene_name", "sample", "cn_type", "pass_filter"])
-    amps = amps.rename(columns={"gene_name":"Gene", "cn_type":"CN", "sample": "Sample_Name"})
-    amps=amps[amps.pass_filter == True]
+def make_maftools_cna_table(cn_change_filename, maftools_table):
+    cn_change = pd.read_csv(cn_change_filename, sep="\t", usecols=["gene_name", "sample", "is_hdel", "is_loh", "is_hlamp"])
+    cn_change = cn_change.rename(columns={"gene_name":"Gene", "cn_type":"CN", "sample": "Sample_Name"})
+    cn_change = cn_change[cn_change['is_hdel'] | cn_change['is_loh'] | cn_change['is_hlamp']]
 
-    dels = pd.read_csv(dels,  sep="\t", usecols=["gene_name", "sample", "cn_type", "pass_filter"])
-    dels = dels.rename(columns={"gene_name":"Gene", "cn_type":"CN", "sample": "Sample_Name"})
-    dels=dels[dels.pass_filter == True]
-
-    out = pd.concat([amps, dels])
     out.to_csv(maftools_table, index=False, sep="\t")
 
 
@@ -99,12 +71,10 @@ def merge_cna_tables(tables, output):
         data.to_csv(output, index=False, mode='a', header=header, sep="\t")
 
 
-
-
-def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels, docker_image=None):
+def classify_remixt(sample_label, remixt, gtf, cn_change, docker_image=None):
 
     cmd = [
-        "classifycopynumber", gtf, output_dir, sample_label, amps, dels, "--remixt_parsed_csv", remixt, "--plot", False
+        "classifycopynumber", gtf, cn_change, "--remixt_parsed_csv", remixt, '--sample_ids', sample_label,
     ]
     pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
