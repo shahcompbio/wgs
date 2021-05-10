@@ -68,10 +68,10 @@ def concatenate_vcf(infiles, outfile):
                     ofile.write(l)
 
 
-def sort_vcf(infile, outfile, docker_image=None):
+def sort_vcf(infile, outfile):
     cmd = ['cat', infile, '|', 'vcf-sort', '>', outfile]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def update_germline_header_sample_ids(infile, outfile, sample_id):

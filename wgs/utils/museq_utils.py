@@ -41,7 +41,7 @@ def update_header_sample_ids(infile, outfile, tumour_id, normal_id):
 def run_museq(
         out, log, reference, interval, museq_params, tempdir,
         tumour_bam=None, normal_bam=None, return_cmd=False,
-        titan_mode=False, docker_image=False
+        titan_mode=False
 ):
     '''
     Run museq script for all chromosomes and merge VCF files
@@ -96,7 +96,7 @@ def run_museq(
     if return_cmd:
         return cmd
     else:
-        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+        pypeliner.commandline.execute(*cmd)
 
     tumour_id = get_sample_id(tumour_bam) if tumour_bam else None
     normal_id = get_sample_id(normal_bam) if normal_bam else None
@@ -106,8 +106,7 @@ def run_museq(
 
 def run_museq_one_job(
         tempdir, museq_vcf, reference, intervals, museq_params,
-        tumour_bam=None, normal_bam=None, museq_docker_image=None,
-        vcftools_docker_image=None, titan_mode=False
+        tumour_bam=None, normal_bam=None, titan_mode=False
 ):
     '''
     Run museq script for all chromosomes and merge VCF files
@@ -135,22 +134,20 @@ def run_museq_one_job(
         commands.append(command)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, museq_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     vcf_files = [os.path.join(tempdir, str(i), 'museq.vcf') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'museq_merge')
     helpers.makedirs(merge_tempdir)
     temp_museq_vcf = os.path.join(merge_tempdir, 'temp_museq_merge.vcf')
-    merge_vcfs(vcf_files, temp_museq_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    merge_vcfs(vcf_files, temp_museq_vcf, merge_tempdir)
 
     tumour_id = get_sample_id(tumour_bam)
     normal_id = get_sample_id(normal_bam)
     update_header_sample_ids(temp_museq_vcf, museq_vcf, tumour_id, normal_id)
 
-
-
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)

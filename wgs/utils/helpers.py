@@ -61,7 +61,7 @@ class GetFileHandle(object):
             return "plain-text"
 
 
-def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=None):
+def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8):
     ctx = {
         'mem': memory,
         'walltime': walltime,
@@ -72,9 +72,6 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=No
         'ncpus': ncpus,
         'disk': disk,
     }
-
-    if docker_image:
-        ctx['docker_image'] = docker_image
 
     return ctx
 
@@ -113,7 +110,7 @@ def build_shell_script(command, tag, tempdir):
     return outfile
 
 
-def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
+def run_in_gnu_parallel(commands, tempdir, ncores=None):
     makedirs(tempdir)
 
     scriptfiles = []
@@ -130,7 +127,7 @@ def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
         ncores = multiprocessing.cpu_count()
 
     gnu_parallel_cmd = ['parallel', '--jobs', ncores, '<', parallel_outfile]
-    pypeliner.commandline.execute(*gnu_parallel_cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*gnu_parallel_cmd)
 
 
 def get_values_from_input(yamldata, key):
