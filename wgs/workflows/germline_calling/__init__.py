@@ -52,9 +52,7 @@ def create_germline_calling_workflow(
     chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),

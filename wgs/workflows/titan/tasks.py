@@ -74,7 +74,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, gc_wig, 
     cmd = [script, tumour_wig, normal_wig, gc_wig, map_wig,
            target_list, outfile, genome_type]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     data = pd.read_csv(outfile, sep='\t', converters={'chr': str})
     if data['logR'].isnull().all():
@@ -97,7 +97,7 @@ def run_titan(
            titan_params['symmetric'], obj_outfile, genome_type, titan_params['chrom'],
            titan_params['y_threshold'], titan_params['max_depth']]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def make_tarfile(output_filename, source_dir):
@@ -105,7 +105,7 @@ def make_tarfile(output_filename, source_dir):
         tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 
-def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None, docker_image=None):
+def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None):
     if chromosomes is None:
         chromosomes = map(str, range(1, 23)) + ['X']
 
@@ -115,20 +115,20 @@ def plot_titan(obj_file, output, tempdir, num_clusters, ploidy, chromosomes=None
 
     try:
         cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
-        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+        pypeliner.commandline.execute(*cmd)
 
         cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
         pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
     except FileNotFoundError:
         chrom = '"{}"'.format(chrom)
         cmd = [script, obj_file, tempdir, num_clusters, chrom, ploidy]
-        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+        pypeliner.commandline.execute(*cmd)
 
         cluster_ploidy_tempdir = os.path.join(tempdir, 'cluster_{}_ploidy_{}'.format(num_clusters, ploidy))
         pdfutils.merge_titan_pngs(cluster_ploidy_tempdir, output, num_clusters, chromosomes)
 
 
-def calc_cnsegments_titan(infile, outigv, outfile, sample_id, docker_image=None):
+def calc_cnsegments_titan(infile, outigv, outfile, sample_id):
     script = 'createTITANsegmentfiles.pl'
 
     symmetric = '1'
@@ -137,7 +137,7 @@ def calc_cnsegments_titan(infile, outigv, outfile, sample_id, docker_image=None)
            '-outfile=' + outfile, '-outIGV=' + outigv,
            '-symmetric=' + symmetric]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def annot_pygenes(infile, outfile, pygenes_gtf):

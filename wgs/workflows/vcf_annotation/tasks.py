@@ -11,7 +11,7 @@ scripts_directory = os.path.join(
     os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
-def run_snpeff(infile, output, config, docker_image=None):
+def run_snpeff(infile, output, config):
     '''
     Run snpEff script on the input VCF file
 
@@ -29,7 +29,7 @@ def run_snpeff(infile, output, config, docker_image=None):
     if snpeff_config:
         cmd.extend(['-c', snpeff_config])
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_mutation_assessor(infile, output, config):

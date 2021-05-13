@@ -29,8 +29,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
 
 def run_museqportrait(
         infile, out_pdf, out_txt, museqportrait_log,
-        single_mode, thousand_genomes=None, dbsnp=None, germline_refdata=None, germline_plot_threshold=0.5,
-        docker_image=None
+        single_mode, thousand_genomes=None, dbsnp=None, germline_refdata=None, germline_plot_threshold=0.5
 ):
     """
     Run museqportrait script on the input VCF file
@@ -74,7 +73,7 @@ def run_museqportrait(
     else:
         cmd = ['museqportrait', '--log', museqportrait_log, '--output-pdf',
                out_pdf, '--output-txt', out_txt, infile]
-        pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+        pypeliner.commandline.execute(*cmd)
 
 
 def fix_museq_vcf(infile, output):

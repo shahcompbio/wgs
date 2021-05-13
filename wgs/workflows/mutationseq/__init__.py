@@ -36,7 +36,7 @@ def create_museq_workflow(
 
     params = config.default_params('variant_calling')
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='generate_intervals',
@@ -73,8 +73,6 @@ def create_museq_workflow(
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
-                'museq_docker_image': config.containers('mutationseq'),
-                'vcftools_docker_image': config.containers('vcftools')
             }
         )
         workflow.transform(
@@ -109,7 +107,6 @@ def create_museq_workflow(
             kwargs={
                 'tumour_bam': tumour_bam,
                 'normal_bam': normal_bam,
-                'docker_image': config.containers('mutationseq'),
             }
         )
         workflow.transform(
@@ -137,7 +134,6 @@ def create_museq_workflow(
                 mgd.TempOutputFile('merged_fixed.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -163,7 +159,6 @@ def create_museq_workflow(
             mgd.TempInputFile('normalized.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.transform(
@@ -180,7 +175,7 @@ def create_museq_workflow(
             mgd.TempOutputFile('museqportrait.log'),
             single,
         ),
-        kwargs={'docker_image': config.containers('mutationseq'),
+        kwargs={
                 'thousand_genomes': thousand_genomes,
                 'dbsnp': dbsnp,
                 'germline_refdata': germline_refdata,

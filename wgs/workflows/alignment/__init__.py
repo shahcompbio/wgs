@@ -18,7 +18,7 @@ def collect_bam_metrics(
     3. picard wgs metrics
     4. fastqc metrics
 
-    :param config: config containing docker 
+    :param config: config
     images for metrics
     :param bams: sample:bam dictionary
     :param metrics_csv: output csv containing
@@ -50,8 +50,6 @@ def collect_bam_metrics(
             mgd.TempSpace('picard_insert'),
         ),
         kwargs={
-            'picard_docker': config.containers('picard'),
-            'samtools_docker': config.containers('samtools'),
             'mem': '{}G'.format(picard_mem)
         }
     )
@@ -73,7 +71,6 @@ def collect_bam_metrics(
             mgd.TempSpace('picard_gc')
         ),
         kwargs={
-            'docker_image': config.containers('picard'),
             'mem': '{}G'.format(picard_mem)
         }
     )
@@ -94,7 +91,6 @@ def collect_bam_metrics(
             mgd.TempSpace('picard_wgs')
         ),
         kwargs={
-            'docker_image': config.containers('picard'),
             'mem': '{}G'.format(picard_mem)
         }
     )
@@ -111,8 +107,6 @@ def collect_bam_metrics(
             pypeliner.managed.OutputFile(bam_tdf),
             reftype
         ),
-        kwargs={'docker_image': config.containers('igvtools')}
-
     )
 
     workflow.transform(
@@ -157,9 +151,6 @@ def fastqc_workflow(fastq_r1, fastq_r2, r1_html, r1_plot, r2_html, r2_plot):
             mgd.OutputFile(r1_plot),
             mgd.TempSpace('fastqc_R1'),
         ),
-        kwargs={
-            'docker_image': config.containers("fastqc"),
-        }
     )
 
     workflow.transform(
@@ -176,9 +167,6 @@ def fastqc_workflow(fastq_r1, fastq_r2, r1_html, r1_plot, r2_html, r2_plot):
             mgd.OutputFile(r2_plot),
             mgd.TempSpace('fastqc_R2'),
         ),
-        kwargs={
-            'docker_image': config.containers('fastqc'),
-        }
     )
 
     return workflow
@@ -266,8 +254,6 @@ def align_samples(
             mgd.TempSpace('merge_tumour_lanes_tempdir')
         ),
         kwargs={
-            'picard_docker_image': config.containers('picard'),
-            'samtools_docker_image': config.containers('samtools'),
             'mem': picard_mem
         }
     )
@@ -289,8 +275,6 @@ def align_samples(
             pypeliner.managed.TempSpace("temp_markdups", "sample_id"),
         ),
         kwargs={
-            'picard_docker': config.containers('picard'),
-            'samtools_docker': config.containers('samtools'),
             'mem': '{}G'.format(picard_mem),
         }
     )
@@ -374,7 +358,6 @@ def align_sample_no_split(
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'docker_image': config.containers('bwa')
         }
     )
 
@@ -393,7 +376,6 @@ def align_sample_no_split(
             pypeliner.managed.TempSpace('bam_sort_tempdir')
         ),
         kwargs={
-            'docker_image': config.containers('picard'),
             'threads': '8',
             'mem': '{}G'.format(picard_mem)
         }
@@ -412,7 +394,6 @@ def align_sample_no_split(
             pypeliner.managed.OutputFile(out_bai),
             pypeliner.managed.OutputFile(samtools_flagstat)
         ),
-        kwargs={'docker_image': config.containers('samtools')}
     )
 
     return workflow
@@ -480,7 +461,6 @@ def align_sample_split(
         kwargs={
             'sample_id': sample_id,
             'lane_id': lane_id,
-            'docker_image': config.containers('bwa')
         }
     )
 
@@ -498,7 +478,6 @@ def align_sample_split(
             pypeliner.managed.TempSpace('bam_sort_by_split', 'split')
         ),
         kwargs={
-            'docker_image': config.containers('samtools'),
             'mem': '{}G'.format(picard_mem)
         }
     )
@@ -516,8 +495,6 @@ def align_sample_split(
             pypeliner.managed.TempSpace('bam_merge_by_split')
         ),
         kwargs={
-            'picard_docker_image': config.containers('picard'),
-            'samtools_docker_image': config.containers('samtools'),
             'mem': picard_mem
         }
     )
@@ -527,7 +504,6 @@ def align_sample_split(
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='16:00',
-            docker_image=config.containers('samtools')
         ),
         args=(
             'samtools',
@@ -542,7 +518,6 @@ def align_sample_split(
         ctx=helpers.get_default_ctx(
             memory=4,
             walltime='16:00',
-            docker_image=config.containers('samtools')
         ),
         args=(
             'samtools',

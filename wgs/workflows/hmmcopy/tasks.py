@@ -20,7 +20,7 @@ def hmmcopy_readcounter(input_bam, output_wig, chromosomes, config):
     rc.main()
 
 
-def calc_corr(input_wig, output_file, output_obj, gc_wig, map_wig, map_cutoff, docker_image=None):
+def calc_corr(input_wig, output_file, output_obj, gc_wig, map_wig, map_cutoff):
     cmd = [
         'hmmcopy_correct_reads.R',
         input_wig,
@@ -31,7 +31,7 @@ def calc_corr(input_wig, output_file, output_obj, gc_wig, map_wig, map_cutoff, d
         output_obj,
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_hmmcopy(
@@ -75,7 +75,7 @@ def run_hmmcopy(
               tumour_table_out,
           ] + params
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def plot_hmm(
@@ -100,7 +100,7 @@ def plot_hmm(
         hmmcopy_plots_dir,
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     correction_pdfs = [os.path.join(correction_plots_dir, f)
                        for f in os.listdir(correction_plots_dir) if f.endswith('.jpg')]

@@ -7,9 +7,7 @@ from wgs.config import config
 
 
 def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbio_cna_table, gtf):
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
         value=list(remixt_dict.keys()),
@@ -187,9 +185,7 @@ def create_cohort_qc_report(
     )
 
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     non_synonymous_labels=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
         "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation", 
@@ -237,9 +233,7 @@ def create_cohort_qc_report(
             mgd.OutputFile(summary_plot),
             mgd.TempInputFile("vcNames"),
             mgd.TempInputFile("genelist")
-
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") },
     )
 
     workflow.transform(
@@ -253,7 +247,6 @@ def create_cohort_qc_report(
             mgd.InputFile(burden_plot),
             mgd.OutputFile(report_path),
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") }
     )
 
     return workflow

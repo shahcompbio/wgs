@@ -67,14 +67,14 @@ def mutect_filter_command(reference, vcf_in, vcf_out):
     return cmd
 
 
-def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir, docker_image=None):
+def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir):
     helpers.makedirs(tempdir)
     unfiltered_vcf = os.path.join(tempdir, 'temp.vcf')
     cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_vcf)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     cmd = mutect_filter_command(reference, unfiltered_vcf, vcf)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_mutect_one_job(
@@ -102,8 +102,8 @@ def run_mutect_one_job(
     merge_vcfs(vcf_files, vcf, merge_tempdir, docker_image=vcftools_docker_image)
 
 
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)

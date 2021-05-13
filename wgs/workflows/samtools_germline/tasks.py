@@ -46,12 +46,12 @@ def samtools_germline_command(vcf, reference, interval, bam_file):
     return cmd
 
 
-def run_samtools_germline(vcf, reference, interval, bam_file, tempdir, docker_image=None):
+def run_samtools_germline(vcf, reference, interval, bam_file, tempdir):
     helpers.makedirs(tempdir)
     vcf_file = os.path.join(tempdir, 'samtools_snps.vcf.gz')
 
     cmd = samtools_germline_command(vcf_file, reference, interval, bam_file)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     normal_id = bamutils.get_sample_id(bam_file)
     vcfutils.update_germline_header_sample_ids(vcf_file, vcf, normal_id)
@@ -82,21 +82,21 @@ def run_samtools_germline_one_job(
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
 
 
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)
 
 
-def roh_calling(samtools_germlines, roh_output, tempdir, docker_image=None):
+def roh_calling(samtools_germlines, roh_output, tempdir):
     helpers.makedirs(tempdir)
 
     output = os.path.join(tempdir, 'output.csv')
 
     cmd = ['bcftools', 'roh', '-G30', '--AF-dflt', 0.4, samtools_germlines, '>', output]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     parse_roh_output( output, roh_output)
 

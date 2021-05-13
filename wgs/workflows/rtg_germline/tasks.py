@@ -56,12 +56,12 @@ def rtg_move_vcf(tempdir, vcf_output):
     shutil.copyfile(tbi_file, vcf_output + '.tbi')
 
 
-def run_rtg_germline(vcf, reference, interval, bam_file, tempdir, docker_image=None):
+def run_rtg_germline(vcf, reference, interval, bam_file, tempdir):
     # rtg fails if output dir already exists
     helpers.rmdirs(tempdir)
 
     cmd = rtg_germline_command(reference, interval, bam_file, tempdir)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     vcf_file = os.path.join(tempdir, 'snps.vcf.gz')
 
@@ -99,8 +99,8 @@ def run_rtg_one_job(
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
 
 
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)

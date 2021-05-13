@@ -58,9 +58,7 @@ def copynumber_calling_workflow(args):
     refdir_paths = config.refdir_data(args['refdir'])['paths']
     chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),

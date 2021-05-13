@@ -6,13 +6,13 @@ from wgs.utils import helpers
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
-def run_samtools_view(infile, outfile, docker_image=None):
+def run_samtools_view(infile, outfile):
     cmd = ['samtools', 'view', '-b', '-F', '1294', infile, '>', outfile]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=None):
+def run_lumpy_extract_split_reads_bwamem(infile, outfile, config):
     extract_split_reads = config['extractSplitReads_BwaMem']
     cmd = [
         'samtools', 'view', '-h', infile, '|',
@@ -21,13 +21,13 @@ def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=N
         '>', outfile
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def run_samtools_sort(infile, outfile, docker_image=None):
+def run_samtools_sort(infile, outfile):
     cmd = ['samtools', 'sort', infile, '-o', outfile]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_lumpyexpress(
@@ -48,7 +48,7 @@ def run_lumpyexpress(
            '-D', ','.join([e for e in [normal_discordants, tumour_discordants] if e]),
            '-o', lumpy_vcf]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config, samtools_docker_image=None, lumpy_docker_image=None):

@@ -10,7 +10,7 @@ from wgs.utils import helpers
 def cohort_qc_workflow(args):
     pypeline = pypeliner.app.Pypeline(config=args)
 
-    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config.containers('wgs')))
+    workflow = pypeliner.workflow.Workflow()
 
     inputs = helpers.load_qc_input_yaml_flat(args['input_yaml'])
     out_dir = args["out_dir"]

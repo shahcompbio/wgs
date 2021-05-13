@@ -47,7 +47,7 @@ def run_svaba(
 ):
     cmd = svaba_cmd(tumor, normal, reference, tempdir, region=region, ncores=ncores, sample_id='sampleid')
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     get_vcfs(tempdir, 'sampleid.svaba.germline.indel.vcf.gz', germline_indel)
     get_vcfs(tempdir, 'sampleid.svaba.germline.sv.vcf.gz', germline_sv)

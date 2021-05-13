@@ -17,8 +17,6 @@ def create_annotation_workflow(
         thousand_genomes,
         cosmic,
         mappability,
-        vcftools_docker=None,
-        snpeff_docker=None
 ):
     databases = {
         'snpeff_params': {'snpeff_config': snpeff, },
@@ -42,8 +40,6 @@ def create_annotation_workflow(
             mgd.TempOutputFile('annotSnpEff.vcf'),
             databases,
         ),
-        kwargs={'docker_image': snpeff_docker}
-
     )
 
     workflow.transform(
@@ -121,7 +117,6 @@ def create_annotation_workflow(
             mgd.TempInputFile('low_mapp.vcf'),
             mgd.OutputFile(annotated_vcf, extensions=['.csi', '.tbi']),
         ),
-        kwargs={'docker_image': vcftools_docker}
     )
 
     return workflow

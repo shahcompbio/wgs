@@ -16,9 +16,7 @@ def create_vcf2maf_workflow(
         tumour_id=None,
         normal_id=None
 ):
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='vcf2maf',
@@ -30,7 +28,6 @@ def create_vcf2maf_workflow(
             reference
         ),
         kwargs={
-            'docker_image': config.containers('vcf2maf'),
             'tumour_id': tumour_id,
             'normal_id': normal_id
         }

@@ -23,7 +23,7 @@ def create_mutect_workflow(
 ):
     params = config.default_params('variant_calling')
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='generate_intervals',
@@ -57,11 +57,7 @@ def create_mutect_workflow(
                 mgd.InputChunks('interval'),
                 mgd.InputFile(normal_bam),
                 mgd.InputFile(tumour_bam)
-        ),
-            kwargs={
-                'mutect_docker_image': config.containers('gatk'),
-                'vcftools_docker_image': config.containers('vcftools')
-            }
+            ),
         )
     else:
         workflow.transform(
@@ -80,9 +76,6 @@ def create_mutect_workflow(
                 mgd.InputFile(tumour_bam),
                 mgd.TempSpace('mutect_temp', 'interval')
             ),
-            kwargs={
-                'docker_image': config.containers('gatk')
-            }
         )
 
         workflow.transform(
@@ -97,7 +90,6 @@ def create_mutect_workflow(
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -123,7 +115,6 @@ def create_mutect_workflow(
             mgd.TempInputFile('normalized.vcf'),
             mgd.OutputFile(snv_vcf, extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.subworkflow(
@@ -136,6 +127,5 @@ def create_mutect_workflow(
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )
-
 
     return workflow

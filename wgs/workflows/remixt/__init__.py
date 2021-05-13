@@ -30,11 +30,9 @@ def create_remixt_workflow(
         reference,
         single_node=False,
 ):
-    ctx = {'docker_image': config.containers('wgs')}
-
     params = config.default_params('copynumber_calling')['remixt']
 
-    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+    workflow = pypeliner.workflow.Workflow()
 
     remixt_config = {
         'genome_fasta_template': reference,

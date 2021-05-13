@@ -199,22 +199,6 @@ def format_file_yaml(filepath):
     return {'filename': filepath, 'type': mapping[ext[1]]}
 
 
-def get_container_ctx(container_config, image_name, docker_only=False):
-    if docker_only and not container_config['container_type'] == 'docker':
-        return {}
-
-    credentials = container_config['images'][image_name]
-    docker_context = {
-        'image': credentials['image'],
-        'container_type': container_config['container_type'],
-        'mounts': container_config['mounts'],
-        'username': credentials['username'],
-        'password': credentials['password'],
-        'server': credentials['server'],
-    }
-    return docker_context
-
-
 def get_mount_dirs_docker(*args):
     mounts = set()
 
