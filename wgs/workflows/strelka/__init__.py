@@ -160,7 +160,6 @@ def create_strelka_workflow(
             mgd.TempInputFile('normalized_snvs.vcf'),
             mgd.TempOutputFile('normalized_snvs_finalize.vcf.gz', extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.transform(
@@ -185,7 +184,6 @@ def create_strelka_workflow(
             mgd.TempInputFile('normalized_indels.vcf'),
             mgd.TempOutputFile('normalized_indels_finalize.vcf.gz', extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.transform(

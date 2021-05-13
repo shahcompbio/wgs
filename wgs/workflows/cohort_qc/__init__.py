@@ -91,9 +91,7 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
 def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotated_maf, api_key
 ):
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),

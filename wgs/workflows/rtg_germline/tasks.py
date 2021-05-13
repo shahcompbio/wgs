@@ -70,7 +70,7 @@ def run_rtg_germline(vcf, reference, interval, bam_file, tempdir):
 
 
 def run_rtg_one_job(
-        tempdir, vcf, reference, intervals, bam_file, freebayes_docker_image=None, vcftools_docker_image=None
+        tempdir, vcf, reference, intervals, bam_file
 ):
     helpers.rmdirs(tempdir)
     commands = []
@@ -81,7 +81,7 @@ def run_rtg_one_job(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, freebayes_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     for i, interval in enumerate(intervals):
         ival_temp_dir = os.path.join(tempdir, str(i))
@@ -93,7 +93,7 @@ def run_rtg_one_job(
     helpers.makedirs(merge_tempdir)
 
     temp_vcf = os.path.join(merge_tempdir, 'merged_rtg.vcf')
-    merge_vcfs(vcf_files, temp_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    merge_vcfs(vcf_files, temp_vcf, merge_tempdir)
 
     normal_id = bamutils.get_sample_id(bam_file)
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)

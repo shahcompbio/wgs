@@ -151,7 +151,6 @@ def create_lumpy_workflow(lumpy_vcf, tumour_bam=None, normal_bam=None, single_no
             'normal_bam': normal_bam,
             'normal_discordants': normal_disc,
             'normal_splitters': normal_split,
-            'docker_image': config.containers('lumpy')
         }
     )
 

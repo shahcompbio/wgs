@@ -43,7 +43,6 @@ def run_svaba(
         tempdir,
         region=None,
         ncores=None,
-        docker_image=None
 ):
     cmd = svaba_cmd(tumor, normal, reference, tempdir, region=region, ncores=ncores, sample_id='sampleid')
 

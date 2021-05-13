@@ -42,7 +42,6 @@ def run_hmmcopy(
         tumour_table_out,
         sample_id,
         hmmcopy_params,
-        docker_image=None
 ):
     args = {key: 'NULL' if value is None else value
             for key, value in hmmcopy_params.items()}
@@ -86,7 +85,6 @@ def plot_hmm(
         bias_pdf,
         correction_pdf,
         hmmcopy_pdf,
-        docker_image=None
 ):
     helpers.makedirs(correction_plots_dir)
     helpers.makedirs(hmmcopy_plots_dir)

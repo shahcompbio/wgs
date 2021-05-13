@@ -56,8 +56,9 @@ def run_readcounter(input_bam, output_wig, chromosomes, config):
     rc.main()
 
 
-def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, gc_wig, map_wig, genome_type,
-                          docker_image=None):
+def calc_correctreads_wig(
+        tumour_wig, normal_wig, target_list, outfile, gc_wig, map_wig, genome_type
+):
     '''
     Run script to calculate correct reads
 
@@ -84,7 +85,7 @@ def calc_correctreads_wig(tumour_wig, normal_wig, target_list, outfile, gc_wig, 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
         num_clusters, ploidy, sample_id, map_wig, titan_params, genome_type,
-        docker_image=None, threads=8
+        threads=8
 ):
     script = 'titan.R'
 

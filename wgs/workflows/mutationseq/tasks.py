@@ -48,8 +48,6 @@ def run_museqportrait(
     :type plot_params: dict
     :param databases:
     :type databases: dict
-    :param docker_image:
-    :type docker_image: str
     :return:
     :rtype:
     """

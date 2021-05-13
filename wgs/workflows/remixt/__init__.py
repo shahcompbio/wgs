@@ -81,8 +81,7 @@ def create_remixt_workflow(
         workflow.subworkflow(
             name='remixt',
             func="remixt.workflow.create_remixt_bam_workflow",
-            ctx={'docker_image': config.containers('remixt'),
-                 'walltime': '48:00'},
+            ctx={'walltime': '48:00'},
             args=(
                 mgd.TempInputFile('filtered_breakpoints.csv'),
                 {sample_id: mgd.InputFile(tumour_path, extensions=['.bai']),

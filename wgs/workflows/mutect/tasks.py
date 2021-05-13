@@ -78,8 +78,7 @@ def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir):
 
 
 def run_mutect_one_job(
-        tempdir, vcf, reference, intervals, normal_bam, tumour_bam, freebayes_docker_image=None,
-        vcftools_docker_image=None
+        tempdir, vcf, reference, intervals, normal_bam, tumour_bam
 ):
     commands = []
     for i, interval in enumerate(intervals):
@@ -94,12 +93,12 @@ def run_mutect_one_job(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, freebayes_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     vcf_files = [os.path.join(tempdir, str(i), 'mutect.vcf.gz') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'mutect_merge')
     helpers.makedirs(merge_tempdir)
-    merge_vcfs(vcf_files, vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    merge_vcfs(vcf_files, vcf, merge_tempdir)
 
 
 def merge_vcfs(inputs, outfile, tempdir):

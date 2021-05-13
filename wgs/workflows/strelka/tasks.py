@@ -133,8 +133,6 @@ def strelka_one_node(
         regions,
         known_sizes,
         is_exome=False,
-        strelka_docker_image=None,
-        vcftools_docker_image=None
 ):
     commands = []
 
@@ -158,7 +156,7 @@ def strelka_one_node(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp_depths')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     depthfiles = [os.path.join(tmp_dir, 'chroms', str(chrom), 'depth.txt') for chrom in chromosomes]
     depth_file = os.path.join(tmp_dir, 'chrom_depths.txt')
@@ -187,7 +185,7 @@ def strelka_one_node(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     indel_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_indel.vcf')
                    for i, region in enumerate(regions)]
@@ -197,10 +195,10 @@ def strelka_one_node(
                  for i, region in enumerate(regions)]
 
     temp_strelka_snv = os.path.join(tmp_dir, 'snv_merge', 'temp_strelka_merge_snv.vcf')
-    concatenate_vcf(snv_files, temp_strelka_snv, merge_temp, docker_image=vcftools_docker_image)
+    concatenate_vcf(snv_files, temp_strelka_snv, merge_temp)
 
     temp_strelka_indel = os.path.join(tmp_dir, 'indel_merge' 'temp_strelka_merge_indel.vcf')
-    concatenate_vcf(indel_files, temp_strelka_indel, merge_temp, docker_image=vcftools_docker_image)
+    concatenate_vcf(indel_files, temp_strelka_indel, merge_temp)
 
     tumour_id = get_sample_id(tumour_bam_file)
     normal_id = get_sample_id(normal_bam_file)
@@ -219,7 +217,6 @@ def call_genome_segment(
         region,
         known_sizes,
         is_exome=False,
-        docker_image=None,
 ):
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)

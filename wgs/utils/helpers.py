@@ -199,19 +199,6 @@ def format_file_yaml(filepath):
     return {'filename': filepath, 'type': mapping[ext[1]]}
 
 
-def get_mount_dirs_docker(*args):
-    mounts = set()
-
-    for arg in args:
-        if os.path.exists(os.path.dirname(arg)):
-            if not arg.startswith('/'):
-                arg = os.path.abspath(arg)
-            arg = arg.split('/')
-
-            mounts.add('/' + arg[1])
-    return sorted(mounts)
-
-
 def write_to_yaml(outfile, data):
     with open(outfile, 'w') as output:
         yaml.safe_dump(data, output, default_flow_style=False)
