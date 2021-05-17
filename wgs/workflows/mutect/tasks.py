@@ -67,19 +67,18 @@ def mutect_filter_command(reference, vcf_in, vcf_out):
     return cmd
 
 
-def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir, docker_image=None):
+def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir):
     helpers.makedirs(tempdir)
     unfiltered_vcf = os.path.join(tempdir, 'temp.vcf')
     cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_vcf)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     cmd = mutect_filter_command(reference, unfiltered_vcf, vcf)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_mutect_one_job(
-        tempdir, vcf, reference, intervals, normal_bam, tumour_bam, freebayes_docker_image=None,
-        vcftools_docker_image=None
+        tempdir, vcf, reference, intervals, normal_bam, tumour_bam
 ):
     commands = []
     for i, interval in enumerate(intervals):
@@ -94,16 +93,16 @@ def run_mutect_one_job(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, freebayes_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     vcf_files = [os.path.join(tempdir, str(i), 'mutect.vcf.gz') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'mutect_merge')
     helpers.makedirs(merge_tempdir)
-    merge_vcfs(vcf_files, vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    merge_vcfs(vcf_files, vcf, merge_tempdir)
 
 
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)

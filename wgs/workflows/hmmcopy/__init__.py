@@ -42,7 +42,6 @@ def create_hmmcopy_workflow(
             map_wig,
             cn_params['map_cutoff'],
         ),
-        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(
@@ -57,7 +56,6 @@ def create_hmmcopy_workflow(
             sample_id,
             cn_params['hmmcopy_params'],
         ),
-        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(
@@ -72,7 +70,6 @@ def create_hmmcopy_workflow(
             mgd.OutputFile(correction_pdf),
             mgd.OutputFile(hmmcopy_pdf),
         ),
-        kwargs={'docker_image': config.containers('hmmcopy')}
     )
 
     workflow.transform(

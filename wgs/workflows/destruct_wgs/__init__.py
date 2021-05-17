@@ -21,13 +21,12 @@ def create_destruct_wgs_workflow(
         'gtf_filename': gtf
     }
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name="get_destruct_config",
         func="destruct.defaultconfig.get_config",
         ctx=helpers.get_default_ctx(
-            docker_image=config.containers('destruct'),
             walltime="48:00",
         ),
         ret=mgd.TempOutputObj("destruct_config"),
@@ -56,13 +55,12 @@ def create_destruct_wgs_workflow(
                 mgd.TempInputObj("destruct_config"),
                 destruct_refdata,
             ),
-            kwargs={'ncpus': 16, 'docker_image': config.containers('destruct')}
+            kwargs={'ncpus': 16}
         )
     else:
         workflow.subworkflow(
             name='destruct_parallel',
             ctx=helpers.get_default_ctx(
-                docker_image=config.containers('destruct'),
                 walltime="48:00",
             ),
             # refers to seperate destruct package
@@ -81,7 +79,6 @@ def create_destruct_wgs_workflow(
     workflow.commandline(
         name='filter_annotate_breakpoints',
         ctx=helpers.get_default_ctx(
-            docker_image=config.containers('destruct'),
             memory=8,
             walltime='8:00'
         ),

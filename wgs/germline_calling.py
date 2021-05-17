@@ -40,7 +40,7 @@ def germline_calling_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
 
     workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
+        ctx=helpers.get_default_ctx()
     )
 
     workflow.setobj(

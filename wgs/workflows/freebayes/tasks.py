@@ -42,12 +42,12 @@ def freebayes_germline_command(vcf, reference, interval, bam_file):
     return cmd
 
 
-def run_freebayes_germline(vcf, reference, interval, bam_file, tempdir, docker_image=None):
+def run_freebayes_germline(vcf, reference, interval, bam_file, tempdir):
     helpers.makedirs(tempdir)
     temp_vcf = os.path.join(tempdir, 'temp.vcf')
 
     cmd = freebayes_germline_command(temp_vcf, reference, interval, bam_file)
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     normal_id = bamutils.get_sample_id(bam_file)
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
@@ -55,7 +55,7 @@ def run_freebayes_germline(vcf, reference, interval, bam_file, tempdir, docker_i
 
 
 def run_freebayes_one_job(
-        tempdir, vcf, reference, intervals, bam_file, freebayes_docker_image=None, vcftools_docker_image=None
+        tempdir, vcf, reference, intervals, bam_file,
 ):
     commands = []
     for i, interval in enumerate(intervals):
@@ -66,20 +66,20 @@ def run_freebayes_one_job(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tempdir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, freebayes_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     vcf_files = [os.path.join(tempdir, str(i), 'germline.vcf.gz') for i in range(len(intervals))]
     merge_tempdir = os.path.join(tempdir, 'germline_merge')
     helpers.makedirs(merge_tempdir)
     temp_vcf = os.path.join(merge_tempdir,'temp_freebayes.vcf')
-    merge_vcfs(vcf_files, temp_vcf, merge_tempdir, docker_image=vcftools_docker_image)
+    merge_vcfs(vcf_files, temp_vcf, merge_tempdir)
 
     normal_id = bamutils.get_sample_id(bam_file)
     vcfutils.update_germline_header_sample_ids(temp_vcf, vcf, normal_id)
 
 
-def merge_vcfs(inputs, outfile, tempdir, docker_image=None):
+def merge_vcfs(inputs, outfile, tempdir):
     helpers.makedirs(tempdir)
     mergedfile = os.path.join(tempdir, 'merged.vcf')
     vcfutils.concatenate_vcf(inputs, mergedfile)
-    vcfutils.sort_vcf(mergedfile, outfile, docker_image=docker_image)
+    vcfutils.sort_vcf(mergedfile, outfile)

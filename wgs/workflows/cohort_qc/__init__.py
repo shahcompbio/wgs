@@ -7,9 +7,7 @@ from wgs.config import config
 
 
 def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbio_cna_table, gtf):
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
         value=list(remixt_dict.keys()),
@@ -93,9 +91,7 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
 def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotated_maf, api_key
 ):
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
@@ -187,9 +183,7 @@ def create_cohort_qc_report(
     )
 
 
-    workflow = pypeliner.workflow.Workflow(
-        ctx={'docker_image': config.containers('wgs')}
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     non_synonymous_labels=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
         "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation", 
@@ -237,9 +231,7 @@ def create_cohort_qc_report(
             mgd.OutputFile(summary_plot),
             mgd.TempInputFile("vcNames"),
             mgd.TempInputFile("genelist")
-
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") },
     )
 
     workflow.transform(
@@ -253,7 +245,6 @@ def create_cohort_qc_report(
             mgd.InputFile(burden_plot),
             mgd.OutputFile(report_path),
         ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") }
     )
 
     return workflow

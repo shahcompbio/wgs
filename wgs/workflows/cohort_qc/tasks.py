@@ -99,14 +99,12 @@ def merge_cna_tables(tables, output):
         data.to_csv(output, index=False, mode='a', header=header, sep="\t")
 
 
-
-
-def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels, docker_image=None):
+def classify_remixt(sample_label, remixt, gtf, output_dir, amps, dels):
 
     cmd = [
         "classifycopynumber", gtf, output_dir, sample_label, amps, dels, "--remixt_parsed_csv", remixt, "--plot", False
     ]
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def _write_maf(m, label, merged_maf, write_header):
@@ -130,20 +128,20 @@ def merge_mafs(germline, somatic_mafs, merged_maf):
         _write_maf(m, label, merged_maf, write_header)
         write_header=False
 
-def annotate_maf(maf, annotated_maf, api_key, tempspace, class_label="", docker_image=None):
+def annotate_maf(maf, annotated_maf, api_key, tempspace, class_label=""):
 
-    annotate_maf_with_oncokb(maf, api_key, tmpspace, annotate_maf, docker_image)
+    annotate_maf_with_oncokb(maf, api_key, tempspace, annotate_maf)
 
 
 def annotate_maf_with_oncokb(
-        maf, api_key, tmpspace, annotated_maf, docker_image=None
+        maf, api_key, tmpspace, annotated_maf
 ):
     helpers.makedirs(tmpspace)
 
     cmd = [
         "MafAnnotator.py", "-i", maf, "-o", annotated_maf, "-b", api_key
     ]
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 
@@ -200,7 +198,7 @@ def plot_mutation_burden(maf, burden_plot_path):
 
 def make_R_cohort_plots(
         maf, cntable, oncoplot_path, somatic_interactions,
-        mafsummary, vcNames, genelist, docker_image=None
+        mafsummary, vcNames, genelist
 ):
 
     plots_cmd = [
@@ -208,11 +206,11 @@ def make_R_cohort_plots(
         oncoplot_path, somatic_interactions, mafsummary, genelist
     ]
 
-    pypeliner.commandline.execute(*plots_cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*plots_cmd)
 
 
 def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary, 
-    burden_plot, report_path, docker_image=None
+    burden_plot, report_path
 ):
     absolute_report = os.path.abspath(report_path)
     intermediate_dir = os.path.dirname(absolute_report)
@@ -220,5 +218,5 @@ def make_report(cohort_label, oncoplot, somatic_interactions, mafsummary,
         "run_cohort_qc_report.sh", os.path.abspath(report_path), intermediate_dir, cohort_label, os.path.abspath(oncoplot),
         os.path.abspath(somatic_interactions), os.path.abspath(mafsummary), os.path.abspath(burden_plot)
     ]
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 

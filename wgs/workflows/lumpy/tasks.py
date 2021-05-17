@@ -6,13 +6,13 @@ from wgs.utils import helpers
 scripts_directory = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'scripts')
 
 
-def run_samtools_view(infile, outfile, docker_image=None):
+def run_samtools_view(infile, outfile):
     cmd = ['samtools', 'view', '-b', '-F', '1294', infile, '>', outfile]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=None):
+def run_lumpy_extract_split_reads_bwamem(infile, outfile, config):
     extract_split_reads = config['extractSplitReads_BwaMem']
     cmd = [
         'samtools', 'view', '-h', infile, '|',
@@ -21,13 +21,13 @@ def run_lumpy_extract_split_reads_bwamem(infile, outfile, config, docker_image=N
         '>', outfile
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def run_samtools_sort(infile, outfile, docker_image=None):
+def run_samtools_sort(infile, outfile):
     cmd = ['samtools', 'sort', infile, '-o', outfile]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def run_lumpyexpress(
@@ -38,7 +38,6 @@ def run_lumpyexpress(
         tumour_discordants=None,
         normal_splitters=None,
         tumour_splitters=None,
-        docker_image=None
 ):
     lumpyexpress = config['lumpyexpress']
 
@@ -48,19 +47,20 @@ def run_lumpyexpress(
            '-D', ','.join([e for e in [normal_discordants, tumour_discordants] if e]),
            '-o', lumpy_vcf]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config, samtools_docker_image=None, lumpy_docker_image=None):
+def run_lumpy_preprocess(bamfile, disc_reads, split_reads, tempdir, config
+                         ):
     helpers.makedirs(tempdir)
 
     # disc
     unsorted_disc = os.path.join(tempdir, 'discordants.unsorted.bam')
-    run_samtools_view(bamfile, unsorted_disc, docker_image=samtools_docker_image)
-    run_samtools_sort(unsorted_disc, disc_reads, docker_image=samtools_docker_image)
+    run_samtools_view(bamfile, unsorted_disc)
+    run_samtools_sort(unsorted_disc, disc_reads)
     os.remove(unsorted_disc)
 
     unsorted_split = os.path.join(tempdir, 'splitters.unsorted.bam')
-    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config, docker_image=lumpy_docker_image)
-    run_samtools_sort(unsorted_split, split_reads, docker_image=samtools_docker_image)
+    run_lumpy_extract_split_reads_bwamem(bamfile, unsorted_split, config)
+    run_samtools_sort(unsorted_split, split_reads)
     os.remove(unsorted_split)

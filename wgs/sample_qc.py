@@ -51,9 +51,7 @@ def sample_qc_workflow(args):
 
 
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow(
-        ctx=helpers.get_default_ctx(docker_image=config.containers('wgs'))
-    )
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),

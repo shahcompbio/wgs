@@ -38,7 +38,6 @@ def create_svaba_workflow(
         ),
         kwargs={
             'ncores': 8,
-            'docker_image': config.containers('svaba')
         }
     )
 

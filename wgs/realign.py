@@ -53,7 +53,7 @@ def realign_bams(
 
 def realign_bam_workflow(args):
     pyp = pypeliner.app.Pypeline(config=args)
-    workflow = pypeliner.workflow.Workflow(ctx=helpers.get_default_ctx(docker_image=config.containers('wgs')))
+    workflow = pypeliner.workflow.Workflow()
 
     outdir = args['out_dir']
     meta_yaml = os.path.join(outdir, 'metadata.yaml')

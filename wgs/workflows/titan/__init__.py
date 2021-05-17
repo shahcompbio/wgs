@@ -18,9 +18,8 @@ def create_titan_workflow(
 
     targets = mgd.InputFile(targets) if targets else None
 
-    ctx = {'docker_image': config.containers('wgs')}
 
-    workflow = pypeliner.workflow.Workflow(ctx=ctx)
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('numclusters', 'ploidy'),
@@ -60,8 +59,6 @@ def create_titan_workflow(
                 'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
                 'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
                 'titan_mode': True,
-                'museq_docker_image': config.containers('mutationseq'),
-                'vcftools_docker_image': config.containers('vcftools')
             }
         )
     else:
@@ -84,7 +81,6 @@ def create_titan_workflow(
                 'tumour_bam': mgd.InputFile(tumour_bam, extensions=['.bai']),
                 'normal_bam': mgd.InputFile(normal_bam, extensions=['.bai']),
                 'titan_mode': True,
-                'docker_image': config.containers('mutationseq')
             }
         )
 
@@ -99,7 +95,6 @@ def create_titan_workflow(
                 mgd.OutputFile(museq_vcf),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -162,7 +157,6 @@ def create_titan_workflow(
             map_wig,
             cn_params['genome_type']
         ),
-        kwargs={'docker_image': config.containers('titan')}
     )
 
     workflow.transform(
@@ -186,7 +180,7 @@ def create_titan_workflow(
             cn_params['titan_params'],
             cn_params['genome_type']
         ),
-        kwargs={'docker_image': config.containers('titan'), 'threads': '8'}
+        kwargs={'threads': '8'}
     )
 
     workflow.transform(
@@ -205,7 +199,6 @@ def create_titan_workflow(
         ),
         kwargs={
             'chromosomes': chromosomes,
-            'docker_image': config.containers('titan'),
         },
     )
 
@@ -222,7 +215,6 @@ def create_titan_workflow(
             mgd.TempOutputFile('segs.csv', 'numclusters', 'ploidy'),
             sample_id,
         ),
-        kwargs={'docker_image': config.containers('titan')}
     )
 
     workflow.transform(

@@ -21,7 +21,7 @@ def create_freebayes_germline_workflow(
 ):
     params = config.default_params('variant_calling')
 
-    workflow = pypeliner.workflow.Workflow(ctx={'docker_image': config.containers('wgs')})
+    workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
         name='generate_intervals',
@@ -54,11 +54,7 @@ def create_freebayes_germline_workflow(
                 reference,
                 mgd.InputChunks('interval'),
                 mgd.InputFile(bam_file)
-            ),
-            kwargs={
-                'freebayes_docker_image': config.containers('freebayes'),
-                'vcftools_docker_image': config.containers('vcftools')
-            }
+            )
         )
     else:
         workflow.transform(
@@ -76,9 +72,6 @@ def create_freebayes_germline_workflow(
                 mgd.InputFile(bam_file),
                 mgd.TempSpace('tempdir_freebayes', 'interval')
             ),
-            kwargs={
-                'docker_image': config.containers('freebayes')
-            }
         )
 
         workflow.transform(
@@ -93,7 +86,6 @@ def create_freebayes_germline_workflow(
                 mgd.TempOutputFile('merged.vcf'),
                 mgd.TempSpace('merge_vcf'),
             ),
-            kwargs={'docker_image': config.containers('vcftools')}
         )
 
     workflow.transform(
@@ -119,7 +111,6 @@ def create_freebayes_germline_workflow(
             mgd.TempInputFile('normalized.vcf'),
             mgd.OutputFile(germline_vcf, extensions=['.tbi', '.csi']),
         ),
-        kwargs={'docker_image': config.containers('vcftools')}
     )
 
     workflow.subworkflow(

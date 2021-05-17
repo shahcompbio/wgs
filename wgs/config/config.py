@@ -151,37 +151,3 @@ def refdir_data(refdir):
         yamldata['paths'][k] = os.path.join(refdir, v)
 
     return yamldata
-
-
-def containers(container_name):
-    version = wgs.__version__
-    # strip setuptools metadata
-    version = version.split("+")[0]
-
-    docker_images = {
-        'bwa': 'bwa:v0.0.1',
-        'samtools': 'samtools:v0.0.2',
-        'picard': 'picard:v0.0.1',
-        'wgs': 'wgs:v{}'.format(version),
-        'strelka': 'strelka:v0.0.2',
-        'mutationseq': 'mutationseq:v0.0.1',
-        'vcftools': 'vcftools:v0.0.1',
-        'snpeff': 'vcftools:v0.0.1',
-        'titan': 'titan:v0.0.2',
-        'destruct': 'destruct:v0.0.2',
-        'lumpy': 'lumpy:v0.0.1',
-        'fastqc': 'fastqc:v0.0.1',
-        'hmmcopy': 'hmmcopy:v0.0.1',
-        'circos': 'circos:v0.0.1',
-        'igvtools': 'igvtools:v0.0.1',
-        'remixt': 'remixt:v0.0.2',
-        'freebayes': 'freebayes:v0.0.1',
-        'rtg': 'rtg:v0.0.1',
-        'vcf2maf': 'vcf2maf:v0.0.1',
-        'gatk': 'gatk:v0.0.1',
-        'svaba': 'svaba:v0.0.1',
-        'oncokb-annotator': 'oncokb-annotator:v0.0.1',
-        'wgs_qc_html':'wgs_qc_html:v0.0.1'
-    }
-
-    return docker_images[container_name]

@@ -61,7 +61,7 @@ class GetFileHandle(object):
             return "plain-text"
 
 
-def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=None):
+def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8):
     ctx = {
         'mem': memory,
         'walltime': walltime,
@@ -72,9 +72,6 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8, docker_image=No
         'ncpus': ncpus,
         'disk': disk,
     }
-
-    if docker_image:
-        ctx['docker_image'] = docker_image
 
     return ctx
 
@@ -113,7 +110,7 @@ def build_shell_script(command, tag, tempdir):
     return outfile
 
 
-def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
+def run_in_gnu_parallel(commands, tempdir, ncores=None):
     makedirs(tempdir)
 
     scriptfiles = []
@@ -130,7 +127,7 @@ def run_in_gnu_parallel(commands, tempdir, docker_image, ncores=None):
         ncores = multiprocessing.cpu_count()
 
     gnu_parallel_cmd = ['parallel', '--jobs', ncores, '<', parallel_outfile]
-    pypeliner.commandline.execute(*gnu_parallel_cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*gnu_parallel_cmd)
 
 
 def get_values_from_input(yamldata, key):
@@ -200,35 +197,6 @@ def format_file_yaml(filepath):
                '.tar': 'tar'}
 
     return {'filename': filepath, 'type': mapping[ext[1]]}
-
-
-def get_container_ctx(container_config, image_name, docker_only=False):
-    if docker_only and not container_config['container_type'] == 'docker':
-        return {}
-
-    credentials = container_config['images'][image_name]
-    docker_context = {
-        'image': credentials['image'],
-        'container_type': container_config['container_type'],
-        'mounts': container_config['mounts'],
-        'username': credentials['username'],
-        'password': credentials['password'],
-        'server': credentials['server'],
-    }
-    return docker_context
-
-
-def get_mount_dirs_docker(*args):
-    mounts = set()
-
-    for arg in args:
-        if os.path.exists(os.path.dirname(arg)):
-            if not arg.startswith('/'):
-                arg = os.path.abspath(arg)
-            arg = arg.split('/')
-
-            mounts.add('/' + arg[1])
-    return sorted(mounts)
 
 
 def write_to_yaml(outfile, data):

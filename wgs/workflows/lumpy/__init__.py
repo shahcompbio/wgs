@@ -28,10 +28,6 @@ def lumpy_preprocess_workflow(
                 mgd.TempSpace("lumpy_preprocess_temp"),
                 config.default_params('breakpoint_calling')['lumpy_paths']
             ),
-            kwargs={
-                'lumpy_docker_image': config.containers('lumpy'),
-                'samtools_docker_image': config.containers('samtools')
-            }
         )
     else:
         workflow.transform(
@@ -45,7 +41,6 @@ def lumpy_preprocess_workflow(
                 mgd.InputFile(bamfile),
                 mgd.TempOutputFile('normal.discordants.unsorted.bam'),
             ),
-            kwargs={'docker_image': config.containers('samtools')}
         )
 
         workflow.transform(
@@ -60,7 +55,6 @@ def lumpy_preprocess_workflow(
                 mgd.TempOutputFile('normal.splitters.unsorted.bam'),
                 config.default_params('breakpoint_calling')['lumpy_paths']
             ),
-            kwargs={'docker_image': config.containers('lumpy')}
         )
 
         workflow.transform(
@@ -74,7 +68,6 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.discordants.unsorted.bam'),
                 mgd.OutputFile(discordants_sorted_bam),
             ),
-            kwargs={'docker_image': config.containers('samtools')}
         )
 
         workflow.transform(
@@ -88,7 +81,6 @@ def lumpy_preprocess_workflow(
                 mgd.TempInputFile('normal.splitters.unsorted.bam'),
                 mgd.OutputFile(splitters_sorted_bam),
             ),
-            kwargs={'docker_image': config.containers('samtools')}
         )
 
     return workflow
@@ -159,7 +151,6 @@ def create_lumpy_workflow(lumpy_vcf, tumour_bam=None, normal_bam=None, single_no
             'normal_bam': normal_bam,
             'normal_discordants': normal_disc,
             'normal_splitters': normal_split,
-            'docker_image': config.containers('lumpy')
         }
     )
 

@@ -20,7 +20,6 @@ def run_vcf2maf(
         reference,
         tumour_id=None,
         normal_id=None,
-        docker_image=None
 ):
     if os.path.exists(tempdir):
         helpers.rmdirs(tempdir)
@@ -35,7 +34,6 @@ def run_vcf2maf(
         gunzip_file(input_vcf, vcf_unzipped)
     else:
         vcf_unzipped = input_vcf
-
 
     assert vcf_unzipped.endswith('.vcf')
     vcf_unzipped_vep = vcf_unzipped[:-4]
@@ -56,7 +54,7 @@ def run_vcf2maf(
     if normal_id:
         cmd.extend(['--normal-id', normal_id])
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def update_ids(infile, tumour_id, normal_id, output):

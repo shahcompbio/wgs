@@ -64,7 +64,7 @@ def generate_intervals(ref, chromosomes, size=1000000):
     return intervals
 
 
-def get_chromosome_depth(chrom, bam_file, ref_genome, out_file, docker_image=None):
+def get_chromosome_depth(chrom, bam_file, ref_genome, out_file):
     chrom = chrom.split('_')[0]
 
     cmd = [
@@ -75,7 +75,7 @@ def get_chromosome_depth(chrom, bam_file, ref_genome, out_file, docker_image=Non
         # '--ref', ref_genome,
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
 def merge_chromosome_depths_weighted(infiles, outfile):
@@ -133,8 +133,6 @@ def strelka_one_node(
         regions,
         known_sizes,
         is_exome=False,
-        strelka_docker_image=None,
-        vcftools_docker_image=None
 ):
     commands = []
 
@@ -158,7 +156,7 @@ def strelka_one_node(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp_depths')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     depthfiles = [os.path.join(tmp_dir, 'chroms', str(chrom), 'depth.txt') for chrom in chromosomes]
     depth_file = os.path.join(tmp_dir, 'chrom_depths.txt')
@@ -187,7 +185,7 @@ def strelka_one_node(
         commands.append(cmd)
 
     parallel_temp_dir = os.path.join(tmp_dir, 'gnu_parallel_temp')
-    helpers.run_in_gnu_parallel(commands, parallel_temp_dir, strelka_docker_image)
+    helpers.run_in_gnu_parallel(commands, parallel_temp_dir)
 
     indel_files = [os.path.join(tmp_dir, 'intervals', str(i), 'strelka_indel.vcf')
                    for i, region in enumerate(regions)]
@@ -197,10 +195,10 @@ def strelka_one_node(
                  for i, region in enumerate(regions)]
 
     temp_strelka_snv = os.path.join(tmp_dir, 'snv_merge', 'temp_strelka_merge_snv.vcf')
-    concatenate_vcf(snv_files, temp_strelka_snv, merge_temp, docker_image=vcftools_docker_image)
+    concatenate_vcf(snv_files, temp_strelka_snv, merge_temp)
 
     temp_strelka_indel = os.path.join(tmp_dir, 'indel_merge' 'temp_strelka_merge_indel.vcf')
-    concatenate_vcf(indel_files, temp_strelka_indel, merge_temp, docker_image=vcftools_docker_image)
+    concatenate_vcf(indel_files, temp_strelka_indel, merge_temp)
 
     tumour_id = get_sample_id(tumour_bam_file)
     normal_id = get_sample_id(normal_bam_file)
@@ -219,7 +217,6 @@ def call_genome_segment(
         region,
         known_sizes,
         is_exome=False,
-        docker_image=None,
 ):
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
@@ -245,7 +242,7 @@ def call_genome_segment(
         is_exome=is_exome,
     )
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     tumour_id = get_sample_id(tumour_bam_file)
     normal_id = get_sample_id(normal_bam_file)
@@ -345,7 +342,7 @@ def get_known_chromosome_sizes(size_file, chromosomes):
     return sizes
 
 
-def count_fasta_bases(ref_genome_fasta_file, out_file, docker_image=None):
+def count_fasta_bases(ref_genome_fasta_file, out_file):
     cmd = [
         'countFastaBases',
         ref_genome_fasta_file,
@@ -353,29 +350,29 @@ def count_fasta_bases(ref_genome_fasta_file, out_file, docker_image=None):
         out_file
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
 
-def index_bcf(in_file, docker_image=None):
+def index_bcf(in_file):
     """ Index a VCF or BCF file with bcftools.
     :param in_file: Path of file to index.
     :param index_file: Path of index file.
     """
-    pypeliner.commandline.execute('bcftools', 'index', in_file, docker_image=docker_image)
+    pypeliner.commandline.execute('bcftools', 'index', in_file)
 
 
-def index_vcf(vcf_file, docker_image=None):
+def index_vcf(vcf_file):
     """ Create a tabix index for a VCF file
     :param vcf_file: Path of VCF to create index for. Should compressed by bgzip.
     :param index_file: Path of index file.
     This is meant to be used from pypeliner so it does some name mangling to add .tmp to the index file.
     """
 
-    pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file, docker_image=docker_image)
+    pypeliner.commandline.execute('tabix', '-f', '-p', 'vcf', vcf_file)
 
 
 def concatenate_vcf(
-        in_files, out_file, tempdir, docker_image=None,
+        in_files, out_file, tempdir,
         allow_overlap=False):
     """ Fast concatenation of VCF file using `bcftools`.
     :param in_files: dict with values being files to be concatenated. Files will be concatenated based on sorted order of keys.
@@ -394,17 +391,17 @@ def concatenate_vcf(
 
     cmd += in_files
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
     # sort merged vcf file
     cmd = ['bcftools', 'sort', '-O', 'z', '-o', out_file, merged_file]
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
-    index_vcf(out_file, docker_image=docker_image)
-    index_bcf(out_file, docker_image=docker_image)
+    index_vcf(out_file)
+    index_bcf(out_file)
 
 
-def filter_vcf(raw_vcf, filtered_vcf, docker_image=None):
+def filter_vcf(raw_vcf, filtered_vcf):
     cmd = [
         'bcftools',
         'view',
@@ -414,7 +411,7 @@ def filter_vcf(raw_vcf, filtered_vcf, docker_image=None):
         raw_vcf,
     ]
 
-    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
+    pypeliner.commandline.execute(*cmd)
 
-    index_vcf(filtered_vcf, docker_image=docker_image)
-    index_bcf(filtered_vcf, docker_image=docker_image)
+    index_vcf(filtered_vcf)
+    index_bcf(filtered_vcf)
