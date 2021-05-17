@@ -1,18 +1,14 @@
-import os
-
 import pypeliner
 import pypeliner.managed as mgd
+from wgs.config import config
 from wgs.utils import helpers
 
-from wgs.config import config
 
 def create_hmmcopy_workflow(
         bam_file, sample_id, bias_pdf, correction_pdf,
         hmmcopy_pdf, hmmcopy_table, pygenes_table,
         chromosomes, map_wig, gc_wig, pygenes_gtf,
 ):
-
-
     cn_params = config.default_params()['copynumber_calling']
 
     workflow = pypeliner.workflow.Workflow()

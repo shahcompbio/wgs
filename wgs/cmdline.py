@@ -116,6 +116,14 @@ def parse_args():
     )
 
     # ================
+    # single sample copy number calling
+    # ================
+    single_sample_copynumber_calling = subparsers.add_parser("single_sample_copynumber_calling")
+    single_sample_copynumber_calling.set_defaults(which='single_sample_copynumber_calling')
+    add_global_args(single_sample_copynumber_calling)
+
+
+    # ================
     # copy number calling
     # ================
     cna_calling = subparsers.add_parser("copynumber_calling")
@@ -126,12 +134,6 @@ def parse_args():
         default=False,
         action='store_true',
         help='''titan'''
-    )
-    cna_calling.add_argument(
-        "--hmmcopy",
-        default=False,
-        action='store_true',
-        help='''hmmcopy'''
     )
     cna_calling.add_argument(
         "--remixt",
