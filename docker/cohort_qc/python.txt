@@ -1,7 +1,7 @@
 certifi==2020.12.5
 cffi==1.14.5
 chardet==4.0.0
-#classifycopynumber==0.1.0
+classifycopynumber @ git+https://github.com/shahcompbio/classifycopynumber.git@3b0094be4e7874abd604f753e827ff70e018233b
 click==7.1.2
 cycler==0.10.0
 decorator==4.4.2
@@ -9,7 +9,7 @@ dill==0.3.3
 idna==2.10
 Jinja2==2.11.3
 kiwisolver==1.3.1
-mafannotator @ git+https://github.com/shahcompbio/mafannotator.git@df2f6440cd7ec9b11f02d7ffe3facab94b7418af
+#mafannotator==0+untagged.1.gdf2f644.dirty
 MarkupSafe==1.1.1
 matplotlib==3.4.1
 networkx==2.5.1
@@ -27,13 +27,14 @@ PyVCF==0.6.8
 PyYAML==5.4.1
 requests==2.25.1
 rpy2==3.4.4
-scgenome @ git+https://github.com/shahcompbio/scgenome.git@179017b23b423b17c9a40450927ed6bbbd21cc7b
+#scgenome @ git+https://github.com/shahcompbio/scgenome.git@179017b23b423b17c9a40450927ed6bbbd21cc7b
 scipy==1.6.3
 seaborn==0.11.1
 six==1.15.0
 tables==3.6.1
 tzlocal==2.1
 urllib3==1.26.4
-wgs @ git+https://github.com/shahcompbio/wgs.git@b01d39b86e492473e6e474303ac7eb0ac11b4d59
-wgs-analysis @ git+https://github.com/amcpherson/wgs_analysis.git@e86b3a158f4cbc2e43fab0e24b8c2b7dded360ad
+wgs @ git+https://github.com/shahcompbio/wgs.git@b97162a1e713c05f5aa7ab31a2ec5554f70be016
+#wgs-analysis @ git+https://github.com/amcpherson/wgs_analysis.git@e86b3a158f4cbc2e43fab0e24b8c2b7dded360ad
+#wgs-analysis @ git+https://github.com/amcpherson/wgs_analysis.git@b1a5711336878ad5997761003f30b421025a61c6
 wgs-qc-utils @ git+https://github.com/shahcompbio/wgs_qc_utils.git@4202cbe0771132b03419f8f6afa8f66d439304f9
