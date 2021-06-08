@@ -7,7 +7,9 @@ from wgs.config import config
 
 
 def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbio_cna_table, gtf):
-    workflow = pypeliner.workflow.Workflow()
+    workflow = pypeliner.workflow.Workflow(
+        ctx={'docker_image': config.containers('wgs')}
+    )
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
         value=list(remixt_dict.keys()),
@@ -21,27 +23,16 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
             mgd.InputInstance('sample_label'),
             mgd.InputFile('remixt', 'sample_label', fnames=remixt_dict),
             gtf,
-            mgd.TempSpace('annotated_maf_tmp', 'sample_label'),
-            mgd.TempOutputFile('amps', 'sample_label'),
-            mgd.TempOutputFile('dels', 'sample_label'),
+            mgd.TempOutputFile('cn_change', 'sample_label'),
         ),
     )
 
     workflow.transform(
-        name='merge_amp_tables',
+        name='merge_cn_tables',
         func='wgs.workflows.cohort_qc.tasks.merge_cna_tables',
         args=(
-            mgd.TempInputFile('amps', 'sample_label', axes_origin=[]),
-            mgd.TempOutputFile("merged_amps"),
-        ),
-    )
-
-    workflow.transform(
-        name='merge_del_tables',
-        func='wgs.workflows.cohort_qc.tasks.merge_cna_tables',
-        args=(
-            mgd.TempInputFile('dels', 'sample_label', axes_origin=[]),
-            mgd.TempOutputFile("merged_dels"),
+            mgd.TempInputFile('cn_change', 'sample_label', axes_origin=[]),
+            mgd.TempOutputFile("merged_cn_change"),
         ),
     )
 
@@ -49,8 +40,7 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
         name='make_cbio_cna_table',
         func='wgs.workflows.cohort_qc.tasks.make_cbio_cna_table',
         args=(
-            mgd.TempInputFile('merged_amps'),
-            mgd.TempInputFile('merged_dels'),
+            mgd.TempInputFile('merged_cn_change'),
             mgd.OutputFile(cbio_cna_table),
         ),
     )
@@ -59,8 +49,7 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
         name='make_maftools_cna_table',
         func='wgs.workflows.cohort_qc.tasks.make_maftools_cna_table',
         args=(
-            mgd.TempInputFile('merged_amps'),
-            mgd.TempInputFile('merged_dels'),
+            mgd.TempInputFile('merged_cn_change'),
             output_table
         ),
     )
@@ -91,7 +80,9 @@ def cna_annotation_workflow(remixt_dict, output_table, segmental_copynumber, cbi
 def preprocess_mafs_workflow(germline_maf_dict, somatic_maf_dict, merged_annotated_maf, api_key
 ):
 
-    workflow = pypeliner.workflow.Workflow()
+    workflow = pypeliner.workflow.Workflow(
+        ctx={'docker_image': config.containers('wgs')}
+    )
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_label'),
@@ -183,10 +174,12 @@ def create_cohort_qc_report(
     )
 
 
-    workflow = pypeliner.workflow.Workflow()
+    workflow = pypeliner.workflow.Workflow(
+        ctx={'docker_image': config.containers('wgs')}
+    )
 
-    non_synonymous_labels=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", 
-        "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation", 
+    non_synonymous_labels=["Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site",
+        "Translation_Start_Site", "Nonsense_Mutation", "Nonstop_Mutation",
         "In_Frame_Del", "In_Frame_Ins", "Missense_Mutation"
     ]
 
@@ -231,7 +224,9 @@ def create_cohort_qc_report(
             mgd.OutputFile(summary_plot),
             mgd.TempInputFile("vcNames"),
             mgd.TempInputFile("genelist")
+
         ),
+        kwargs={'docker_image':config.containers("wgs_qc_html") },
     )
 
     workflow.transform(
@@ -245,6 +240,7 @@ def create_cohort_qc_report(
             mgd.InputFile(burden_plot),
             mgd.OutputFile(report_path),
         ),
+        kwargs={'docker_image':config.containers("wgs_qc_html") }
     )
 
     return workflow

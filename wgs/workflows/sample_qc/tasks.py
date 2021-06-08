@@ -18,7 +18,7 @@ def get_gene_annotations(outfile):
 
 
 def circos(titan_calls, remixt_calls, sample_id, sv_calls,
-           circos_plot_remixt, circos_plot_titan, tempdir):
+           circos_plot_remixt, circos_plot_titan, tempdir, docker_image=None):
 
     helpers.makedirs(tempdir)
 
@@ -26,8 +26,8 @@ def circos(titan_calls, remixt_calls, sample_id, sv_calls,
 
     cmd = ['Rscript',script_path, titan_calls, remixt_calls, sv_calls,
            circos_plot_remixt, circos_plot_titan, sample_id]
-
-    pypeliner.commandline.execute(*cmd)
+    
+    pypeliner.commandline.execute(*cmd, docker_image=docker_image)
 
 
 def prep_data_for_circos(titan, remixt, sample_id, prepped_titan_calls,
@@ -106,14 +106,14 @@ def prep_sv_for_circos(sv_calls, outfile):
 
 def samtools_coverage(
         bam_file, bed_file, output,
-        mapping_qual
+        mapping_qual, docker_image=None
 ):
     command = [
         "samtools", "bedcov", bed_file, bam_file,
         "-Q", mapping_qual, ">", output
     ]
 
-    pypeliner.commandline.execute(*command)
+    pypeliner.commandline.execute(*command, docker_image=docker_image)
 
     df_out = pd.read_csv(output, sep="\t", names=["chrom", "start", "end", "sum_cov"])
     df_out.to_csv(output, sep="\t", index=False, header=True)

@@ -30,21 +30,33 @@ plot_remixt = function(copy_number){
 
   circos.track(factors= paste0("chr", copy_number$chrom),
                ylim=c(0, 8), "track.height" = 0.15)
+
   for (state in 0:8){
     circos.trackLines(factors = paste0("chr",names(chrom_positions)),
                       x = unname(chrom_positions), y = rep(state, 46), col="grey")
+
   }
-  circos.trackPoints(factors= paste0("chr", copy_number$chrom),
-                     x = copy_number$start, y = copy_number$combined, cex = 0.1, col = "black")
-  circos.track(factors= paste0("chr", copy_number$chrom),
+
+
+  cn_combined = copy_number
+  cn_combined["combined"] = cn_combined$major + cn_combined$major
+  cn_combined = cn_combined[cn_combined$combined <= 8,]
+
+  circos.trackPoints(factors= paste0("chr", cn_combined$chrom),
+                     x = cn_combined$start, y = cn_combined$combined, cex = 0.1, col = "black")
+
+  circos.track(factors= paste0("chr", cn_combined$chrom),
                ylim=c(0, 8), "track.height" = 0.15)
   for (state in 0:8){
     circos.trackLines(factors = paste0("chr",names(chrom_positions)),
                       x = unname(chrom_positions), y = rep(state, 46), col="grey")
+
   }
+
 
   circos.trackPoints(factors= paste0("chr", copy_number$chrom),
                      x = copy_number$start, y = copy_number$major, cex = 0.1, col = "red")
+
   circos.trackPoints(factors= paste0("chr", copy_number$chrom),
                      x = copy_number$start, y = copy_number$minor, cex = 0.1, col = "blue")
 }

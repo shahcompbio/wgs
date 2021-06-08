@@ -1,0 +1,40 @@
+---
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document
+params:
+  label: ""
+  oncoplot: ""
+  somatic_plot: ""
+  summary: ""
+  burden_plot: ""
+
+---
+---
+title: `r params$label`
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.align = 'center')
+library(knitr)
+```
+
+## Summary plot
+```{r adjdist, echo = FALSE}
+include_graphics(params$summary)
+```
+
+## oncoplot plot
+```{r a, echo = FALSE}
+include_graphics(params$oncoplot)
+```
+
+## somatic_plot plot
+```{r b, echo = FALSE}
+include_graphics(params$somatic_plot)
+```
+
+## Summary plot
+```{r burden, echo = FALSE}
+include_graphics(params$burden_plot)
+```

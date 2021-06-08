@@ -84,7 +84,9 @@ def get_coverage_data(
                 mgd.TempInputFile('coverage_bed.bed'),
                 mgd.TempOutputFile('per_interval.txt', 'chromosome'),
                 mapping_qual,
+
             ),
+            kwargs={'docker_image': config.containers('samtools')},
         )
 
     else:
@@ -119,6 +121,7 @@ def get_coverage_data(
                 mgd.TempOutputFile('per_interval.txt', 'chromosome'),
                 mapping_qual,
             ),
+            kwargs={'docker_image': config.containers('samtools')}
         )
 
         workflow.transform(
