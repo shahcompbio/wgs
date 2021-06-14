@@ -84,6 +84,7 @@ def get_coverage_data(
                 mgd.TempInputFile('coverage_bed.bed'),
                 mgd.TempOutputFile('per_interval.txt', 'chromosome'),
                 mapping_qual,
+
             ),
         )
 

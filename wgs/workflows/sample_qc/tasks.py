@@ -19,14 +19,13 @@ def get_gene_annotations(outfile):
 
 def circos(titan_calls, remixt_calls, sample_id, sv_calls,
            circos_plot_remixt, circos_plot_titan, tempdir):
-
     helpers.makedirs(tempdir)
 
     script_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'scripts','circos.R')
 
     cmd = ['Rscript',script_path, titan_calls, remixt_calls, sv_calls,
            circos_plot_remixt, circos_plot_titan, sample_id]
-
+    
     pypeliner.commandline.execute(*cmd)
 
 
