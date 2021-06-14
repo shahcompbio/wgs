@@ -199,7 +199,7 @@ def _make_axes(ideogram, chrom, sample, fig, normal_only=False):
 
 
 def genome_wide_plot(
-        remixt, sample_id, titan, roh, germline_calls, somatic_calls,
+        remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
         tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf,
         normal_only=False
 ):
@@ -228,7 +228,7 @@ def genome_wide_plot(
         breakpoints =None
         snv_copynumber = None
     else:
-        remixt = read_remixt.read(remixt)
+        remixt = read_remixt.read(remixt, remixt_label)
         somatic_calls = read_variant_calls.read(somatic_calls)
         titan = read_titan.read(titan)
         tumour_coverage = read_coverage.read(tumour_coverage)
@@ -242,7 +242,7 @@ def genome_wide_plot(
     for chrom in chromosomes:
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
-        axes = _make_axes(ideogram, chrom, sample_id, fig, normal_only=normal_only)
+        axes = _make_axes(ideogram, chrom, remixt_label, fig, normal_only=normal_only)
         
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,
