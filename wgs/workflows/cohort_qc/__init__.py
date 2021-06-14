@@ -225,8 +225,7 @@ def create_cohort_qc_report(
             mgd.TempInputFile("vcNames"),
             mgd.TempInputFile("genelist")
 
-        ),
-        kwargs={'docker_image':config.containers("wgs_qc_html") },
+        )
     )
 
     workflow.transform(
