@@ -9,11 +9,12 @@ from wgs.cmdline import parse_args
 from wgs.cohort_qc import cohort_qc_workflow
 from wgs.config import batch_config
 from wgs.copynumber_calling import copynumber_calling_workflow
-from wgs.single_sample_copynumber_calling import single_sample_copynumber_calling_workflow
 from wgs.germline_calling import germline_calling_workflow
 from wgs.realign import realign_bam_workflow
 from wgs.sample_qc import sample_qc_workflow
+from wgs.single_sample_copynumber_calling import single_sample_copynumber_calling_workflow
 from wgs.somatic_calling import somatic_calling_workflow
+from wgs.somatic_panel_of_normals import somatic_panel_of_normals_workflow
 
 
 def generate_config(args):
@@ -39,6 +40,10 @@ def main():
     if args["which"] == "alignment":
         args = generate_config(args)
         alignment_workflow(args)
+
+    if args["which"] == "somatic_panel_of_normals":
+        args = generate_config(args)
+        somatic_panel_of_normals_workflow(args)
 
     if args["which"] == "somatic_calling":
         args = generate_config(args)

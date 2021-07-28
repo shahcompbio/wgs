@@ -95,6 +95,13 @@ def parse_args():
         help='''strelka filter'''
     )
 
+    # ===============
+    # variant calling
+    # ===============
+    somatic_panel_of_normals = subparsers.add_parser("somatic_panel_of_normals")
+    somatic_panel_of_normals.set_defaults(which='somatic_panel_of_normals')
+    somatic_panel_of_normals = add_global_args(somatic_panel_of_normals)
+
     # ================
     # germline calling
     # ================
@@ -121,7 +128,6 @@ def parse_args():
     single_sample_copynumber_calling = subparsers.add_parser("single_sample_copynumber_calling")
     single_sample_copynumber_calling.set_defaults(which='single_sample_copynumber_calling')
     add_global_args(single_sample_copynumber_calling)
-
 
     # ================
     # copy number calling
