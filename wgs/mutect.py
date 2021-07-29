@@ -11,8 +11,8 @@ def mutect_workflow(args):
     meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
     input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
 
-    tumour = args['tumour_bam']
-    normal = args['normal_bam']
+    tumour = args['tumour']
+    normal = args['normal']
     tumour_id = args['tumour_id']
     normal_id = args['normal_id']
 
@@ -24,8 +24,8 @@ def mutect_workflow(args):
 
     var_dir = os.path.join(args['out_dir'], 'mutect')
 
-    mutect_vcf = os.path.join(var_dir, '{sample_id}', '{sample_id}_mutect.vcf.gz')
-    mutect_maf = os.path.join(var_dir, '{sample_id}', '{sample_id}_mutect.maf')
+    mutect_vcf = os.path.join(var_dir, 'mutect.vcf.gz')
+    mutect_maf = os.path.join(var_dir, 'mutect.maf')
 
     pyp = pypeliner.app.Pypeline(config=args)
 
@@ -61,8 +61,6 @@ def mutect_workflow(args):
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={
-            'input_yaml_data': helpers.load_yaml(args['input_yaml']),
-            'input_yaml': mgd.OutputFile(input_yaml_blob),
             'metadata': {'type': 'variant_calling'}
         }
     )
