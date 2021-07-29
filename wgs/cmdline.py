@@ -126,6 +126,10 @@ def parse_args():
         "--normal_id",
         help='''strelka filter'''
     )
+    mutect.add_argument(
+        "--panel_of_normals",
+        help='''strelka filter'''
+    )
 
     # ================
     # germline calling

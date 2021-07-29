@@ -19,7 +19,8 @@ def create_mutect_workflow(
         chromosomes,
         normal_id,
         tumour_id,
-        single_node=None
+        single_node=None,
+        panel_of_normals=None
 ):
     params = config.default_params('variant_calling')
 
@@ -58,6 +59,7 @@ def create_mutect_workflow(
                 mgd.InputFile(normal_bam),
                 mgd.InputFile(tumour_bam)
             ),
+            kwargs={'panel_of_normals':panel_of_normals}
         )
     else:
         workflow.transform(
@@ -76,6 +78,7 @@ def create_mutect_workflow(
                 mgd.InputFile(tumour_bam),
                 mgd.TempSpace('mutect_temp', 'interval')
             ),
+            kwargs={'panel_of_normals': panel_of_normals}
         )
 
         workflow.transform(

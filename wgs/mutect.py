@@ -48,6 +48,7 @@ def mutect_workflow(args):
         ),
         kwargs={
             'single_node': single_node,
+            'panel_of_normals': args['panel_of_normals']
         },
     )
 

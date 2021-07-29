@@ -43,7 +43,7 @@ def get_sample_id(bamfile):
     return list(samples)[0]
 
 
-def mutect_run_command(reference, interval, normal_bam, tumour_bam, vcf_out):
+def mutect_run_command(reference, interval, normal_bam, tumour_bam, vcf_out, panel_of_normals=None):
     interval = interval.split('_')
 
     interval = '{}:{}-{}'.format(interval[0], interval[1], interval[2])
@@ -56,6 +56,9 @@ def mutect_run_command(reference, interval, normal_bam, tumour_bam, vcf_out):
         '-R', reference
     ]
 
+    if panel_of_normals:
+        cmd += ['--panel-of-normals', panel_of_normals]
+
     return cmd
 
 
@@ -67,10 +70,10 @@ def mutect_filter_command(reference, vcf_in, vcf_out):
     return cmd
 
 
-def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir):
+def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir, panel_of_normals=None):
     helpers.makedirs(tempdir)
     unfiltered_vcf = os.path.join(tempdir, 'temp.vcf')
-    cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_vcf)
+    cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_vcf, panel_of_normals=panel_of_normals)
     pypeliner.commandline.execute(*cmd)
 
     cmd = mutect_filter_command(reference, unfiltered_vcf, vcf)
@@ -78,14 +81,14 @@ def run_mutect(vcf, reference, interval, normal_bam, tumour_bam, tempdir):
 
 
 def run_mutect_one_job(
-        tempdir, vcf, reference, intervals, normal_bam, tumour_bam
+        tempdir, vcf, reference, intervals, normal_bam, tumour_bam, panel_of_normals=None
 ):
     commands = []
     for i, interval in enumerate(intervals):
         ival_temp_dir = os.path.join(tempdir, str(i))
         helpers.makedirs(ival_temp_dir)
         unfiltered_output = os.path.join(ival_temp_dir, 'mutect.vcf.gz')
-        cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_output)
+        cmd = mutect_run_command(reference, interval, normal_bam, tumour_bam, unfiltered_output, panel_of_normals=panel_of_normals)
         commands.append(cmd)
 
         output = os.path.join(ival_temp_dir, 'mutect.vcf.gz')
