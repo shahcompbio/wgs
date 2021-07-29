@@ -81,14 +81,23 @@ def mutect_workflow(normal_bam, sample_vcf, refdir, single_node):
         )
 
 
+
+    return workflow
+
+
+
 def create_somatic_panel_of_normals_workflow(
         samples, normals, pon_vcf, sample_vcfs, refdir, single_node
 ):
+
+    normals = dict([(sampid, normals[sampid]) for sampid in samples])
+    sample_vcfs = dict([(sampid, sample_vcfs[sampid]) for sampid in samples])
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('sample_id'),
-        value=samples,
+        value=list(samples),
     )
 
     workflow.subworkflow(

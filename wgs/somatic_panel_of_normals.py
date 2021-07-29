@@ -11,8 +11,8 @@ def somatic_panel_of_normals_workflow(args):
     inputs = helpers.load_yaml(args['input_yaml'])
 
     inputs = inputs['normals']
-    samples = inputs.keys()
-    tumours = [inputs[samp] for samp in samples]
+    samples = list(inputs.keys())
+    tumours = {samp: inputs[samp] for samp in samples}
 
     meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
     input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
@@ -34,7 +34,7 @@ def somatic_panel_of_normals_workflow(args):
         name='somatic_panel_of_normals',
         func=somatic_panel_of_normals.create_somatic_panel_of_normals_workflow,
         args=(
-            samples,
+            list(samples),
             mgd.InputFile("tumour.bam", 'sample_id', fnames=tumours,
                           extensions=['.bai'], axes_origin=[]),
             mgd.OutputFile(pon_vcf),

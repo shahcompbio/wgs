@@ -30,7 +30,7 @@ def mutect_tumour_only_cmd(reference, interval, normal_bam, vcf_out, germline_re
     cmd = [
         'gatk', 'Mutect2', '-R', reference, '-I', normal_bam,
         '-tumor', normal_sample_id,
-        '--germline_resource', germline_resource,
+        '--germline-resource', germline_resource,
         '--normal', normal_sample_id, '-O', vcf_out, '--intervals', interval
     ]
 
