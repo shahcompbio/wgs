@@ -11,10 +11,12 @@ import pypeliner
 from wgs import __version__
 
 
-def add_global_args(subparser):
-    subparser.add_argument("--input_yaml",
-                           required=True,
-                           help='''yaml file with tumour, normal and sampleids''')
+def add_global_args(subparser, input_yaml=False):
+
+    if input_yaml:
+        subparser.add_argument("--input_yaml",
+                               required=True,
+                               help='''yaml file with tumour, normal and sampleids''')
 
     subparser.add_argument("--out_dir",
                            required=True,
@@ -55,7 +57,7 @@ def parse_args():
     # ================
     alignment = subparsers.add_parser("alignment")
     alignment.set_defaults(which='alignment')
-    alignment = add_global_args(alignment)
+    alignment = add_global_args(alignment, input_yaml=True)
     alignment.add_argument(
         "--picard_mem",
         default=8,
@@ -68,7 +70,7 @@ def parse_args():
     # ================
     realignment = subparsers.add_parser("realignment")
     realignment.set_defaults(which='realignment')
-    realignment = add_global_args(realignment)
+    realignment = add_global_args(realignment, input_yaml=True)
     realignment.add_argument(
         "--picard_mem",
         default=8,
@@ -87,7 +89,7 @@ def parse_args():
     # ================
     somatic_calling = subparsers.add_parser("somatic_calling")
     somatic_calling.set_defaults(which='somatic_calling')
-    somatic_calling = add_global_args(somatic_calling)
+    somatic_calling = add_global_args(somatic_calling, input_yaml=True)
     somatic_calling.add_argument(
         "--is_exome",
         default=False,
@@ -95,26 +97,49 @@ def parse_args():
         help='''strelka filter'''
     )
 
-    # ===============
-    # variant calling
-    # ===============
+    # =========================
+    # mutect - panel of normals
+    # =========================
     somatic_panel_of_normals = subparsers.add_parser("somatic_panel_of_normals")
     somatic_panel_of_normals.set_defaults(which='somatic_panel_of_normals')
-    somatic_panel_of_normals = add_global_args(somatic_panel_of_normals)
+    somatic_panel_of_normals = add_global_args(somatic_panel_of_normals, input_yaml=True)
+
+    # =========================
+    # mutect
+    # =========================
+    mutect = subparsers.add_parser("mutect")
+    mutect.set_defaults(which='mutect')
+    mutect = add_global_args(mutect)
+    mutect.add_argument(
+        "--tumour",
+        help='''strelka filter'''
+    )
+    mutect.add_argument(
+        "--normal",
+        help='''strelka filter'''
+    )
+    mutect.add_argument(
+        "--tumour_id",
+        help='''strelka filter'''
+    )
+    mutect.add_argument(
+        "--normal_id",
+        help='''strelka filter'''
+    )
 
     # ================
     # germline calling
     # ================
     germline_calling = subparsers.add_parser("germline_calling")
     germline_calling.set_defaults(which='germline_calling')
-    add_global_args(germline_calling)
+    add_global_args(germline_calling, input_yaml=True)
 
     # ================
     # breakpoints calling
     # ================
     sv_calling = subparsers.add_parser("breakpoint_calling")
     sv_calling.set_defaults(which='breakpoint_calling')
-    add_global_args(sv_calling)
+    add_global_args(sv_calling, input_yaml=True)
     sv_calling.add_argument(
         "--svaba",
         default=False,
@@ -127,14 +152,14 @@ def parse_args():
     # ================
     single_sample_copynumber_calling = subparsers.add_parser("single_sample_copynumber_calling")
     single_sample_copynumber_calling.set_defaults(which='single_sample_copynumber_calling')
-    add_global_args(single_sample_copynumber_calling)
+    add_global_args(single_sample_copynumber_calling, input_yaml=True)
 
     # ================
     # copy number calling
     # ================
     cna_calling = subparsers.add_parser("copynumber_calling")
     cna_calling.set_defaults(which='copynumber_calling')
-    cna_calling = add_global_args(cna_calling)
+    cna_calling = add_global_args(cna_calling, input_yaml=True)
     cna_calling.add_argument(
         "--titan",
         default=False,
@@ -153,7 +178,7 @@ def parse_args():
     # ================
     sample_qc = subparsers.add_parser("sample_qc")
     sample_qc.set_defaults(which='sample_qc')
-    sample_qc = add_global_args(sample_qc)
+    sample_qc = add_global_args(sample_qc, input_yaml=True)
     sample_qc.add_argument(
         '--bins',
         default=2000
@@ -173,7 +198,7 @@ def parse_args():
     # ================
     cohort_qc = subparsers.add_parser("cohort_qc")
     cohort_qc.set_defaults(which='cohort_qc')
-    cohort_qc = add_global_args(cohort_qc)
+    cohort_qc = add_global_args(cohort_qc, input_yaml=True)
     cohort_qc.add_argument(
         "--API_key",
         default=False,

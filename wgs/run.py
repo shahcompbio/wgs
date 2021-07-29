@@ -15,6 +15,7 @@ from wgs.sample_qc import sample_qc_workflow
 from wgs.single_sample_copynumber_calling import single_sample_copynumber_calling_workflow
 from wgs.somatic_calling import somatic_calling_workflow
 from wgs.somatic_panel_of_normals import somatic_panel_of_normals_workflow
+from wgs.mutect import mutect_workflow
 
 
 def generate_config(args):
@@ -72,6 +73,10 @@ def main():
     if args["which"] == "sample_qc":
         args = generate_config(args)
         sample_qc_workflow(args)
+
+    if args["which"] == "mutect":
+        args = generate_config(args)
+        mutect_workflow(args)
 
 
 if __name__ == "__main__":
