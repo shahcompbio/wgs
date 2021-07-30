@@ -76,7 +76,7 @@ def mutect_panel_of_normals(sample_vcfs, pon_vcf, tempdir):
     args_file = os.path.join(tempdir, 'file_list.args')
 
     with open(args_file, 'wt') as args:
-        for samp_vcf in sample_vcfs:
+        for samp_vcf in sample_vcfs.values():
             args.write('{}\n'.format(samp_vcf))
 
     cmd = [
