@@ -2,7 +2,7 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN apt-get update && apt install build-essential gcc samtools -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update --allow-releaseinfo-change update && apt install build-essential gcc samtools -y && rm -rf /var/lib/apt/lists/*
 RUN conda install -c bioconda -c dranew destruct==0.4.18 destruct_utils==0.4.19
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/destruct* &&  pip install git+https://github.com/amcpherson/destruct.git@master
 RUN pip install -e git+https://github.com/amcpherson/blossomv.git#egg=blossomv

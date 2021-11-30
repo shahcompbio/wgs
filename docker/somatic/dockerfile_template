@@ -2,7 +2,7 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN apt-get update && apt-get install -y  samtools && rm -rf /var/lib/apt/lists/*
+RUN apt-get update --allow-releaseinfo-change update && apt-get install -y  samtools && rm -rf /var/lib/apt/lists/*
 RUN conda install -c bioconda -c conda-forge bcftools cryptography
 RUN conda install -c bioconda gatk4
 RUN cp /app/run_strelka /opt/conda/bin && chmod 777 /opt/conda/bin/run_strelka
