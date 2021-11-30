@@ -2,7 +2,7 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN apt-get update --allow-releaseinfo-change update \
+RUN apt-get --allow-releaseinfo-change update \
     && wget http://ftp.de.debian.org/debian/pool/contrib/m/msttcorefonts/ttf-mscorefonts-installer_3.7_all.deb -P ~/Downloads \
     && apt install ~/Downloads/ttf-mscorefonts-installer_3.7_all.deb -y \
     && apt-mark hold ttf-mscorefonts-installer && rm -rf /var/lib/apt/lists/*

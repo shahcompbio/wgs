@@ -2,7 +2,7 @@ FROM quay.io/singlecellpipelinetest/miniconda3:4.8.2
 
 ADD . /app
 
-RUN  mkdir /usr/share/man/man1/ && apt-get update --allow-releaseinfo-change update && apt-get install -y libltdl7 parallel default-jdk samtools && rm -rf /var/lib/apt/lists/*
+RUN  mkdir /usr/share/man/man1/ && apt-get --allow-releaseinfo-change update && apt-get install -y libltdl7 parallel default-jdk samtools && rm -rf /var/lib/apt/lists/*
 
 RUN conda install -c bioconda -c conda-forge bcftools cryptography
 RUN conda install -c bioconda freebayes
