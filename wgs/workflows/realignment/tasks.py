@@ -45,4 +45,11 @@ def split_by_rg(
 def get_read_group(infile):
     bam = pysam.AlignmentFile(infile, mode='rb', check_sq=False)
     header = bam.header['RG']
+
+    for readgroup in header:
+        if 'SM' not in readgroup:
+            raise Exception(
+                "missing SM tag in readgroup: {} for bam: {}".format(readgroup['ID'], infile)
+            )
+
     return {rg['ID']: rg for rg in header}
