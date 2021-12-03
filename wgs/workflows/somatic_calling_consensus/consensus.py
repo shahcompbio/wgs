@@ -104,7 +104,7 @@ def fetch_vcf(filename, chromosome, caller):
                         snv_data[(chrom, pos + i, rb, ab)] = data
                         id_counter += 1
             else:
-                indel_data[(chrom, pos, id_counter)] = (data, ref, alt)
+                indel_data[(chrom, pos)] = (data, ref, alt)
                 id_counter += 1
 
     return snv_data, indel_data
@@ -141,27 +141,30 @@ def indel_consensus(strelka_indel, mutect_indel):
 
     for k in strelka_indel:
         if k in mutect_indel:
-            chrom, pos, id_count = k
+            chrom, pos = k
             mutect_data, mutect_ref, mutect_alt = mutect_indel[k]
             strelka_data, strelka_ref, strelka_alt = strelka_indel[k]
 
             if mutect_ref == strelka_ref and mutect_alt == strelka_alt:
                 qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = mutect_data
-                consensus.append([chrom, pos, mutect_ref, mutect_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
+                consensus.append(
+                    [chrom, pos, mutect_ref, mutect_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
             else:
                 qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = mutect_data
-                consensus.append([chrom, pos, mutect_ref, mutect_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
+                consensus.append(
+                    [chrom, pos, mutect_ref, mutect_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
                 qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = strelka_data
-                consensus.append([chrom, pos, strelka_ref, strelka_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
+                consensus.append(
+                    [chrom, pos, strelka_ref, strelka_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
         else:
-            chrom, pos, id_counter = k
+            chrom, pos = k
             strelka_data, strelka_ref, strelka_alt = strelka_indel[k]
             qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = strelka_data
             consensus.append([chrom, pos, strelka_ref, strelka_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
 
     for k in mutect_indel:
         if k not in strelka_indel:
-            chrom, pos, id_count = k
+            chrom, pos = k
             mutect_data, mutect_ref, mutect_alt = mutect_indel[k]
             qual, vcf_filter, tr, ta, td, nr, na, nd, id_count = mutect_data
             consensus.append([chrom, pos, mutect_ref, mutect_alt, id_count, qual, vcf_filter, tr, ta, td, nr, na, nd])
