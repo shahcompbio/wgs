@@ -39,7 +39,7 @@ plot_remixt = function(copy_number){
 
 
   cn_combined = copy_number
-  cn_combined["combined"] = cn_combined$major + cn_combined$major
+  cn_combined["combined"] = cn_combined$major_raw_e + cn_combined$minor_raw_e
   cn_combined = cn_combined[cn_combined$combined <= 8,]
 
   circos.trackPoints(factors= paste0("chr", cn_combined$chrom),
@@ -55,10 +55,10 @@ plot_remixt = function(copy_number){
 
 
   circos.trackPoints(factors= paste0("chr", copy_number$chrom),
-                     x = copy_number$start, y = copy_number$major, cex = 0.1, col = "red")
+                     x = copy_number$start, y = copy_number$major_raw_e, cex = 0.1, col = "red")
 
   circos.trackPoints(factors= paste0("chr", copy_number$chrom),
-                     x = copy_number$start, y = copy_number$minor, cex = 0.1, col = "blue")
+                     x = copy_number$start, y = copy_number$minor_raw_e, cex = 0.1, col = "blue")
 }
 
 
