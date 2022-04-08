@@ -228,7 +228,7 @@ def genome_wide_plot(
         breakpoints =None
         snv_copynumber = None
     else:
-        remixt = read_remixt.read(remixt, remixt_label)
+        remixt = read_remixt.read(remixt)
         somatic_calls = read_variant_calls.read(somatic_calls)
         titan = read_titan.read(titan)
         tumour_coverage = read_coverage.read(tumour_coverage)
