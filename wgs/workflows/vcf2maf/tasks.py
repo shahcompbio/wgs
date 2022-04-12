@@ -18,8 +18,9 @@ def run_vcf2maf(
         maf_output,
         tempdir,
         reference,
-        tumour_id=None,
-        normal_id=None,
+        vep_fasta_suffix,
+        vep_ncbi_build,
+        vep_cache_version,
 ):
     if os.path.exists(tempdir):
         helpers.rmdirs(tempdir)
@@ -42,17 +43,12 @@ def run_vcf2maf(
     if os.path.exists(vcf_unzipped_vep):
         os.remove(vcf_unzipped_vep)
 
+
     cmd = [
         'vcf2maf', vcf_unzipped, maf_output,
-        os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
-        os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
-        reference,
+        os.path.join(reference, vep_fasta_suffix),
+        reference, vep_ncbi_build, vep_cache_version
     ]
-
-    if tumour_id:
-        cmd.extend(['--tumor-id', tumour_id])
-    if normal_id:
-        cmd.extend(['--normal-id', normal_id])
 
     pypeliner.commandline.execute(*cmd)
 

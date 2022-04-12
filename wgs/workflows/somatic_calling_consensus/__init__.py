@@ -22,6 +22,8 @@ def create_somatic_consensus_workflow(
         normal_id,
         tumour_id,
 ):
+    params = config.default_params('variant_calling')
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.transform(
@@ -48,6 +50,9 @@ def create_somatic_consensus_workflow(
             mgd.TempInputFile('consensus.vcf'),
             mgd.TempOutputFile('consensus.maf'),
             reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'normal_id': normal_id, 'tumour_id': tumour_id}
     )

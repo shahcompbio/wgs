@@ -124,6 +124,9 @@ def create_mutect_workflow(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf),
             reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )

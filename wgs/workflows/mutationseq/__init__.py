@@ -189,7 +189,10 @@ def create_museq_workflow(
         args=(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf),
-            reference_vep
+            reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'normal_id': normal_id, 'tumour_id': tumour_id}
     )

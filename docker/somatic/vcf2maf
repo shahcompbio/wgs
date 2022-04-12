@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+vcf2maf.pl --input-vcf $1 --output-maf $2 --ref-fasta $3 --vep-data $4 --ncbi-build $5 --cache-version $6 --vep-path $(dirname `which vep`)

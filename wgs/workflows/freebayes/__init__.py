@@ -120,6 +120,9 @@ def create_freebayes_germline_workflow(
             mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(germline_maf, extensions=['.tbi', '.csi']),
             reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'normal_id': normal_id}
     )

@@ -211,6 +211,9 @@ def create_strelka_workflow(
             mgd.InputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf_file),
             reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )
@@ -222,6 +225,9 @@ def create_strelka_workflow(
             mgd.InputFile(indel_vcf_file, extensions=['.tbi', '.csi']),
             mgd.OutputFile(indel_maf_file),
             reference_vep,
+            params['vep_fasta_suffix'],
+            params['ncbi_build'],
+            params['cache_version']
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )

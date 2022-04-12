@@ -6,7 +6,8 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y  samtools &&
 RUN conda install -c bioconda -c conda-forge bcftools cryptography
 RUN conda install -c bioconda gatk4
 RUN cp /app/run_strelka /opt/conda/bin && chmod 777 /opt/conda/bin/run_strelka
-RUN conda install -c shahcompbio -c bioconda vcf2maf_shahcompbio
+RUN conda install -c bioconda vcf2maf ensembl-vep==105
+RUN cp /app/vcf2maf /opt/conda/bin/ && chmod 777 /opt/conda/bin/vcf2maf
 
 RUN conda create --name museq python=2.7
 SHELL ["conda", "run", "-n", "museq", "/bin/bash", "-c"]

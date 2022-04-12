@@ -13,6 +13,9 @@ def create_vcf2maf_workflow(
         vcf_file,
         maf_file,
         reference,
+        vep_fasta_suffix,
+        vep_ncbi_build,
+        vep_cache_version,
         tumour_id=None,
         normal_id=None
 ):
@@ -25,12 +28,11 @@ def create_vcf2maf_workflow(
             mgd.InputFile(vcf_file),
             mgd.TempOutputFile('maf_file.maf'),
             mgd.TempSpace('vcf2maf_temp'),
-            reference
-        ),
-        kwargs={
-            'tumour_id': tumour_id,
-            'normal_id': normal_id
-        }
+            reference,
+            vep_fasta_suffix,
+            vep_ncbi_build,
+            vep_cache_version,
+        )
     )
 
     workflow.transform(
