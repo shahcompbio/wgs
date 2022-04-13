@@ -15,7 +15,7 @@ def create_museq_workflow(
         museqportrait_pdf,
         reference,
         reference_vep,
-        chromosomes,
+        params_refdir,
         normal_id=None,
         tumour_id=None,
         thousand_genomes=None,
@@ -48,7 +48,7 @@ def create_museq_workflow(
         ret=mgd.OutputChunks('interval'),
         args=(
             reference,
-            chromosomes
+            params_refdir['chromosomes']
         ),
         kwargs={'size': params['split_size']}
     )
@@ -190,9 +190,9 @@ def create_museq_workflow(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf),
             reference_vep,
-            params['vep_fasta_suffix'],
-            params['ncbi_build'],
-            params['cache_version']
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version']
         ),
         kwargs={'normal_id': normal_id, 'tumour_id': tumour_id}
     )

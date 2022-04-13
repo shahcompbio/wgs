@@ -16,7 +16,7 @@ def create_rtg_germline_workflow(
         reference,
         reference_sdf,
         reference_vep,
-        chromosomes,
+        params_refdir,
         normal_id,
         single_node=None
 ):
@@ -34,7 +34,7 @@ def create_rtg_germline_workflow(
         ret=mgd.OutputChunks('interval'),
         args=(
             reference,
-            chromosomes
+            params_refdir['chromosomes']
         ),
         kwargs={'size': params['split_size']}
     )
@@ -108,9 +108,9 @@ def create_rtg_germline_workflow(
             mgd.InputFile(germline_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(germline_maf, extensions=['.tbi', '.csi']),
             reference_vep,
-            params['vep_fasta_suffix'],
-            params['ncbi_build'],
-            params['cache_version']
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version']
         ),
         kwargs={'normal_id': normal_id}
     )

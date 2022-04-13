@@ -7,7 +7,6 @@ Created on Feb 21, 2018
 import pypeliner
 import pypeliner.managed as mgd
 from wgs.utils import helpers
-from wgs.config import config
 
 
 def create_germline_consensus_workflow(
@@ -16,18 +15,15 @@ def create_germline_consensus_workflow(
         rtg_vcf,
         freebayes_vcf,
         consensus_maf,
-        chromosomes,
+        params_refdir,
         reference_vep,
         normal_id
 ):
-    params = config.default_params('variant_calling')
-
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
         obj=mgd.OutputChunks('chrom'),
-        value=chromosomes,
+        value=params_refdir['chromosomes'],
     )
 
     workflow.transform(
@@ -43,7 +39,7 @@ def create_germline_consensus_workflow(
             mgd.InputFile(samtools_vcf),
             mgd.TempOutputFile('consensus.vcf'),
             mgd.TempOutputFile('counts.csv'),
-            chromosomes
+            params_refdir['chromosomes']
         ),
     )
 
@@ -69,9 +65,9 @@ def create_germline_consensus_workflow(
             mgd.TempInputFile('consensus_chrom.vcf', 'chrom'),
             mgd.TempOutputFile('consensus_chrom.maf', 'chrom'),
             reference_vep,
-            params['vep_fasta_suffix'],
-            params['ncbi_build'],
-            params['cache_version']
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version']
         ),
         kwargs={'normal_id': normal_id}
     )
