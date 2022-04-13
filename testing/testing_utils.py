@@ -38,7 +38,7 @@ def read_in(file, yaml_dtypes=None, sep = "," ):
     '''
     if yaml_dtypes:
         dtypes = {col['name']:col['dtype'] 
-            for col in yaml.load(open(yaml_dtypes))["columns"]}
+            for col in yaml.safe_load(open(yaml_dtypes))["columns"]}
         return pd.read_csv(file, dtype = dtypes, sep = sep)
     else:
         return pd.read_csv(file, sep = sep)

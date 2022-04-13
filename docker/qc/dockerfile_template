@@ -8,6 +8,6 @@ RUN conda install --file /app/conda_requirements.yml
 RUN pip install -r /app/requirements.txt
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.2
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.3
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.8

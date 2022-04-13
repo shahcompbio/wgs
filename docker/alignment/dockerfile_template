@@ -9,7 +9,7 @@ RUN conda install -c conda-forge freetype -y
 RUN conda install -c bioconda -c conda-forge fastqc openjdk=11.0.8
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.2
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.3
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.8

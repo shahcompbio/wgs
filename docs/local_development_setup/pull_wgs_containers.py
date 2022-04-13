@@ -27,7 +27,7 @@ def main():
     args = parser.parse_args()
     
     containers_yaml = vars(args)["containers_yaml"]
-    containers = yaml.load(open(containers_yaml), Loader=yaml.FullLoader)['wgs_containers']
+    containers = yaml.safe_oad(open(containers_yaml), Loader=yaml.FullLoader)['wgs_containers']
     
     pull_containers(containers)
 
