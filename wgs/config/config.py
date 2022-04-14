@@ -53,7 +53,6 @@ def default_params(mode='all'):
         'chromosomes': list(map(str, range(1, 23))) + ['X'],
         'readcounter': {'w': 1000, 'q': 0},
         'map_cutoff': 0.85,
-        'genome_type': 'NCBI',
         'titan_intervals': [
             {'num_clusters': 1, 'ploidy': 2},
             {'num_clusters': 2, 'ploidy': 2},

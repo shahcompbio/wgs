@@ -154,8 +154,7 @@ def create_titan_workflow(
             targets,
             mgd.TempOutputFile('correct_reads.txt'),
             gc_wig,
-            map_wig,
-            cn_params['genome_type']
+            map_wig
         ),
     )
 

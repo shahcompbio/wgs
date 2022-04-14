@@ -56,8 +56,34 @@ def run_readcounter(input_bam, output_wig, chromosomes, config):
     rc.main()
 
 
+def get_first_chrom_wig_file(wigfile):
+    with open(wigfile,'rt') as reader:
+        for line in reader:
+            if line.startswith('fixedStep'):
+                break
+    line = line.strip().split()
+
+    assert line[1].startswith('chrom='), 'malformed wig header line {}'.format(line)
+    return line[1].replace('chrom=', '')
+
+def get_genome_type(normal_wig, tumour_wig, gc_wig, map_wig):
+
+    normal_chr = get_first_chrom_wig_file(normal_wig)
+    tumour_chr = get_first_chrom_wig_file(tumour_wig)
+    map_chr = get_first_chrom_wig_file(map_wig)
+    gc_chr = get_first_chrom_wig_file(gc_wig)
+
+    if normal_chr.startswith('chr'):
+        err_str = 'genome type mismatch found in {} {} {} {}'.format(normal_wig, tumour_wig, gc_wig, map_wig)
+        assert tumour_chr.startswith('chr'), err_str
+        assert map_chr.startswith('chr'), err_str
+        assert gc_chr.startswith('chr'), err_str
+        return 'UCSC'
+    else:
+        return 'NCBI'
+
 def calc_correctreads_wig(
-        tumour_wig, normal_wig, target_list, outfile, gc_wig, map_wig, genome_type
+        tumour_wig, normal_wig, target_list, outfile, gc_wig, map_wig
 ):
     '''
     Run script to calculate correct reads
@@ -72,6 +98,7 @@ def calc_correctreads_wig(
     if not target_list:
         target_list = 'NULL'
 
+    genome_type = get_genome_type(tumour_wig, normal_wig, gc_wig, map_wig)
     cmd = [script, tumour_wig, normal_wig, gc_wig, map_wig,
            target_list, outfile, genome_type]
 
