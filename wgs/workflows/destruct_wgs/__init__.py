@@ -12,7 +12,7 @@ from wgs.utils import helpers
 def create_destruct_wgs_workflow(
         tumour_bam, normal_bam, raw_breakpoints, raw_library,
         breakpoints, library, reads,
-        sample_id, reference, destruct_refdata, gtf, mappability,
+        sample_id, reference, destruct_refdata, gtf,
         single_node=False
 ):
     destruct_config = {
@@ -95,20 +95,6 @@ def create_destruct_wgs_workflow(
     )
 
     workflow.transform(
-        name='mappability_annotate_breakpoints',
-        ctx=helpers.get_default_ctx(
-            memory=8,
-            walltime='8:00'
-        ),
-        func='wgs.workflows.destruct_wgs.flag_mappability.main',
-        args=(
-            mgd.TempInputFile("filter_annotate_breakpoints_output"),
-            mgd.TempOutputFile("breakpoints"),
-            mappability,
-        )
-    )
-
-    workflow.transform(
         name='finalize_raw_breakpoints',
         ctx=helpers.get_default_ctx(
             memory=8,
@@ -142,7 +128,7 @@ def create_destruct_wgs_workflow(
         ),
         func="wgs.utils.csvutils.finalize_csv",
         args=(
-            mgd.TempInputFile("breakpoints"),
+            mgd.TempInputFile("filter_annotate_breakpoints_output"),
             mgd.OutputFile(breakpoints, extensions=['.yaml']),
         ),
     )
