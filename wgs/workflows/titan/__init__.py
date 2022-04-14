@@ -176,8 +176,7 @@ def create_titan_workflow(
             mgd.InputInstance('ploidy'),
             sample_id,
             map_wig,
-            cn_params['titan_params'],
-            cn_params['genome_type']
+            cn_params['titan_params']
         ),
         kwargs={'threads': '8'}
     )

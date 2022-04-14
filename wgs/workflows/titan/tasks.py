@@ -111,10 +111,12 @@ def calc_correctreads_wig(
 
 def run_titan(
         infile, cnfile, outfile, obj_outfile, outparam,
-        num_clusters, ploidy, sample_id, map_wig, titan_params, genome_type,
+        num_clusters, ploidy, sample_id, map_wig, titan_params,
         threads=8
 ):
     script = 'titan.R'
+
+    genome_type = 'UCSC' if get_first_chrom_wig_file(map_wig).startswith('chr') else 'NCBI'
 
     cmd = [script, sample_id, infile, cnfile, map_wig, num_clusters,
            threads, ploidy, outfile, outparam,
