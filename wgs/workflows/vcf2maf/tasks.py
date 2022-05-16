@@ -5,7 +5,8 @@ import shutil
 import pandas as pd
 import pypeliner
 from wgs.utils import helpers
-
+import vcf
+import itertools
 
 def gunzip_file(infile, outfile):
     with gzip.open(infile, 'rb') as f_in:
@@ -78,3 +79,55 @@ def update_ids(infile, tumour_id, normal_id, output):
         outfile.write(maf_header)
 
         df.to_csv(outfile, sep='\t', index=False)
+
+
+def split_vcf(in_file, out_file_callback, lines_per_file):
+    """ Split a VCF file into smaller files.
+
+    :param in_file: Path of VCF file to split.
+
+    :param out_file_callback: Callback function which supplies file name given index of split.
+
+    :param lines_per_file: Maximum number of lines to be written per file.
+
+     """
+
+    def line_group(_, line_idx=itertools.count()):
+        return int(next(line_idx) / lines_per_file)
+
+    reader = vcf.Reader(filename=in_file)
+
+    for file_idx, records in itertools.groupby(reader, key=line_group):
+        file_name = out_file_callback(file_idx)
+
+        with open(file_name, 'wt') as out_fh:
+            writer = vcf.Writer(out_fh, reader)
+
+            for record in records:
+                writer.write_record(record)
+
+            writer.close()
+
+
+def merge_mafs(maf_files, output):
+
+    if isinstance(maf_files, dict):
+        maf_files = list(maf_files.values())
+
+    with helpers.GetFileHandle(output, 'wt') as maf_writer:
+
+        with helpers.GetFileHandle(maf_files[0]) as header_read:
+            header = header_read.readline()
+            assert header.startswith('#version 2.4')
+            maf_writer.write(header)
+
+            header = header_read.readline()
+            assert header.startswith('Hugo_Symbol')
+            maf_writer.write(header)
+
+        for filepath in maf_files:
+            with helpers.GetFileHandle(filepath, 'rt') as maf_reader:
+                for line in maf_reader:
+                    if line.startswith('Hugo_Symbol') or line.startswith('#'):
+                        continue
+                    maf_writer.write(line)

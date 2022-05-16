@@ -43,45 +43,18 @@ def create_germline_consensus_workflow(
         ),
     )
 
-    workflow.transform(
-        name='split_vcf',
-        ctx=helpers.get_default_ctx(
-            memory=15,
-            walltime='8:00', ),
-        func='wgs.workflows.germline_calling_consensus.tasks.split_vcf_by_chr',
-        axes=('chrom',),
-        args=(
-            mgd.TempInputFile('consensus.vcf'),
-            mgd.InputInstance('chrom'),
-            mgd.TempOutputFile('consensus_chrom.vcf', 'chrom')
-        )
-    )
-
     workflow.subworkflow(
         name="consensus_maf",
         func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
-        axes=('chrom',),
         args=(
-            mgd.TempInputFile('consensus_chrom.vcf', 'chrom'),
-            mgd.TempOutputFile('consensus_chrom.maf', 'chrom'),
+            mgd.TempInputFile('consensus.vcf'),
+            mgd.TempOutputFile('consensus.maf'),
             reference_vep,
             params_refdir['vep_fasta_suffix'],
             params_refdir['ncbi_build'],
             params_refdir['cache_version']
         ),
         kwargs={'normal_id': normal_id}
-    )
-
-    workflow.transform(
-        name='merge_maf',
-        ctx=helpers.get_default_ctx(
-            memory=15,
-            walltime='8:00', ),
-        func='wgs.workflows.germline_calling_consensus.tasks.merge_mafs',
-        args=(
-            mgd.TempInputFile('consensus_chrom.maf', 'chrom'),
-            mgd.TempOutputFile('consensus.maf')
-        )
     )
 
     workflow.transform(
