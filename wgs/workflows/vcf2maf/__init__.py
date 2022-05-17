@@ -23,6 +23,9 @@ def create_vcf2maf_workflow(
     workflow.transform(
         name='split_vcf',
         func='wgs.workflows.vcf2maf.tasks.split_vcf',
+        ctx=helpers.get_default_ctx(
+            memory=15,
+            walltime='8:00', ),
         args=(
             mgd.InputFile(vcf_file),
             mgd.TempOutputFile('split.vcf', 'split')
@@ -33,11 +36,14 @@ def create_vcf2maf_workflow(
     workflow.transform(
         name='vcf2maf',
         func='wgs.workflows.vcf2maf.tasks.run_vcf2maf',
+        ctx=helpers.get_default_ctx(
+            memory=15,
+            walltime='8:00', ),
         axes=('split',),
         args=(
             mgd.TempInputFile('split.vcf', 'split'),
             mgd.TempOutputFile('maf_file.maf', 'split'),
-            mgd.TempSpace('vcf2maf_temp'),
+            mgd.TempSpace('vcf2maf_temp', 'split'),
             reference,
             vep_fasta_suffix,
             vep_ncbi_build,
@@ -60,6 +66,9 @@ def create_vcf2maf_workflow(
     workflow.transform(
         name='update_ids',
         func='wgs.workflows.vcf2maf.tasks.update_ids',
+        ctx=helpers.get_default_ctx(
+            memory=15,
+            walltime='8:00', ),
         args=(
             mgd.TempInputFile('maf_file_merged.maf'),
             tumour_id,
