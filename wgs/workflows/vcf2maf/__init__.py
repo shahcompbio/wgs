@@ -25,7 +25,7 @@ def create_vcf2maf_workflow(
         name='split_vcf',
         func='wgs.workflows.vcf2maf.tasks.split_vcf',
         args=(
-            mgd.InputFile(in_vcf_file),
+            mgd.InputFile(vcf_file),
             mgd.TempOutputFile('split.vcf', 'split')
         ),
         kwargs={'lines_per_file': 5000}
@@ -36,7 +36,7 @@ def create_vcf2maf_workflow(
         func='wgs.workflows.vcf2maf.tasks.run_vcf2maf',
         axes=('split',),
         args=(
-            mgd.TempInputFile('split.vcf', 'split')
+            mgd.TempInputFile('split.vcf', 'split'),
             mgd.TempOutputFile('maf_file.maf', 'split'),
             mgd.TempSpace('vcf2maf_temp'),
             reference,
