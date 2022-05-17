@@ -5,8 +5,7 @@ Created on Feb 21, 2018
 '''
 import pypeliner
 import pypeliner.managed as mgd
-
-from wgs.config import config
+from wgs.utils import helpers
 
 
 def create_vcf2maf_workflow(
