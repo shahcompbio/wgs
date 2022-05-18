@@ -52,6 +52,18 @@ def plot_chrom_on_axes(
     prepped_normal_coverage = read_coverage.prepare_at_chrom(normal_coverage, chrom)
     prepped_ideogram = read_ideogram.prepare_at_chrom(ideogram, chrom)
 
+    coverage_ylim_min = 0
+    coverage_ylim_max = 150
+    coverage_cap_percentile = 0.9
+    if pd.isnull(coverage_ylim_max):
+        coverage_ylim_max = 250
+    if pd.isnull(coverage_ylim_max):
+        coverage_ylim_min = 0
+
+    prepped_normal_coverage_cap = prepped_normal_coverage.coverage.quantile(
+            coverage_cap_quantile
+        )
+
     if not normal_only:
         prepped_remxit = read_remixt.prepare_at_chrom(remixt, chrom)
         prepped_snv_cn = parse_snv_cn.prepare_at_chrom(vaf_data, chrom)
@@ -63,13 +75,14 @@ def plot_chrom_on_axes(
         prepped_breakpoints = read_variant_calls.prepare_at_chrom(
             breakpoints, chrom, n_bins=2000
         )
+        prepped_tumour_coverage_cap = prepped_tumour_coverage.coverage.quantile(
+                coverage_cap_quantile
+            )
+        if prepped_tumour_coverage_cap > coverage_ylim_max:
+            coverage_ylim_max = 50 * (int(prepped_tumour_coverage_cap) / 50) + 1)
 
-    coverage_ylim_min = 0
-    coverage_ylim_max = 150
-    if pd.isnull(coverage_ylim_max):
-        coverage_ylim_max = 250
-    if pd.isnull(coverage_ylim_max):
-        coverage_ylim_min = 0
+    if prepped_normal_coverage_cap > coverage_ylim_max:
+        coverage_ylim_max = 50 * (int(prepped_normal_coverage_cap) / 50) + 1)
 
     anno_genes = gene_annotation_plotting.get_gene_annotation_data(chrom)
     chrom_max = prepped_ideogram.start.max()
