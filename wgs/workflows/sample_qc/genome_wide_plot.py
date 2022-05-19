@@ -54,7 +54,7 @@ def plot_chrom_on_axes(
 
     coverage_ylim_min = 0
     coverage_ylim_max = 150
-    coverage_cap_percentile = 0.9
+    coverage_cap_quantile = 0.9
     if pd.isnull(coverage_ylim_max):
         coverage_ylim_max = 250
     if pd.isnull(coverage_ylim_max):
