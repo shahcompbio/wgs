@@ -222,9 +222,6 @@ def indel_consensus(freebayes, rtg, samtools):
 
 def write_vcf(consensus, vcf_output, counts_output):
     with open(vcf_output, 'a') as outfile, open(counts_output, 'a') as count_file:
-        outfile.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
-        count_file.write("chrom\tpos\tID\tNR\tNA\tND\n")
-
         for call in consensus:
             outstr = [call[0], str(call[1]), str(call[4]), call[2], call[3], str(call[5]), call[6], '.']
             outstr = '\t'.join(outstr) + '\n'
@@ -243,6 +240,12 @@ def main(
         counts_output,
         chromosomes
 ):
+    with open(consensus_vcf, 'wt') as writer:
+        writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+
+    with open(counts_output, 'wt') as writer:
+        writer.write("chrom\tpos\tID\tNR\tNA\tND\n")
+
     for chromosome in chromosomes:
         museq_calls, _ = fetch_vcf(museq_vcf, chromosome, 'museq_germline')
         freebayes_snv, freebayes_indel = fetch_vcf(freebayes_vcf, chromosome, 'freebayes')
