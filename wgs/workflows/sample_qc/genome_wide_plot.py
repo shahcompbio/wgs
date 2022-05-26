@@ -77,12 +77,12 @@ def plot_chrom_on_axes(
         )
         prepped_tumour_coverage_cap = prepped_tumour_coverage.coverage.quantile(
                 coverage_cap_quantile
-            )
+        )
         if prepped_tumour_coverage_cap > coverage_ylim_max:
-            coverage_ylim_max = 50 * (int(prepped_tumour_coverage_cap) / 50) + 1)
+            coverage_ylim_max = 50 * ((int(prepped_tumour_coverage_cap) / 50) + 1)
 
     if prepped_normal_coverage_cap > coverage_ylim_max:
-        coverage_ylim_max = 50 * (int(prepped_normal_coverage_cap) / 50) + 1)
+        coverage_ylim_max = 50 * ((int(prepped_normal_coverage_cap) / 50) + 1)
 
     anno_genes = gene_annotation_plotting.get_gene_annotation_data(chrom)
     chrom_max = prepped_ideogram.start.max()
@@ -99,7 +99,7 @@ def plot_chrom_on_axes(
         )
         axes[2] = roh_plotting.plot(
             prepped_roh.start, prepped_roh.state, axes[2], chrom_max)
-        
+
         axes[3] = ideogram_plotting.plot(prepped_ideogram, axes[3])
 
         if not anno_genes.empty:
@@ -256,7 +256,7 @@ def genome_wide_plot(
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
         axes = _make_axes(ideogram, chrom, remixt_label, fig, normal_only=normal_only)
-        
+
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,
                                   normal_coverage, breakpoints, snv_copynumber,
