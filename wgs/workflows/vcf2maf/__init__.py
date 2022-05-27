@@ -30,7 +30,7 @@ def create_vcf2maf_workflow(
             mgd.InputFile(vcf_file),
             mgd.TempOutputFile('split.vcf', 'split')
         ),
-        kwargs={'lines_per_file': 5000}
+        kwargs={'lines_per_file': 20000}
     )
 
     workflow.transform(
