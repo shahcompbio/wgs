@@ -1,0 +1,20 @@
+FROM continuumio/miniconda3
+
+RUN conda config --add channels https://conda.anaconda.org/dranew && conda config --add channels bioconda
+RUN apt update
+RUN apt install build-essential -y
+RUN apt install libbz2-dev -y
+RUN pip install remixt==0.5.19
+RUN pip install pysam
+RUN mkdir -p /root/.config/matplotlib
+RUN echo "backend : Agg" > /root/.config/matplotlib/matplotlibrc
+
+
+RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.2
+RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
+RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
+RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.8
+RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
+RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
+RUN pip install pyvcf intervaltree fpdf pysam PyPDF2==1.26.0
