@@ -28,6 +28,7 @@ def create_remixt_workflow(
         remixt_refdata,
         remixt_raw_dir,
         reference,
+        chromosomes,
         single_node=False,
 ):
     params = config.default_params('copynumber_calling')['remixt']
@@ -38,7 +39,8 @@ def create_remixt_workflow(
         'genome_fasta_template': reference,
         'genome_fai_template': reference + '.fai',
         'max_copy_number': 10,
-        'max_ploidy': 7
+        'max_ploidy': 7,
+        'chromosomes': chromosomes
     }
 
     if breakpoints is None:

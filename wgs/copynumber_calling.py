@@ -86,6 +86,7 @@ def copynumber_calling_workflow(args):
                 refdir_paths['refdata_remixt'],
                 mgd.Template('rawdir', 'sample_id', template=remixt_raw_dir),
                 refdir_paths['reference'],
+                chromosomes
             ),
             kwargs={'single_node': args['single_node']}
         )
