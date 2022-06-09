@@ -43,6 +43,9 @@ def create_remixt_workflow(
         'chromosomes': chromosomes
     }
 
+    if chromosomes[0].startswith('chr'):
+        remixt_config['chr_prefix'] = 'chr'
+
     if breakpoints is None:
         raise MissingInputs('Remixt requires breakpoints')
 
