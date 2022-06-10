@@ -15,6 +15,7 @@ def create_vcf2maf_workflow(
         vep_fasta_suffix,
         vep_ncbi_build,
         vep_cache_version,
+        vep_species,
         tumour_id=None,
         normal_id=None
 ):
@@ -48,6 +49,7 @@ def create_vcf2maf_workflow(
             vep_fasta_suffix,
             vep_ncbi_build,
             vep_cache_version,
+            vep_species
         )
     )
 

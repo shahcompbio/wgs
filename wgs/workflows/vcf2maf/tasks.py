@@ -1,12 +1,13 @@
 import gzip
+import itertools
 import os
 import shutil
 
 import pandas as pd
 import pypeliner
-from wgs.utils import helpers
 import vcf
-import itertools
+from wgs.utils import helpers
+
 
 def gunzip_file(infile, outfile):
     with gzip.open(infile, 'rb') as f_in:
@@ -22,6 +23,7 @@ def run_vcf2maf(
         vep_fasta_suffix,
         vep_ncbi_build,
         vep_cache_version,
+        vep_species
 ):
     if os.path.exists(tempdir):
         helpers.rmdirs(tempdir)
@@ -39,16 +41,16 @@ def run_vcf2maf(
 
     assert vcf_unzipped.endswith('.vcf')
     vcf_unzipped_vep = vcf_unzipped[:-4]
-    vcf_unzipped_vep = vcf_unzipped_vep+'.vep.vcf'
+    vcf_unzipped_vep = vcf_unzipped_vep + '.vep.vcf'
 
     if os.path.exists(vcf_unzipped_vep):
         os.remove(vcf_unzipped_vep)
 
-
     cmd = [
         'vcf2maf', vcf_unzipped, maf_output,
         os.path.join(reference, vep_fasta_suffix),
-        reference, vep_ncbi_build, vep_cache_version
+        reference, vep_ncbi_build, vep_cache_version,
+        vep_species
     ]
 
     pypeliner.commandline.execute(*cmd)
@@ -61,7 +63,7 @@ def update_ids(infile, tumour_id, normal_id, output):
 
     df = pd.read_csv(infile, dtype='str', skiprows=1, sep='\t')
 
-    if len(df)>1:
+    if len(df) > 1:
         assert len(df['Tumor_Sample_Barcode'].unique()) == 1
         assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
 
@@ -110,7 +112,6 @@ def split_vcf(in_file, out_file_callback, lines_per_file):
 
 
 def merge_mafs(maf_files, output):
-
     if isinstance(maf_files, dict):
         maf_files = list(maf_files.values())
 

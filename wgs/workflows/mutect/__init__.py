@@ -126,7 +126,8 @@ def create_mutect_workflow(
             reference_vep,
             params_refdir['vep_fasta_suffix'],
             params_refdir['ncbi_build'],
-            params_refdir['cache_version']
+            params_refdir['cache_version'],
+            params_refdir['species'],
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )

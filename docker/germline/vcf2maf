@@ -1,4 +1,11 @@
 #!/bin/bash
 
+perl=`which perl`
+vep=`which vep`
 
-vcf2maf.pl --input-vcf $1 --output-maf $2 --ref-fasta $3 --vep-data $4 --ncbi-build $5 --cache-version $6 --vep-path $(dirname `which vep`)
+
+
+$perl $vep --species ${7} --assembly ${5} --no_progress --buffer_size 5000 --sift b --ccds --uniprot --hgvs --symbol --numbers --domains --gene_phenotype --canonical --protein --biotype --uniprot --tsl --variant_class --shift_hgvs 1 --check_existing --total_length --allele_number --no_escape --xref_refseq --failed 1 --vcf --flag_pick_allele --pick_order canonical,tsl,biotype,rank,ccds,length --dir ${4} --fasta ${3} --format vcf --input_file ${1} --output_file ${1}.vep.vcf --offline --pubmed --fork 4 --cache_version ${6} --polyphen b --af --af_1kg --af_esp --af_gnomad --regulatory
+
+
+vcf2maf.pl --input-vcf ${1}.vep.vcf --output-maf $2 --ref-fasta $3 --vep-data $4 --ncbi-build $5 --cache-version $6  --inhibit-vep
