@@ -35,20 +35,16 @@ def create_remixt_workflow(
 
     workflow = pypeliner.workflow.Workflow()
 
-    if chromosomes[0].startswith('chr'):
-        chr_prefix = 'chr'
-        chromosomes = [v.replace('chr', '') for v in chromosomes]
-    else:
-        chr_prefix = ''
-
     remixt_config = {
         'genome_fasta_template': reference,
         'genome_fai_template': reference + '.fai',
         'max_copy_number': 10,
         'max_ploidy': 7,
         'chromosomes': chromosomes,
-        'chr_prefix': chr_prefix
     }
+
+    if chromosomes[0].startswith('chr'):
+        remixt_config['chr_name_prefix'] = 'chr'
 
     if breakpoints is None:
         raise MissingInputs('Remixt requires breakpoints')
