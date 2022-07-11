@@ -18,3 +18,4 @@ RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
 RUN pip install setuptools==57.5.0
 RUN pip install pyvcf intervaltree fpdf pysam PyPDF2==1.26.0
 RUN conda install -c bioconda vcftools tabix bcftools
+RUN apt install shapeit4 -y
