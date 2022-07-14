@@ -49,7 +49,7 @@ def create_germline_calling_workflow(
     consensus_germline_maf = dict([(sampid, consensus_germline_maf[sampid])
                                    for sampid in samples])
 
-    chromosomes = config.refdir_data(refdir)['params']['chromosomes']
+    params_refdir = config.refdir_data(refdir)['params']
     paths_refdir = config.refdir_data(refdir)['paths']
 
     workflow = pypeliner.workflow.Workflow()
@@ -79,7 +79,7 @@ def create_germline_calling_workflow(
             mgd.OutputFile('museq_single_pdf', 'sample_id', fnames=museq_single_pdf),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
         ),
         kwargs={
             'tumour_id': None,
@@ -109,7 +109,7 @@ def create_germline_calling_workflow(
                           extensions=['.bai'], axes_origin=[]),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
             mgd.TempInputObj('normal_id', 'sample_id', fnames=normal_ids),
         ),
         kwargs={
@@ -130,7 +130,7 @@ def create_germline_calling_workflow(
                           extensions=['.bai'], axes_origin=[]),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
             mgd.TempInputObj('normal_id', 'sample_id'),
         ),
         kwargs={
@@ -152,7 +152,7 @@ def create_germline_calling_workflow(
             paths_refdir['reference'],
             paths_refdir['reference_sdf'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
             mgd.TempInputObj('normal_id', 'sample_id'),
         ),
         kwargs={
@@ -174,7 +174,7 @@ def create_germline_calling_workflow(
                           fnames=freebayes_germline_vcf),
             mgd.OutputFile("germlines_consensus.maf", 'sample_id',
                            fnames=consensus_germline_maf),
-            chromosomes,
+            params_refdir,
             paths_refdir['reference_vep'],
             mgd.TempInputObj('normal_id', 'sample_id')
         ),

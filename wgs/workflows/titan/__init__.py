@@ -154,8 +154,7 @@ def create_titan_workflow(
             targets,
             mgd.TempOutputFile('correct_reads.txt'),
             gc_wig,
-            map_wig,
-            cn_params['genome_type']
+            map_wig
         ),
     )
 
@@ -177,8 +176,7 @@ def create_titan_workflow(
             mgd.InputInstance('ploidy'),
             sample_id,
             map_wig,
-            cn_params['titan_params'],
-            cn_params['genome_type']
+            cn_params['titan_params']
         ),
         kwargs={'threads': '8'}
     )

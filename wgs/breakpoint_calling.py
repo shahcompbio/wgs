@@ -63,8 +63,7 @@ def breakpoint_calling_workflow(args):
             mgd.InputInstance('sample_id'),
             refdir_paths['reference'],
             refdir_paths['refdata_destruct'],
-            refdir_paths['gtf'],
-            refdir_paths['blacklist_destruct']
+            refdir_paths['gtf']
         ),
         kwargs={'single_node': single_node}
     )

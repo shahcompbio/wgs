@@ -47,8 +47,8 @@ def create_somatic_calling_workflow(
 
     somatic_consensus_maf = dict([(sampid, somatic_consensus_maf[sampid]) for sampid in samples])
 
-    chromosomes = config.refdir_data(refdir)['params']['chromosomes']
     paths_refdir = config.refdir_data(refdir)['paths']
+    params_refdir = config.refdir_data(refdir)['params']
 
     workflow = pypeliner.workflow.Workflow()
 
@@ -76,7 +76,7 @@ def create_somatic_calling_workflow(
             mgd.OutputFile('museq_paired_pdf', 'sample_id', fnames=museq_paired_pdf),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
         ),
         kwargs={
             'normal_id': mgd.TempInputObj('normal_id', 'sample_id'),
@@ -106,7 +106,7 @@ def create_somatic_calling_workflow(
                            fnames=strelka_indel_maf),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
             mgd.TempInputObj('normal_id', 'sample_id'),
             mgd.TempInputObj('tumour_id', 'sample_id'),
         ),
@@ -130,7 +130,7 @@ def create_somatic_calling_workflow(
                            fnames=mutect_maf),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
-            chromosomes,
+            params_refdir,
             mgd.TempInputObj('normal_id', 'sample_id'),
             mgd.TempInputObj('tumour_id', 'sample_id'),
         ),
@@ -155,7 +155,7 @@ def create_somatic_calling_workflow(
                           extensions=['.csi', '.tbi'], fnames=museq_vcf),
             mgd.OutputFile("somatic_consensus.maf", 'sample_id',
                            fnames=somatic_consensus_maf),
-            chromosomes,
+            params_refdir,
             paths_refdir['reference_vep'],
             mgd.TempInputObj('normal_id', 'sample_id'),
             mgd.TempInputObj('tumour_id', 'sample_id'),

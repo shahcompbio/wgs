@@ -1,9 +1,11 @@
 import gzip
+import itertools
 import os
 import shutil
 
 import pandas as pd
 import pypeliner
+import vcf
 from wgs.utils import helpers
 
 
@@ -18,8 +20,10 @@ def run_vcf2maf(
         maf_output,
         tempdir,
         reference,
-        tumour_id=None,
-        normal_id=None,
+        vep_fasta_suffix,
+        vep_ncbi_build,
+        vep_cache_version,
+        vep_species
 ):
     if os.path.exists(tempdir):
         helpers.rmdirs(tempdir)
@@ -37,22 +41,17 @@ def run_vcf2maf(
 
     assert vcf_unzipped.endswith('.vcf')
     vcf_unzipped_vep = vcf_unzipped[:-4]
-    vcf_unzipped_vep = vcf_unzipped_vep+'.vep.vcf'
+    vcf_unzipped_vep = vcf_unzipped_vep + '.vep.vcf'
 
     if os.path.exists(vcf_unzipped_vep):
         os.remove(vcf_unzipped_vep)
 
     cmd = [
         'vcf2maf', vcf_unzipped, maf_output,
-        os.path.join(reference, 'homo_sapiens', '99_GRCh37', 'Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz'),
-        os.path.join(reference, 'ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz'),
-        reference,
+        os.path.join(reference, vep_fasta_suffix),
+        reference, vep_ncbi_build, vep_cache_version,
+        vep_species
     ]
-
-    if tumour_id:
-        cmd.extend(['--tumor-id', tumour_id])
-    if normal_id:
-        cmd.extend(['--normal-id', normal_id])
 
     pypeliner.commandline.execute(*cmd)
 
@@ -64,7 +63,7 @@ def update_ids(infile, tumour_id, normal_id, output):
 
     df = pd.read_csv(infile, dtype='str', skiprows=1, sep='\t')
 
-    if len(df)>1:
+    if len(df) > 1:
         assert len(df['Tumor_Sample_Barcode'].unique()) == 1
         assert df['Tumor_Sample_Barcode'].unique()[0] == 'TUMOR'
 
@@ -82,3 +81,54 @@ def update_ids(infile, tumour_id, normal_id, output):
         outfile.write(maf_header)
 
         df.to_csv(outfile, sep='\t', index=False)
+
+
+def split_vcf(in_file, out_file_callback, lines_per_file):
+    """ Split a VCF file into smaller files.
+
+    :param in_file: Path of VCF file to split.
+
+    :param out_file_callback: Callback function which supplies file name given index of split.
+
+    :param lines_per_file: Maximum number of lines to be written per file.
+
+     """
+
+    def line_group(_, line_idx=itertools.count()):
+        return int(next(line_idx) / lines_per_file)
+
+    reader = vcf.Reader(filename=in_file)
+
+    for file_idx, records in itertools.groupby(reader, key=line_group):
+        file_name = out_file_callback(file_idx)
+
+        with open(file_name, 'wt') as out_fh:
+            writer = vcf.Writer(out_fh, reader)
+
+            for record in records:
+                writer.write_record(record)
+
+            writer.close()
+
+
+def merge_mafs(maf_files, output):
+    if isinstance(maf_files, dict):
+        maf_files = list(maf_files.values())
+
+    with helpers.GetFileHandle(output, 'wt') as maf_writer:
+
+        with helpers.GetFileHandle(maf_files[0]) as header_read:
+            header = header_read.readline()
+            assert header.startswith('#version 2.4')
+            maf_writer.write(header)
+
+            header = header_read.readline()
+            assert header.startswith('Hugo_Symbol')
+            maf_writer.write(header)
+
+        for filepath in maf_files:
+            with helpers.GetFileHandle(filepath, 'rt') as maf_reader:
+                for line in maf_reader:
+                    if line.startswith('Hugo_Symbol') or line.startswith('#'):
+                        continue
+                    maf_writer.write(line)

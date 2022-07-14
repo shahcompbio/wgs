@@ -14,7 +14,7 @@ def create_strelka_workflow(
         indel_maf_file,
         reference,
         reference_vep,
-        chromosomes,
+        params_refdir,
         normal_id,
         tumour_id,
         single_node=False,
@@ -34,7 +34,7 @@ def create_strelka_workflow(
         ret=mgd.OutputChunks('regions'),
         args=(
             reference,
-            chromosomes
+            params_refdir['chromosomes']
         ),
         kwargs={'size': params['split_size']}
     )
@@ -54,7 +54,7 @@ def create_strelka_workflow(
         ret=pypeliner.managed.TempOutputObj('known_sizes'),
         args=(
             pypeliner.managed.TempInputFile('ref_base_counts.tsv'),
-            chromosomes
+            params_refdir['chromosomes']
         )
     )
 
@@ -211,6 +211,10 @@ def create_strelka_workflow(
             mgd.InputFile(snv_vcf_file, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf_file),
             reference_vep,
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version'],
+            params_refdir['species'],
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )
@@ -222,6 +226,10 @@ def create_strelka_workflow(
             mgd.InputFile(indel_vcf_file, extensions=['.tbi', '.csi']),
             mgd.OutputFile(indel_maf_file),
             reference_vep,
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version'],
+            params_refdir['species'],
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )

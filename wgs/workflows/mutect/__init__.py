@@ -16,7 +16,7 @@ def create_mutect_workflow(
         snv_maf,
         reference,
         reference_vep,
-        chromosomes,
+        params_refdir,
         normal_id,
         tumour_id,
         single_node=None
@@ -35,7 +35,7 @@ def create_mutect_workflow(
         ret=mgd.OutputChunks('interval'),
         args=(
             reference,
-            chromosomes
+            params_refdir['chromosomes']
         ),
         kwargs={'size': params['split_size']}
     )
@@ -124,6 +124,10 @@ def create_mutect_workflow(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf),
             reference_vep,
+            params_refdir['vep_fasta_suffix'],
+            params_refdir['ncbi_build'],
+            params_refdir['cache_version'],
+            params_refdir['species'],
         ),
         kwargs={'tumour_id': tumour_id, 'normal_id': normal_id}
     )

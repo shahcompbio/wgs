@@ -6,7 +6,8 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y  samtools &&
 RUN conda install -c bioconda -c conda-forge bcftools cryptography
 RUN conda install -c bioconda gatk4
 RUN cp /app/run_strelka /opt/conda/bin && chmod 777 /opt/conda/bin/run_strelka
-RUN conda install -c shahcompbio -c bioconda vcf2maf_shahcompbio
+RUN conda install -c bioconda vcf2maf ensembl-vep==105
+RUN cp /app/vcf2maf /opt/conda/bin/ && chmod 777 /opt/conda/bin/vcf2maf
 
 RUN conda create --name museq python=2.7
 SHELL ["conda", "run", "-n", "museq", "/bin/bash", "-c"]
@@ -23,13 +24,14 @@ SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.2
+RUN pip install git+https://github.com/shahcompbio/pypeliner.git@v0.6.3
 RUN pip install git+https://github.com/shahcompbio/wgs.git@{git_commit}
 RUN pip install git+https://github.com/shahcompbio/biowrappers.git@master
 RUN pip install git+https://github.com/shahcompbio/wgs_qc_utils.git@v0.0.8
 RUN pip install git+https://github.com/shahcompbio/classifycopynumber.git@v0.0.2
 RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
-RUN pip install pandas numpy pysam matplotlib seaborn pyvcf
+RUN pip install pandas numpy matplotlib seaborn pyvcf
+RUN conda install -c bioconda pysam
 RUN conda install -c bioconda vcftools tabix bcftools snpeff
 RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
 RUN rm /opt/conda/bin/samtools
