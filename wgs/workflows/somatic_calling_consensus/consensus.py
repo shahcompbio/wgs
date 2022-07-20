@@ -201,7 +201,7 @@ def main(
         writer.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
 
     with open(counts_output, 'wt') as writer:
-        writer.write("chrom\tpos\tID\tNR\tNA\tND\n")
+        writer.write("chrom\tpos\tID\tTR\tTA\tTD\tNR\tNA\tND\n")
 
     for chromosome in chromosomes:
         museq_calls, _ = fetch_vcf(museq_snv_vcf, chromosome, 'museq_snv')
