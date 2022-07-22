@@ -2,6 +2,8 @@ def update_maf_counts(input_maf, counts_file, output_maf):
     counts = {}
     with open(counts_file) as infile:
         for line in infile:
+            if line.startswith('chrom'):
+                continue
             line = line.strip().split()
             chrom, pos, id, ta, tr, td, na, nr, nd = line
             counts[(chrom, pos, id)] = (ta, tr, td, na, nr, nd)
