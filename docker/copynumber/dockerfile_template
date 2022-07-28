@@ -10,8 +10,7 @@ RUN apt-get --allow-releaseinfo-change update \
 
 RUN conda install -c dranew remixt && rm -rf /opt/conda/lib/python2.7/site-packages/remixt*
 RUN apt-get update && apt-get install libc-dev libz-dev -y && apt-get install build-essential -y && rm -rf /var/lib/apt/lists/* && conda install -c bioconda cython
-RUN rm -rf /opt/conda/lib/python2.7/site-packages/pypeliner*
-RUN pip install git+https://github.com/amcpherson/remixt.git@v0.5.16p1
+RUN pip install git+https://github.com/amcpherson/remixt.git@v0.5.16p1 --no-deps
 
 RUN conda install -c bioconda vcftools tabix bcftools snpeff
 RUN conda install -c bioconda perl-vcftools-vcf==0.1.15
@@ -20,18 +19,18 @@ RUN conda install -c dranew pygenes
 
 RUN conda create --name titan python=2.7
 SHELL ["conda", "run", "-n", "titan", "/bin/bash", "-c"]
-RUN conda install --file /app/titan.csv
+RUN conda install --file /app/titan_requirements.txt
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN conda create --name hmmcopy python=2.7
 SHELL ["conda", "run", "-n", "hmmcopy", "/bin/bash", "-c"]
-RUN conda install --file /app/hmmcopy.csv
+RUN conda install --file /app/hmmcopy_requirements.txt
 RUN cp /app/*.R /opt/conda/envs/hmmcopy/bin
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN conda create --name museq python=2.7
 SHELL ["conda", "run", "-n", "museq", "/bin/bash", "-c"]
-RUN conda install -c conda-forge -c shahcompbio museq intervaltree museqportrait==0.99.13 -y
+RUN conda install --file /app/museq_requirements.txt
 SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
 
 RUN rm -rf /opt/conda/lib/python3.7/site-packages/pypeliner*

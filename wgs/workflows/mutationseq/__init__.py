@@ -185,7 +185,8 @@ def create_museq_workflow(
 
     workflow.subworkflow(
         name="mutationseq_single_maf",
-        func='wgs.workflows.vcf2maf.create_vcf2maf_workflow',
+        func='wgs.workflows.vcf2'
+             'maf.create_vcf2maf_workflow',
         args=(
             mgd.InputFile(snv_vcf, extensions=['.tbi', '.csi']),
             mgd.OutputFile(snv_maf),
