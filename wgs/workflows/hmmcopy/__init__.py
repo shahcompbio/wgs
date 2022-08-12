@@ -65,6 +65,7 @@ def create_hmmcopy_workflow(
             mgd.OutputFile(bias_pdf),
             mgd.OutputFile(correction_pdf),
             mgd.OutputFile(hmmcopy_pdf),
+            chromosomes
         ),
     )
 

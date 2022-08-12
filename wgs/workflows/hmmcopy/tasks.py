@@ -85,6 +85,7 @@ def plot_hmm(
         bias_pdf,
         correction_pdf,
         hmmcopy_pdf,
+        chromosomes
 ):
     helpers.makedirs(correction_plots_dir)
     helpers.makedirs(hmmcopy_plots_dir)
@@ -107,12 +108,12 @@ def plot_hmm(
     all_hmmcopy_pdfs = [os.path.join(hmmcopy_plots_dir, pdf)
                         for pdf in os.listdir(hmmcopy_plots_dir)]
     # just some sorting
-    human_pdfs = [os.path.join(hmmcopy_plots_dir, 'chr_{}.pdf'.format(chrom))
-                  for chrom in list(map(str, range(1, 23))) + ['X']]
-    all_hmmcopy_pdfs = [v for v in human_pdfs if v in all_hmmcopy_pdfs]
-    all_hmmcopy_pdfs += list(set(all_hmmcopy_pdfs) - set(human_pdfs))
+    pdfs = [os.path.join(hmmcopy_plots_dir, 'chr_{}.pdf'.format(chrom))
+                  for chrom in chromosomes]
+    all_hmmcopy_pdfs = [v for v in pdfs if v in all_hmmcopy_pdfs]
+    all_hmmcopy_pdfs += list(set(all_hmmcopy_pdfs) - set(pdfs))
 
-    pdfutils.merge_pdfs(human_pdfs, hmmcopy_pdf)
+    pdfutils.merge_pdfs(pdfs, hmmcopy_pdf)
 
 
 def annot_hmm(input_segments, output_file, pygenes_gtf):
