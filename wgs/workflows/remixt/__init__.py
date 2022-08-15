@@ -30,7 +30,10 @@ def create_remixt_workflow(
         reference,
         chromosomes,
         single_node=False,
+        sex='female'
 ):
+    assert sex in ['female', 'male']
+
     params = config.default_params('copynumber_calling')['remixt']
 
     workflow = pypeliner.workflow.Workflow()
@@ -41,6 +44,7 @@ def create_remixt_workflow(
         'max_copy_number': 10,
         'max_ploidy': 7,
         'chromosomes': chromosomes,
+        'is_female':  True if sex == 'female' else False
     }
 
     if chromosomes[0].startswith('chr'):
