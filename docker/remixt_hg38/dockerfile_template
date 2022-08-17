@@ -1,5 +1,7 @@
 FROM continuumio/miniconda3
 
+ADD . /app
+
 RUN apt update
 RUN apt install build-essential -y
 RUN apt install libbz2-dev -y
