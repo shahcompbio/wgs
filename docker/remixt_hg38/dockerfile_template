@@ -18,4 +18,10 @@ RUN pip install git+https://github.com/amcpherson/wgs_analysis.git@v0.0.1
 RUN pip install setuptools==57.5.0
 RUN pip install pyvcf intervaltree fpdf pysam PyPDF2==1.26.0
 RUN conda install -c bioconda vcftools tabix bcftools
-RUN apt install shapeit4 -y
+
+
+RUN conda create --name shapeit
+SHELL ["conda", "run", "-n", "shapeit", "/bin/bash", "-c"]
+RUN conda install --file /app/shapeit_requirements.yml
+SHELL ["conda", "run", "-n", "base", "/bin/bash", "-c"]
+ENV PATH="${PATH}:/opt/conda/envs/shapeit/bin"
