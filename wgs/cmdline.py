@@ -122,7 +122,6 @@ def parse_args():
     single_sample_copynumber_calling.set_defaults(which='single_sample_copynumber_calling')
     add_global_args(single_sample_copynumber_calling)
 
-
     # ================
     # copy number calling
     # ================
@@ -141,7 +140,12 @@ def parse_args():
         action='store_true',
         help='''remixt'''
     )
-
+    cna_calling.add_argument(
+        "--sex",
+        default='female',
+        choices=['female', 'male'],
+        help='''remixt is_female flag'''
+    )
     # ================
     # sample_qc
     # ================

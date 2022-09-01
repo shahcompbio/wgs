@@ -15,6 +15,8 @@ def copynumber_calling_workflow(args):
     run_titan = args['titan']
     run_remixt = args['remixt']
 
+    sex = args['sex']
+
     if not run_titan and not run_remixt:
         run_titan = True
         run_remixt = True
@@ -88,7 +90,7 @@ def copynumber_calling_workflow(args):
                 refdir_paths['reference'],
                 chromosomes
             ),
-            kwargs={'single_node': args['single_node']}
+            kwargs={'single_node': args['single_node'], 'sex': sex}
         )
 
     if run_titan:
