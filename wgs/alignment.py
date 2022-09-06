@@ -6,18 +6,17 @@ import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import alignment
 
-from wgs.config import config
 
 def alignment_workflow(args):
     inputs = helpers.load_yaml(args['input_yaml'])
-    outdir = args['out_dir']
-    meta_yaml = os.path.join(outdir, 'metadata.yaml')
-    input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
-    outputs = os.path.join(outdir, '{sample_id}', '{sample_id}.bam')
-    outputs_tdf = os.path.join(outdir, '{sample_id}', '{sample_id}.bam.tdf')
-    metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
-    metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.tar.gz')
+    meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
+    input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
+
+    outputs = args['output_prefix'] + 'aligned.bam'
+    outputs_tdf = args['output_prefix'] + 'aligned.bam.tdf'
+    metrics_output = args['output_prefix'] + 'aligned_metrics.csv'
+    metrics_tar = args['output_prefix'] + 'aligned_metrics.tar.gz'
 
     samples = list(inputs.keys())
     fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
@@ -65,7 +64,7 @@ def alignment_workflow(args):
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
-            outdir,
+            args['out_dir'],
             outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),
