@@ -260,7 +260,7 @@ def align_samples(
         func='wgs.workflows.alignment.tasks.markdups',
         args=(
             mgd.TempInputFile('merged_lanes.bam', extensions=['.bai']),
-            mgd.OutputFile('markdups.bam', fnames=bam_outputs, extensions=['.bai']),
+            mgd.OutputFile(bam_outputs, extensions=['.bai']),
             mgd.TempOutputFile('markdups_metrics'),
             pypeliner.managed.TempSpace("temp_markdups"),
         ),
@@ -293,7 +293,7 @@ def align_samples(
         name='tar',
         func='wgs.utils.helpers.make_tar_from_files',
         args=(
-            mgd.OutputFile('metrics_tar', 'sample_id', fnames=metrics_tar),
+            mgd.OutputFile(metrics_tar),
             [
                 mgd.TempInputFile('picard_insert_metrics.txt'),
                 mgd.TempInputFile('picard_insert_metrics.pdf'),
