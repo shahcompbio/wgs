@@ -29,7 +29,7 @@ def copynumber_calling_workflow(args):
 
     normal = inputs['normal']
     tumour = inputs['tumour']
-    targets = inputs['targets']
+    targets = inputs['target_list']
     breakpoints = inputs['breakpoints']
     sample_id = inputs['sample_id']
 
