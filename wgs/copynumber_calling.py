@@ -30,7 +30,6 @@ def copynumber_calling_workflow(args):
     normal = inputs['normal']
     tumour = inputs['tumour']
     targets = inputs['target_list']
-    breakpoints = inputs['breakpoints']
     sample_id = inputs['sample_id']
 
     titan_outfile = args['output_prefix'] + '_titan_markers.csv.gz'
@@ -58,6 +57,7 @@ def copynumber_calling_workflow(args):
     workflow = pypeliner.workflow.Workflow()
 
     if run_remixt:
+        breakpoints = inputs['breakpoints']
         workflow.subworkflow(
             name='remixt',
             func=remixt.create_remixt_workflow,
