@@ -81,10 +81,8 @@ def get_fastqs(inputs):
     fq2 = {}
 
     for lane in inputs['fastqs']:
-        print(lane)
-        print(inputs[lane])
-        fq1[lane] = inputs[lane]['fastq1']
-        fq2[lane] = inputs[lane]['fastq2']
+        fq1[lane] = inputs['fastqs'][lane]['fastq1']
+        fq2[lane] = inputs['fastqs'][lane]['fastq2']
 
     return fq1, fq2
 
