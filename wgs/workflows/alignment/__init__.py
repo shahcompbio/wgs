@@ -275,7 +275,7 @@ def align_samples(
         args=(
             mgd.InputFile(bam_outputs, extensions=['.bai']),
             mgd.TempInputFile('markdups_metrics'),
-            sample_info['sample_id'],
+            sample_info['SM'],
             refdir,
             mgd.OutputFile(metrics_outputs, extensions=['.yaml']),
             mgd.TempOutputFile('picard_insert_metrics.txt'),
@@ -344,7 +344,7 @@ def align_sample_no_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_info['sample_id'],
+            'sample_id': sample_info['SM'],
             'lane_id': lane_id,
         }
     )
@@ -447,7 +447,7 @@ def align_sample_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_info['sample_id'],
+            'sample_id': sample_info['SM'],
             'lane_id': lane_id,
         }
     )
