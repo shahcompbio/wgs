@@ -218,7 +218,7 @@ def align_samples(
     workflow.subworkflow(
         name='align_samples',
         func=align_func,
-        axes=('lane_id'),
+        axes=('lane_id',),
         args=(
             mgd.InputFile('input.r1.fastq.gz', 'lane_id', fnames=fastqs_r1),
             mgd.InputFile('input.r2.fastq.gz', 'lane_id', fnames=fastqs_r2),
