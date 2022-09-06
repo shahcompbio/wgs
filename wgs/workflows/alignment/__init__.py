@@ -189,51 +189,43 @@ def align_samples(
     else:
         align_func = align_sample_split
 
-    if not isinstance(bam_outputs, dict):
-        samples = sorted(set([v[0] for v in fastqs_r1.keys()]))
-        bam_outputs = {sample: bam_outputs[sample] for sample in samples}
-        metrics_outputs = {sample: metrics_outputs[sample] for sample in samples}
-        metrics_tar = {sample: metrics_tar[sample] for sample in samples}
-        bam_tdf = {sample: bam_tdf[sample] for sample in samples}
-
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
-        obj=mgd.TempOutputObj('sampleinfo', 'sample_id', axes_origin=[]),
+        obj=mgd.TempOutputObj('sampleinfo'),
         value=sample_info
     )
 
     workflow.setobj(
-        obj=mgd.OutputChunks('sample_id', 'lane_id'),
+        obj=mgd.OutputChunks('lane_id'),
         value=list(fastqs_r1.keys()),
     )
 
     workflow.subworkflow(
         name='fastqc_workflow',
         func=fastqc_workflow,
-        axes=('sample_id', 'lane_id'),
+        axes=('lane_id',),
         args=(
-            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
-            mgd.TempOutputFile('fastqc_R1.html', 'sample_id', 'lane_id'),
-            mgd.TempOutputFile('fastqc_R1.pdf', 'sample_id', 'lane_id'),
-            mgd.TempOutputFile('fastqc_R2.html', 'sample_id', 'lane_id'),
-            mgd.TempOutputFile('fastqc_R2.pdf', 'sample_id', 'lane_id'),
+            mgd.InputFile('input.r1.fastq.gz', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'lane_id', fnames=fastqs_r2),
+            mgd.TempOutputFile('fastqc_R1.html', 'lane_id'),
+            mgd.TempOutputFile('fastqc_R1.pdf', 'lane_id'),
+            mgd.TempOutputFile('fastqc_R2.html', 'lane_id'),
+            mgd.TempOutputFile('fastqc_R2.pdf', 'lane_id'),
         )
     )
 
     workflow.subworkflow(
         name='align_samples',
         func=align_func,
-        axes=('sample_id', 'lane_id'),
+        axes=('lane_id'),
         args=(
-            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
-            mgd.TempOutputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            mgd.TempOutputFile('samtools_flagstat.txt', 'sample_id', 'lane_id'),
-            mgd.InputInstance("sample_id"),
+            mgd.InputFile('input.r1.fastq.gz', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'lane_id', fnames=fastqs_r2),
+            mgd.TempOutputFile('aligned_lanes.bam', 'lane_id'),
+            mgd.TempOutputFile('samtools_flagstat.txt', 'lane_id'),
             mgd.InputInstance("lane_id"),
-            mgd.TempInputObj('sampleinfo', 'sample_id'),
+            mgd.TempInputObj('sampleinfo'),
             refdir
         ),
         kwargs={'picard_mem': picard_mem}
@@ -247,10 +239,9 @@ def align_samples(
             disk=400
         ),
         func="wgs.workflows.alignment.tasks.merge_bams",
-        axes=('sample_id',),
         args=(
-            mgd.TempInputFile('aligned_lanes.bam', 'sample_id', 'lane_id'),
-            mgd.TempOutputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
+            mgd.TempInputFile('aligned_lanes.bam', 'lane_id'),
+            mgd.TempOutputFile('merged_lanes.bam', extensions=['.bai']),
             mgd.TempSpace('merge_tumour_lanes_tempdir')
         ),
         kwargs={
@@ -267,12 +258,11 @@ def align_samples(
             disk=300
         ),
         func='wgs.workflows.alignment.tasks.markdups',
-        axes=('sample_id',),
         args=(
-            mgd.TempInputFile('merged_lanes.bam', 'sample_id', extensions=['.bai']),
-            mgd.OutputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
-            mgd.TempOutputFile('markdups_metrics', 'sample_id'),
-            pypeliner.managed.TempSpace("temp_markdups", "sample_id"),
+            mgd.TempInputFile('merged_lanes.bam', extensions=['.bai']),
+            mgd.OutputFile('markdups.bam', fnames=bam_outputs, extensions=['.bai']),
+            mgd.TempOutputFile('markdups_metrics'),
+            pypeliner.managed.TempSpace("temp_markdups"),
         ),
         kwargs={
             'mem': '{}G'.format(picard_mem),
@@ -282,43 +272,41 @@ def align_samples(
     workflow.subworkflow(
         name='metrics',
         func=collect_bam_metrics,
-        axes=('sample_id',),
         args=(
-            mgd.InputFile('markdups.bam', 'sample_id', fnames=bam_outputs, extensions=['.bai']),
-            mgd.TempInputFile('markdups_metrics', 'sample_id'),
-            mgd.InputInstance('sample_id'),
+            mgd.InputFile(bam_outputs, extensions=['.bai']),
+            mgd.TempInputFile('markdups_metrics'),
+            sample_info['sample_id'],
             refdir,
-            mgd.OutputFile('metrics_output', 'sample_id', fnames=metrics_outputs, extensions=['.yaml']),
-            mgd.TempOutputFile('picard_insert_metrics.txt', 'sample_id'),
-            mgd.TempOutputFile('picard_insert_metrics.pdf', 'sample_id'),
-            mgd.TempOutputFile('flagstat_metrics.txt', 'sample_id'),
-            mgd.TempOutputFile('picard_gc_metrics.txt', 'sample_id'),
-            mgd.TempOutputFile('picard_gc_summary.txt', 'sample_id'),
-            mgd.TempOutputFile('picard_gc.pdf', 'sample_id'),
-            mgd.TempOutputFile('picard_wgs_metrics.txt', 'sample_id'),
-            mgd.OutputFile('out.bam.tdf', 'sample_id', fnames=bam_tdf),
+            mgd.OutputFile(metrics_outputs, extensions=['.yaml']),
+            mgd.TempOutputFile('picard_insert_metrics.txt'),
+            mgd.TempOutputFile('picard_insert_metrics.pdf'),
+            mgd.TempOutputFile('flagstat_metrics.txt'),
+            mgd.TempOutputFile('picard_gc_metrics.txt'),
+            mgd.TempOutputFile('picard_gc_summary.txt'),
+            mgd.TempOutputFile('picard_gc.pdf'),
+            mgd.TempOutputFile('picard_wgs_metrics.txt'),
+            mgd.OutputFile(bam_tdf),
         )
     )
 
     workflow.transform(
         name='tar',
         func='wgs.utils.helpers.make_tar_from_files',
-        axes=('sample_id',),
         args=(
             mgd.OutputFile('metrics_tar', 'sample_id', fnames=metrics_tar),
             [
-                mgd.TempInputFile('picard_insert_metrics.txt', 'sample_id'),
-                mgd.TempInputFile('picard_insert_metrics.pdf', 'sample_id'),
-                mgd.TempInputFile('flagstat_metrics.txt', 'sample_id'),
-                mgd.TempInputFile('picard_gc_metrics.txt', 'sample_id'),
-                mgd.TempInputFile('picard_gc_summary.txt', 'sample_id'),
-                mgd.TempInputFile('picard_gc.pdf', 'sample_id'),
-                mgd.TempInputFile('picard_wgs_metrics.txt', 'sample_id'),
-                mgd.TempInputFile('markdups_metrics', 'sample_id'),
-                mgd.TempInputFile('fastqc_R1.html', 'sample_id', 'lane_id'),
-                mgd.TempInputFile('fastqc_R1.pdf', 'sample_id', 'lane_id'),
-                mgd.TempInputFile('fastqc_R2.html', 'sample_id', 'lane_id'),
-                mgd.TempInputFile('fastqc_R2.pdf', 'sample_id', 'lane_id'),
+                mgd.TempInputFile('picard_insert_metrics.txt'),
+                mgd.TempInputFile('picard_insert_metrics.pdf'),
+                mgd.TempInputFile('flagstat_metrics.txt'),
+                mgd.TempInputFile('picard_gc_metrics.txt'),
+                mgd.TempInputFile('picard_gc_summary.txt'),
+                mgd.TempInputFile('picard_gc.pdf'),
+                mgd.TempInputFile('picard_wgs_metrics.txt'),
+                mgd.TempInputFile('markdups_metrics'),
+                mgd.TempInputFile('fastqc_R1.html', 'lane_id'),
+                mgd.TempInputFile('fastqc_R1.pdf', 'lane_id'),
+                mgd.TempInputFile('fastqc_R2.html', 'lane_id'),
+                mgd.TempInputFile('fastqc_R2.pdf', 'lane_id'),
             ],
             mgd.TempSpace('wgs_metrics')
         )
@@ -328,7 +316,7 @@ def align_samples(
 
 def align_sample_no_split(
         fastq_1, fastq_2, out_file,
-        samtools_flagstat, sample_id,
+        samtools_flagstat,
         lane_id, sample_info, refdir,
         picard_mem=None
 ):
@@ -356,7 +344,7 @@ def align_sample_no_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_id,
+            'sample_id': sample_info['sample_id'],
             'lane_id': lane_id,
         }
     )
@@ -401,7 +389,7 @@ def align_sample_no_split(
 
 def align_sample_split(
         fastq_1, fastq_2, out_file,
-        samtools_flagstat, sample_id,
+        samtools_flagstat,
         lane_id, sample_info, refdir,
         picard_mem=2
 ):
@@ -459,7 +447,7 @@ def align_sample_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_id,
+            'sample_id': sample_info['sample_id'],
             'lane_id': lane_id,
         }
     )
