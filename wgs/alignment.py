@@ -18,16 +18,15 @@ def alignment_workflow(args):
     metrics_output = args['output_prefix'] + 'aligned_metrics.csv'
     metrics_tar = args['output_prefix'] + 'aligned_metrics.tar.gz'
 
-    samples = list(inputs.keys())
-    fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
+    fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs)
 
-    sample_info = helpers.get_sample_info(inputs)
+    sample_info = inputs['readgroup_info']
 
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
-        obj=mgd.OutputChunks('sample_id', 'lane_id'),
+        obj=mgd.OutputChunks('lane_id'),
         value=list(fastqs_r1.keys()),
     )
 
@@ -35,12 +34,12 @@ def alignment_workflow(args):
         name="align_samples",
         func=alignment.align_samples,
         args=(
-            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
-            mgd.Template('output.bam', 'sample_id', template=outputs),
-            mgd.Template('metrics.txt', 'sample_id', template=metrics_output),
-            mgd.Template('metrics.tar', 'sample_id', template=metrics_tar),
-            mgd.Template('output.bam.tdf', 'sample_id', template=outputs_tdf),
+            mgd.InputFile('input.r1.fastq.gz', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'lane_id', fnames=fastqs_r2),
+            mgd.Template(outputs),
+            mgd.Template(metrics_output),
+            mgd.Template(metrics_tar),
+            mgd.Template(outputs_tdf),
             sample_info,
             args['refdir']
         ),
@@ -48,17 +47,14 @@ def alignment_workflow(args):
                 'picard_mem': args['picard_mem']}
     )
 
-    outputted_filenames = helpers.expand_list(
-        [
-            outputs,
-            outputs_tdf,
-            metrics_output,
-            metrics_tar,
+    outputted_filenames = [
+        outputs,
+        outputs_tdf,
+        metrics_output,
+        metrics_tar,
 
-        ],
-        samples,
-        "sample_id"
-    )
+    ]
+
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
