@@ -22,7 +22,6 @@ def create_somatic_calling_workflow(
         single_node=False,
         is_exome=False
 ):
-
     paths_refdir = config.refdir_data(refdir)['paths']
     params_refdir = config.refdir_data(refdir)['params']
 
@@ -31,7 +30,6 @@ def create_somatic_calling_workflow(
     workflow.subworkflow(
         name="mutationseq_paired",
         func='wgs.workflows.mutationseq.create_museq_workflow',
-        axes=('sample_id',),
         args=(
             mgd.OutputFile('museq_snv_ann.vcf.gz', 'sample_id',
                            extensions=['.csi', '.tbi'], fnames=museq_vcf),
@@ -54,7 +52,6 @@ def create_somatic_calling_workflow(
     workflow.subworkflow(
         name="strelka",
         func='wgs.workflows.strelka.create_strelka_workflow',
-        axes=('sample_id',),
         args=(
             mgd.InputFile(normal, extensions=['.bai']),
             mgd.InputFile(tumour, extensions=['.bai']),
@@ -77,19 +74,16 @@ def create_somatic_calling_workflow(
     workflow.subworkflow(
         name="mutect",
         func='wgs.workflows.mutect.create_mutect_workflow',
-        axes=('sample_id',),
         args=(
-            mgd.InputFile('normal_bam', 'sample_id', fnames=normals, extensions=['.bai']),
-            mgd.InputFile('tumour_bam', 'sample_id', fnames=tumours, extensions=['.bai']),
-            mgd.OutputFile('mutect_snv_ann.vcf.gz', 'sample_id',
-                           extensions=['.csi', '.tbi'], fnames=mutect_vcf),
-            mgd.OutputFile('mutect_snv_ann.maf', 'sample_id',
-                           fnames=mutect_maf),
+            mgd.InputFile(normal, extensions=['.bai']),
+            mgd.InputFile(tumour, extensions=['.bai']),
+            mgd.OutputFile(mutect_vcf, extensions=['.csi', '.tbi']),
+            mgd.OutputFile(mutect_maf),
             paths_refdir['reference'],
             paths_refdir['reference_vep'],
             params_refdir,
-            mgd.TempInputObj('normal_id', 'sample_id'),
-            mgd.TempInputObj('tumour_id', 'sample_id'),
+            normal_id,
+            tumour_id,
         ),
         kwargs={
             'single_node': single_node,
@@ -100,22 +94,16 @@ def create_somatic_calling_workflow(
     workflow.subworkflow(
         name="somatic_consensus",
         func='wgs.workflows.somatic_calling_consensus.create_somatic_consensus_workflow',
-        axes=('sample_id',),
         args=(
-            mgd.InputFile('mutect_snv_ann.vcf.gz', 'sample_id',
-                          extensions=['.csi', '.tbi'], fnames=mutect_vcf),
-            mgd.InputFile('strelka_snv_ann.vcf.gz', 'sample_id',
-                          extensions=['.csi', '.tbi'], fnames=strelka_snv_vcf),
-            mgd.InputFile('strelka_indel_ann.vcf.gz', 'sample_id',
-                          extensions=['.csi', '.tbi'], fnames=strelka_indel_vcf),
-            mgd.InputFile('museq_snv_ann.vcf.gz', 'sample_id',
-                          extensions=['.csi', '.tbi'], fnames=museq_vcf),
-            mgd.OutputFile("somatic_consensus.maf", 'sample_id',
-                           fnames=somatic_consensus_maf),
+            mgd.InputFile(mutect_vcf, extensions=['.csi', '.tbi']),
+            mgd.InputFile(strelka_snv_vcf, extensions=['.csi', '.tbi']),
+            mgd.InputFile(strelka_indel_vcf, extensions=['.csi', '.tbi']),
+            mgd.InputFile(museq_vcf, extensions=['.csi', '.tbi']),
+            mgd.OutputFile(somatic_consensus_maf),
             params_refdir,
             paths_refdir['reference_vep'],
-            mgd.TempInputObj('normal_id', 'sample_id'),
-            mgd.TempInputObj('tumour_id', 'sample_id'),
+            normal_id,
+            tumour_id,
         ),
     )
 
