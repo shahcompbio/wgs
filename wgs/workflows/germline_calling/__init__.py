@@ -29,7 +29,7 @@ def create_germline_calling_workflow(
         name="mutationseq_single",
         func='wgs.workflows.mutationseq.create_museq_workflow',
         args=(
-            mgd.OutputFile('museq_ss_vcf', extensions=['.csi', '.tbi']),
+            mgd.OutputFile(museq_ss_vcf, extensions=['.csi', '.tbi']),
             mgd.OutputFile(museq_ss_maf),
             mgd.OutputFile(museq_single_pdf),
             paths_refdir['reference'],
