@@ -5,24 +5,15 @@ from wgs.workflows import alignment
 
 
 def realign_bam_files(
-        inputs, outputs, metrics_output,
-        metrics_tar, refdir, samples,
+        input, output, metrics_output,
+        metrics_tar, refdir,
         single_node=False,
         ignore_bamtofastq_exception=False,
         picard_mem=8
 ):
-    inputs = dict([(sample, inputs[sample]) for sample in samples])
-    outputs = dict([(sample, outputs[sample]) for sample in samples])
-    outputs_tdf = dict([(sample, outputs[sample] + '.tdf') for sample in samples])
-
-    metrics_output = dict([(sample, metrics_output[sample]) for sample in samples])
-    metrics_tar = dict([(sample, metrics_tar[sample]) for sample in samples])
+    outputs_tdf = output + '.tdf'
 
     workflow = pypeliner.workflow.Workflow()
-
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples)
 
     workflow.transform(
         name='bam_to_fastq',
@@ -31,12 +22,11 @@ def realign_bam_files(
             disk=500
         ),
         func="wgs.workflows.realignment.tasks.split_by_rg",
-        axes=('sample_id',),
         args=(
-            mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
-            mgd.TempOutputFile("inputdata_read1.fastq.gz", 'sample_id', "readgroup"),
-            mgd.TempOutputFile("inputdata_read2.fastq.gz", 'sample_id', "readgroup", axes_origin=[]),
-            mgd.TempSpace("bamtofastq", 'sample_id'),
+            mgd.InputFile(input),
+            mgd.TempOutputFile("inputdata_read1.fastq.gz",  "readgroup"),
+            mgd.TempOutputFile("inputdata_read2.fastq.gz",  "readgroup", axes_origin=[]),
+            mgd.TempSpace("bamtofastq"),
             ignore_bamtofastq_exception
         )
     )
@@ -44,10 +34,9 @@ def realign_bam_files(
     workflow.transform(
         name='get_sample_info',
         func="wgs.workflows.realignment.tasks.get_read_group",
-        axes=('sample_id',),
-        ret=mgd.TempOutputObj('sample_info', 'sample_id'),
+        ret=mgd.TempOutputObj('sample_info'),
         args=(
-            mgd.InputFile('input.bam', 'sample_id', fnames=inputs),
+            mgd.InputFile(input),
         )
     )
 
@@ -55,14 +44,13 @@ def realign_bam_files(
         name='align_samples',
         func=alignment.align_samples,
         args=(
-            mgd.TempInputFile("inputdata_read1.fastq.gz", "sample_id", "readgroup", axes_origin=[]),
-            mgd.TempInputFile("inputdata_read2.fastq.gz", "sample_id", "readgroup", axes_origin=[]),
-            mgd.OutputFile('output.bam', 'sample_id', fnames=outputs, extensions=['.bai'], axes_origin=[]),
-            mgd.OutputFile('output_metrics.csv', 'sample_id', fnames=metrics_output, extensions=['.yaml'],
-                           axes_origin=[]),
-            mgd.OutputFile('output_metrics.tar', 'sample_id', fnames=metrics_tar, axes_origin=[]),
-            mgd.OutputFile('output.bam.tdf', 'sample_id', fnames=outputs_tdf, axes_origin=[]),
-            mgd.TempInputObj('sample_info', 'sample_id', axes_origin=[]),
+            mgd.TempInputFile("inputdata_read1.fastq.gz", "readgroup"),
+            mgd.TempInputFile("inputdata_read2.fastq.gz", "readgroup"),
+            mgd.OutputFile(output, extensions=['.bai']),
+            mgd.OutputFile(metrics_output, extensions=['.yaml']),
+            mgd.OutputFile(metrics_tar),
+            mgd.OutputFile(outputs_tdf),
+            mgd.TempInputObj('sample_info'),
             refdir
         ),
         kwargs={
