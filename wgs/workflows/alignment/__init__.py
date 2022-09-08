@@ -189,6 +189,8 @@ def align_samples(
     else:
         align_func = align_sample_split
 
+    raise Exception(sample_info)
+
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
