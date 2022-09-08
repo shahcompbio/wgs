@@ -228,7 +228,8 @@ def align_samples(
             mgd.TempOutputFile('samtools_flagstat.txt', 'lane_id'),
             mgd.InputInstance("lane_id"),
             mgd.TempInputObj('sampleinfo'),
-            refdir
+            refdir,
+            sample_id
         ),
         kwargs={'picard_mem': picard_mem}
     )
@@ -319,7 +320,7 @@ def align_samples(
 def align_sample_no_split(
         fastq_1, fastq_2, out_file,
         samtools_flagstat,
-        lane_id, sample_info, refdir,
+        lane_id, sample_info, refdir, sample_id,
         picard_mem=None
 ):
     ref_genome = config.refdir_data(refdir)['paths']['reference']
@@ -346,7 +347,7 @@ def align_sample_no_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_info['SM'],
+            'sample_id': sample_id,
             'lane_id': lane_id,
         }
     )
@@ -392,7 +393,7 @@ def align_sample_no_split(
 def align_sample_split(
         fastq_1, fastq_2, out_file,
         samtools_flagstat,
-        lane_id, sample_info, refdir,
+        lane_id, sample_info, refdir, sample_id,
         picard_mem=2
 ):
     ref_genome = config.refdir_data(refdir)['paths']['reference']
@@ -449,7 +450,7 @@ def align_sample_split(
             sample_info,
         ),
         kwargs={
-            'sample_id': sample_info['SM'],
+            'sample_id': sample_id,
             'lane_id': lane_id,
         }
     )
