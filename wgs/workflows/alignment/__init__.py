@@ -181,6 +181,7 @@ def align_samples(
         bam_tdf,
         sample_info,
         refdir,
+        sample_id,
         single_node=False,
         picard_mem=8,
 ):
@@ -276,7 +277,7 @@ def align_samples(
         args=(
             mgd.InputFile(bam_outputs, extensions=['.bai']),
             mgd.TempInputFile('markdups_metrics'),
-            sample_info['SM'],
+            sample_id,
             refdir,
             mgd.OutputFile(metrics_outputs, extensions=['.yaml']),
             mgd.TempOutputFile('picard_insert_metrics.txt'),

@@ -21,6 +21,7 @@ def alignment_workflow(args):
     fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs)
 
     sample_info = inputs['readgroup_info']
+    sample_id = sample_info['SM']
 
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
@@ -41,7 +42,8 @@ def alignment_workflow(args):
             mgd.Template(metrics_tar),
             mgd.Template(outputs_tdf),
             sample_info,
-            args['refdir']
+            args['refdir'],
+            sample_id
         ),
         kwargs={'single_node': args['single_node'],
                 'picard_mem': args['picard_mem']}

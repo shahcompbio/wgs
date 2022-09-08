@@ -40,6 +40,15 @@ def realign_bam_files(
         )
     )
 
+    workflow.transform(
+        name='get_sample_id',
+        func="wgs.workflows.realignment.tasks.get_sample_id",
+        ret=mgd.TempOutputObj('sample_id'),
+        args=(
+            mgd.TempInputObj('sample_info'),
+        )
+    )
+
     workflow.subworkflow(
         name='align_samples',
         func=alignment.align_samples,
@@ -51,7 +60,8 @@ def realign_bam_files(
             mgd.OutputFile(metrics_tar),
             mgd.OutputFile(outputs_tdf),
             mgd.TempInputObj('sample_info'),
-            refdir
+            refdir,
+            mgd.TempInputObj('sample_id')
         ),
         kwargs={
             'single_node': single_node,
