@@ -53,3 +53,11 @@ def get_read_group(infile):
             )
 
     return {rg['ID']: rg for rg in header}
+
+
+def get_sample_id(sample_info):
+    samples = [sample_info[v]['SM'] for v in sample_info]
+
+    assert len(set(samples)) == 1
+
+    return samples[0]

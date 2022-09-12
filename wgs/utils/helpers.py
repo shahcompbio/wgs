@@ -76,28 +76,15 @@ def get_default_ctx(memory=4, walltime='04:00', ncpus=1, disk=8):
     return ctx
 
 
-def get_fastqs(inputs, samples, sample_type):
+def get_fastqs(inputs):
     fq1 = {}
     fq2 = {}
 
-    for sample in samples:
-        if sample_type:
-            fastqs = inputs[sample]['fastqs'][sample_type]
-        else:
-            fastqs = inputs[sample]['fastqs']
-        for lane in fastqs:
-            fq1[(sample, lane)] = fastqs[lane]['fastq1']
-            fq2[(sample, lane)] = fastqs[lane]['fastq2']
+    for lane in inputs['fastqs']:
+        fq1[lane] = inputs['fastqs'][lane]['fastq1']
+        fq2[lane] = inputs['fastqs'][lane]['fastq2']
 
     return fq1, fq2
-
-
-def get_sample_info(inputs):
-    sample_info = {}
-    for sample in inputs:
-        assert sample not in sample_info
-        sample_info[sample] = inputs[sample]['readgroup_info']
-    return sample_info
 
 
 def build_shell_script(command, tag, tempdir):
@@ -177,12 +164,11 @@ def get_fastq_files(input_yaml):
     data = load_yaml(input_yaml)
 
     items = {}
-    for cell_id, cell_data in data.items():
-        items[cell_id] = {}
-        for lane, laneinfo in cell_data["fastqs"].items():
-            items[cell_id][lane] = {}
-            items[cell_id][lane]['fastq_1'] = format_file_yaml(laneinfo['fastq_1'])
-            items[cell_id][lane]['fastq_2'] = format_file_yaml(laneinfo['fastq_2'])
+    for lane, laneinfo in data["fastqs"].items():
+        items[lane] = {}
+        items[lane]['fastq_1'] = format_file_yaml(laneinfo['fastq_1'])
+        items[lane]['fastq_2'] = format_file_yaml(laneinfo['fastq_2'])
+
     return items
 
 
@@ -311,26 +297,6 @@ def symlink(actual_file, symlink):
 
 def copy_file(infile, output):
     shutil.copy(infile, output)
-
-
-# def get_fastqs(fastqs_file):
-#
-#     data = load_yaml(fastqs_file)
-#
-#     for cell in data.keys():
-#         assert "fastqs" in data[
-#             cell], "couldnt extract fastq file paths from yaml input for cell: {}".format(cell)
-#
-#     fastq_1_filenames = dict()
-#     fastq_2_filenames = dict()
-#     for cell in data.keys():
-#         fastqs = data[cell]["fastqs"]
-#
-#         for lane, paths in fastqs.items():
-#             fastq_1_filenames[(cell, lane)] = paths["fastq_1"]
-#             fastq_2_filenames[(cell, lane)] = paths["fastq_2"]
-#
-#     return fastq_1_filenames, fastq_2_filenames
 
 
 def get_instrument_info(fastqs_file):
@@ -578,12 +544,12 @@ def generate_and_upload_metadata(
 
 
 def load_qc_input_yaml_flat(path):
-    data= {}
+    data = {}
     yaml = load_yaml(path)
 
     for cohort, cohort_data in yaml.items():
         for sample, sample_data in cohort_data.items():
-            data[(cohort, sample)] = {data_label: data 
-                for data_label, data in sample_data.items()
-            }
+            data[(cohort, sample)] = {data_label: data
+                                      for data_label, data in sample_data.items()
+                                      }
     return data

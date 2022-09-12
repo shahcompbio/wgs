@@ -6,29 +6,28 @@ import pypeliner.managed as mgd
 from wgs.utils import helpers
 from wgs.workflows import alignment
 
-from wgs.config import config
 
 def alignment_workflow(args):
     inputs = helpers.load_yaml(args['input_yaml'])
-    outdir = args['out_dir']
-    meta_yaml = os.path.join(outdir, 'metadata.yaml')
-    input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
-    outputs = os.path.join(outdir, '{sample_id}', '{sample_id}.bam')
-    outputs_tdf = os.path.join(outdir, '{sample_id}', '{sample_id}.bam.tdf')
-    metrics_output = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.csv')
-    metrics_tar = os.path.join(outdir, '{sample_id}', '{sample_id}_metrics.tar.gz')
+    meta_yaml = os.path.join(args['out_dir'], 'metadata.yaml')
+    input_yaml_blob = os.path.join(args['out_dir'], 'input.yaml')
 
-    samples = list(inputs.keys())
-    fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs, samples, None)
+    outputs = args['output_prefix'] + 'aligned.bam'
+    outputs_tdf = args['output_prefix'] + 'aligned.bam.tdf'
+    metrics_output = args['output_prefix'] + 'aligned_metrics.csv'
+    metrics_tar = args['output_prefix'] + 'aligned_metrics.tar.gz'
 
-    sample_info = helpers.get_sample_info(inputs)
+    fastqs_r1, fastqs_r2 = helpers.get_fastqs(inputs)
+
+    sample_info = inputs['readgroup_info']
+    sample_id = sample_info['SM']
 
     pyp = pypeliner.app.Pypeline(config=args)
     workflow = pypeliner.workflow.Workflow()
 
     workflow.setobj(
-        obj=mgd.OutputChunks('sample_id', 'lane_id'),
+        obj=mgd.OutputChunks('lane_id'),
         value=list(fastqs_r1.keys()),
     )
 
@@ -36,36 +35,34 @@ def alignment_workflow(args):
         name="align_samples",
         func=alignment.align_samples,
         args=(
-            mgd.InputFile('input.r1.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r1),
-            mgd.InputFile('input.r2.fastq.gz', 'sample_id', 'lane_id', fnames=fastqs_r2),
-            mgd.Template('output.bam', 'sample_id', template=outputs),
-            mgd.Template('metrics.txt', 'sample_id', template=metrics_output),
-            mgd.Template('metrics.tar', 'sample_id', template=metrics_tar),
-            mgd.Template('output.bam.tdf', 'sample_id', template=outputs_tdf),
+            mgd.InputFile('input.r1.fastq.gz', 'lane_id', fnames=fastqs_r1),
+            mgd.InputFile('input.r2.fastq.gz', 'lane_id', fnames=fastqs_r2),
+            mgd.Template(outputs),
+            mgd.Template(metrics_output),
+            mgd.Template(metrics_tar),
+            mgd.Template(outputs_tdf),
             sample_info,
-            args['refdir']
+            args['refdir'],
+            sample_id
         ),
         kwargs={'single_node': args['single_node'],
                 'picard_mem': args['picard_mem']}
     )
 
-    outputted_filenames = helpers.expand_list(
-        [
-            outputs,
-            outputs_tdf,
-            metrics_output,
-            metrics_tar,
+    outputted_filenames = [
+        outputs,
+        outputs_tdf,
+        metrics_output,
+        metrics_tar,
 
-        ],
-        samples,
-        "sample_id"
-    )
+    ]
+
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
-            outdir,
+            args['out_dir'],
             outputted_filenames,
             mgd.OutputFile(meta_yaml)
         ),

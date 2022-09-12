@@ -17,40 +17,31 @@ def single_sample_copynumber_calling_workflow(args):
     meta_yaml = os.path.join(outdir, 'metadata.yaml')
     input_yaml_blob = os.path.join(outdir, 'input.yaml')
 
-    bams = helpers.get_values_from_input(inputs, 'bam')
-    samples = list(bams.keys())
+    bam = inputs['bam']
+    sample_id = inputs['sample_id']
 
-    cna_outdir = os.path.join(args['out_dir'], 'copynumber', '{sample_id}')
-
-    hmmcopy_raw_dir = os.path.join(cna_outdir, 'hmmcopy')
-    bias_pdf = os.path.join(hmmcopy_raw_dir, 'plots', '{sample_id}_bias.pdf')
-    correction_pdf = os.path.join(hmmcopy_raw_dir, 'plots', '{sample_id}_correction.pdf')
-    hmmcopy_pdf = os.path.join(hmmcopy_raw_dir, 'plots', '{sample_id}_hmmcopy.pdf')
-    correction_table = os.path.join(hmmcopy_raw_dir, '{sample_id}_correctreads_with_state.txt')
-    pygenes = os.path.join(hmmcopy_raw_dir, '{sample_id}_hmmcopy.seg.pygenes')
+    bias_pdf = args['output_prefix'] + '_bias.pdf'
+    correction_pdf = args['output_prefix'] + '_correction.pdf'
+    hmmcopy_pdf = args['output_prefix'] + '_hmmcopy.pdf'
+    correction_table = args['output_prefix'] + '_correctreads_with_state.txt'
+    pygenes = args['output_prefix'] + '_hmmcopy.seg.pygenes'
 
     refdir_paths = config.refdir_data(args['refdir'])['paths']
     chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
     workflow = pypeliner.workflow.Workflow()
 
-    workflow.setobj(
-        obj=mgd.OutputChunks('sample_id'),
-        value=samples)
-
     workflow.subworkflow(
         name='hmmcopy',
         func=hmmcopy.create_hmmcopy_workflow,
-        axes=('sample_id',),
         args=(
-            mgd.InputFile("sample.bam", 'sample_id', fnames=bams,
-                          extensions=['.bai']),
-            mgd.InputInstance('sample_id'),
-            mgd.OutputFile('bias', 'sample_id', template=bias_pdf),
-            mgd.OutputFile('correction', 'sample_id', template=correction_pdf),
-            mgd.OutputFile('hmmcopy', 'sample_id', template=hmmcopy_pdf),
-            mgd.OutputFile('correction_table', 'sample_id', template=correction_table),
-            mgd.OutputFile('pygenes', 'sample_id', template=pygenes),
+            mgd.InputFile(bam, extensions=['.bai']),
+            sample_id,
+            mgd.OutputFile(bias_pdf),
+            mgd.OutputFile(correction_pdf),
+            mgd.OutputFile(hmmcopy_pdf),
+            mgd.OutputFile(correction_table),
+            mgd.OutputFile(pygenes),
             chromosomes,
             refdir_paths['map_wig'],
             refdir_paths['gc_wig'],
@@ -66,15 +57,13 @@ def single_sample_copynumber_calling_workflow(args):
         pygenes,
     ]
 
-    outputted_filenames = helpers.expand_list(filenames, samples, "sample_id")
-
     workflow.transform(
         name='generate_meta_files_results',
         func='wgs.utils.helpers.generate_and_upload_metadata',
         args=(
             sys.argv[0:],
             args["out_dir"],
-            outputted_filenames,
+            filenames,
             mgd.OutputFile(meta_yaml)
         ),
         kwargs={

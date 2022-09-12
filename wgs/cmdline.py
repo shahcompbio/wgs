@@ -4,6 +4,7 @@ Created on Feb 19, 2018
 @author: dgrewal
 '''
 import json
+import os
 
 import argparse
 import pypeliner
@@ -16,7 +17,7 @@ def add_global_args(subparser):
                            required=True,
                            help='''yaml file with tumour, normal and sampleids''')
 
-    subparser.add_argument("--out_dir",
+    subparser.add_argument("--output_prefix",
                            required=True,
                            help='''Path to output directory.''')
 
@@ -195,5 +196,9 @@ def parse_args():
                                  help='''json string to override the defaults in config''')
 
     args = vars(parser.parse_args())
+
+    if not args['output_prefix'].endswith('/'):
+        args['output_prefix'] = args['output_prefix'] + '_'
+    args['out_dir'] = os.path.dirname(args['output_prefix'])
 
     return args
