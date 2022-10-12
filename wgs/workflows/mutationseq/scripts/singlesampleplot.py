@@ -34,6 +34,8 @@ class PlotSingleSample(object):
 
         for filename in (self.thousand_genomes, self.dbsnp):
             with pysam.Tabixfile(filename) as ref_vcf_data:
+                if chromosome not in ref_vcf_data.contigs:
+                    continue
                 for record in ref_vcf_data.fetch(chromosome):
                     record = record.replace('chr', '').split()
 
