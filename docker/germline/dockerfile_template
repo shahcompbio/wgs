@@ -31,4 +31,5 @@ RUN pip install pandas matplotlib seaborn pyvcf tables
 RUN conda install -c bioconda pysam
 RUN rm /opt/conda/bin/samtools
 
+RUN pip install scipy
 ENV PATH="${PATH}:/opt/conda/envs/museq/bin"

@@ -5,7 +5,7 @@ phases:
     commands:
       - bash docker/preflight.sh
       - cd docker/alignment/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
-      - cd docker/copynumber/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../ 
+      - cd docker/copynumber/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
       - cd docker/breakpoint/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
       - cd docker/germline/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
       - cd docker/somatic/ && bash build.sh quay.io wgspipelinetest $QUAY_USR $QUAY_PSW && cd ../../
