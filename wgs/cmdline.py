@@ -10,6 +10,7 @@ import argparse
 import pypeliner
 
 from wgs import __version__
+import warnings
 
 
 def add_global_args(subparser):
@@ -197,8 +198,11 @@ def parse_args():
 
     args = vars(parser.parse_args())
 
+    if '/' not in args['output_prefix']:
+        warnings.warn('output prefix is not a path, using {} as output directory'.format(args['output_prefix']))
+        args['output_prefix'] += '/'
     if not args['output_prefix'].endswith('/'):
         args['output_prefix'] = args['output_prefix'] + '_'
-    args['out_dir'] = os.path.dirname(args['output_prefix'])
+    args['out_dir'] = os.path.dirname(args['output_prefix']) + '/'
 
     return args
