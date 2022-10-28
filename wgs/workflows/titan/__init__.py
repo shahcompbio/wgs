@@ -16,8 +16,6 @@ def create_titan_workflow(
 
     chunks = [(v['num_clusters'], v['ploidy']) for v in cn_params['titan_intervals']]
 
-    targets = mgd.InputFile(targets) if targets else None
-
 
     workflow = pypeliner.workflow.Workflow()
 
