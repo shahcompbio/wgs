@@ -148,6 +148,13 @@ def parse_args():
         choices=['female', 'male'],
         help='''remixt is_female flag'''
     )
+    cna_calling.add_argument(
+        "--titan_keep_chrY",
+        default=False,
+        action='store_true',
+        help='''keep/remove chrY in titan'''
+    )
+
     # ================
     # sample_qc
     # ================
