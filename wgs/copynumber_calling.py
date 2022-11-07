@@ -29,7 +29,7 @@ def copynumber_calling_workflow(args):
 
     normal = inputs['normal']
     tumour = inputs['tumour']
-    targets = inputs['target_list']
+    targets = inputs.get('target_list')
     sample_id = inputs['sample_id']
 
     titan_outfile = args['output_prefix'] + '_titan_markers.csv.gz'
@@ -82,14 +82,17 @@ def copynumber_calling_workflow(args):
         )
 
     if run_titan:
+        targets = mgd.InputFile(targets) if targets else None
+        if not args['titan_keep_chrY']:
+            chromosomes = [v for v in chromosomes if not v in ['Y', 'chrY']]
         workflow.subworkflow(
             name='titan',
             func=titan.create_titan_workflow,
             axes=('sample_id',),
             args=(
-                mgd.InputFile(tumour,extensions=['.bai']),
-                mgd.InputFile(normal,extensions=['.bai']),
-                mgd.InputFile(targets),
+                mgd.InputFile(tumour, extensions=['.bai']),
+                mgd.InputFile(normal, extensions=['.bai']),
+                targets,
                 mgd.OutputFile(titan_outfile),
                 mgd.OutputFile(titan_params),
                 mgd.OutputFile(titan_segs),
