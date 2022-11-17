@@ -24,7 +24,7 @@ plot_remixt = function(copy_number){
   for (chrom in names(chrom_maxes)){
     chrom_maxes[chrom] = max(copy_number[copy_number$chrom==chrom, ]$start)
   }
-  chrom_starts = rep(0, 23)
+  chrom_starts = rep(0, length(chrom_maxes)) 
   names(chrom_starts) = names(chrom_maxes)
   chrom_positions = c(chrom_starts, chrom_maxes)
 
@@ -33,7 +33,9 @@ plot_remixt = function(copy_number){
 
   for (state in 0:8){
     circos.trackLines(factors = paste0("chr",names(chrom_positions)),
-                      x = unname(chrom_positions), y = rep(state, 46), col="grey")
+                      x = unname(chrom_positions), 
+                      y = rep(state, length(chrom_positions)), 
+                      col="grey")
 
   }
 
@@ -49,7 +51,9 @@ plot_remixt = function(copy_number){
                ylim=c(0, 8), "track.height" = 0.15)
   for (state in 0:8){
     circos.trackLines(factors = paste0("chr",names(chrom_positions)),
-                      x = unname(chrom_positions), y = rep(state, 46), col="grey")
+                      x = unname(chrom_positions), 
+                      y = rep(state, length(chrom_positions)), 
+                      col="grey")
 
   }
 
@@ -87,7 +91,9 @@ plot_titan = function(copy_number){
 
   for (state in 0:8){
     circos.trackLines(factors = paste0("chr",names(chrom_positions)),
-                      x = unname(chrom_positions), y = rep(state, 46), col="grey")
+                      x = unname(chrom_positions), 
+                      y = rep(state, length(chrom_positions)), 
+                      col="grey")
   }
 
   for (state in unique(copy_number$state)){
