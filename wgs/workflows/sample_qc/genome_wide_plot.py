@@ -181,7 +181,7 @@ def _add_axis_unit(frame, normal_only=False):
         subplot_spec=frame
     )
 
-def _make_axes(ideogram, chrom, sample, fig, normal_only=False):
+def _make_axes(ideogram, chrom, sample, fig, normal_only=False, genome="GRCh37"):
     max = ideogram[ideogram.chrom == chrom].start.max()
     outer = fig.add_gridspec(1, 4, width_ratios=[max / 250, 0.15, 0.15, 1 - max / 250])
 
@@ -203,7 +203,7 @@ def _make_axes(ideogram, chrom, sample, fig, normal_only=False):
             if i not in [0, 1, 2, 3, 4, 5, 6, 7, 8, 14]:
                 ax.axis("off")
 
-    fig.suptitle("({}) Sample: {} Chromosome: {}".format("GRCh37", sample, (chrom)))
+    fig.suptitle("({}) Sample: {} Chromosome: {}".format(genome, sample, (chrom)))
     if normal_only:
         axes[3].set_xlabel("Position (Mb)", fontsize=14, fontname="Arial")
     else:
@@ -214,25 +214,33 @@ def _make_axes(ideogram, chrom, sample, fig, normal_only=False):
 def genome_wide_plot(
         remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
         tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf,
-        normal_only=False
+        normal_only=False, sex="female", genome="GRCh37",
 ):
     """
     make a genome wide plot
-    :param copy_number: copy number data
+    :param remixt: remixt copy number data
+    :param remixt_label: label (sample ID) for remixt
+    :param titan: titan copy number data
     :param roh: roh data
     :param germline_calls: germline data
     :param somatic_calls: somatic data
     :param tumour_coverage: tumour coverage data
     :param normal_coverage: normal coverage data
-    :param sample_label: label for sample plotted
-    :param plot_name: name for plot pdf
-    :param remixt: remixt data
+    :param breakpoints: somatic breakpoint data
+    :param chromosomes: input chromosome list
+    :param pdf: output pdf path
+    :param normal_only: data doesn't include tumor (default: False)
+    :param sex: sex of the patient (default: 'female') ['female', 'male']
+    :param genome: genome version (default: 'GRCh37')
     """
 
     pdf = matplotlib.backends.backend_pdf.PdfPages(pdf)
     roh = read_roh.read(roh)
+    roh['chrom'] = roh['chrom'].str.replace('chr', '')
     germline_calls = read_variant_calls.read(germline_calls)
+    germline_calls['chrom'] = germline_calls['chrom'].str.replace('chr', '')
     normal_coverage = read_coverage.read(normal_coverage)
+    normal_coverage['chrom'] = normal_coverage['chrom'].str.replace('chr', '')
     if normal_only:
         remixt = None
         somatic_calls = None
@@ -242,20 +250,30 @@ def genome_wide_plot(
         snv_copynumber = None
     else:
         remixt = read_remixt.read(remixt)
+        remixt['chrom'] = remixt['chrom'].str.replace('chr', '')
         somatic_calls = read_variant_calls.read(somatic_calls)
+        somatic_calls['chrom'] = somatic_calls['chrom'].str.replace('chr', '')
         titan = read_titan.read(titan)
+        titan['Chrom'] = titan['Chrom'].str.replace('chr', '')
         tumour_coverage = read_coverage.read(tumour_coverage)
+        tumour_coverage['chrom'] = tumour_coverage['chrom'].str.replace('chr', '')
         breakpoints = read_variant_calls.read_svs(breakpoints)
+        breakpoints['chrom'] = breakpoints['chrom'].str.replace('chr', '')
         snv_copynumber = parse_snv_cn.parse(somatic_calls, remixt)
+        snv_copynumber['chrom'] = snv_copynumber['chrom'].str.replace('chr', '')
 
     ideogram = read_ideogram.read()
 
-    chromosomes = [chrom.lower() for chrom in chromosomes]
+    chromosomes = [chrom.lower().replace('chr', '') for chrom in chromosomes]
+    if sex == 'female':
+        if 'Y' in chromosomes: chromosomes.remove('Y')
+        if 'y' in chromosomes: chromosomes.remove('y')
 
     for chrom in chromosomes:
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
-        axes = _make_axes(ideogram, chrom, remixt_label, fig, normal_only=normal_only)
+        axes = _make_axes(ideogram, chrom, remixt_label, fig, 
+                          normal_only=normal_only, genome=genome)
 
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,
