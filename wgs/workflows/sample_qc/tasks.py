@@ -127,17 +127,18 @@ def genome_wide(
         sample_id, roh, germline_calls,
         normal_coverage, chromosomes, pdf, 
         titan=False, somatic=False, remixt=False,
-        tumour=False, breakpoints=False, normal_only=False
+        tumour=False, breakpoints=False, normal_only=False, sex="female",
 ):
 
     if normal_only:
         genome_wide_plot.genome_wide_plot(
             None, sample_id, None, roh, germline_calls, None,
-            None, normal_coverage, None, chromosomes, pdf, normal_only=normal_only
+            None, normal_coverage, None, chromosomes, pdf, 
+            normal_only=normal_only, sex=sex,
         )
     else:
         genome_wide_plot.genome_wide_plot(
             remixt, sample_id, titan, roh, germline_calls, somatic,
             tumour, normal_coverage, breakpoints, chromosomes, pdf, 
-            normal_only=normal_only
+            normal_only=normal_only, sex=sex,
         )

@@ -181,7 +181,7 @@ def _add_axis_unit(frame, normal_only=False):
         subplot_spec=frame
     )
 
-def _make_axes(ideogram, chrom, sample, fig, normal_only=False, genome="GRCh37"):
+def _make_axes(ideogram, chrom, sample, fig, normal_only=False):
     max = ideogram[ideogram.chrom == chrom].start.max()
     outer = fig.add_gridspec(1, 4, width_ratios=[max / 250, 0.15, 0.15, 1 - max / 250])
 
@@ -203,7 +203,7 @@ def _make_axes(ideogram, chrom, sample, fig, normal_only=False, genome="GRCh37")
             if i not in [0, 1, 2, 3, 4, 5, 6, 7, 8, 14]:
                 ax.axis("off")
 
-    fig.suptitle("({}) Sample: {} Chromosome: {}".format(genome, sample, (chrom)))
+    fig.suptitle("Sample: {} Chromosome: {}".format(sample, (chrom)))
     if normal_only:
         axes[3].set_xlabel("Position (Mb)", fontsize=14, fontname="Arial")
     else:
@@ -214,7 +214,7 @@ def _make_axes(ideogram, chrom, sample, fig, normal_only=False, genome="GRCh37")
 def genome_wide_plot(
         remixt, remixt_label, titan, roh, germline_calls, somatic_calls,
         tumour_coverage, normal_coverage, breakpoints, chromosomes, pdf,
-        normal_only=False, sex="female", genome="GRCh37",
+        normal_only=False, sex="female", 
 ):
     """
     make a genome wide plot
@@ -228,10 +228,9 @@ def genome_wide_plot(
     :param normal_coverage: normal coverage data
     :param breakpoints: somatic breakpoint data
     :param chromosomes: input chromosome list
-    :param pdf: output pdf path
+    :param pdf: output pdf object
     :param normal_only: data doesn't include tumor (default: False)
     :param sex: sex of the patient (default: 'female') ['female', 'male']
-    :param genome: genome version (default: 'GRCh37')
     """
 
     pdf = matplotlib.backends.backend_pdf.PdfPages(pdf)
@@ -273,7 +272,7 @@ def genome_wide_plot(
         fig = plt.figure(constrained_layout=True, figsize=(15, 10))
 
         axes = _make_axes(ideogram, chrom, remixt_label, fig, 
-                          normal_only=normal_only, genome=genome)
+                          normal_only=normal_only)
 
         axes = plot_chrom_on_axes(remixt, titan, roh, germline_calls,
                                   somatic_calls, tumour_coverage,

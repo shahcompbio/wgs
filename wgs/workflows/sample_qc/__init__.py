@@ -156,7 +156,8 @@ def create_sample_qc_workflow(
         chromosomes,
         bins,
         mapping_qual_threshold,
-        single_node=False
+        single_node=False,
+        sex='female',
 ):
 
     workflow = pypeliner.workflow.Workflow()
@@ -208,7 +209,8 @@ def create_sample_qc_workflow(
             "somatic": mgd.InputFile(somatic_calls),
             "remixt": mgd.InputFile(remixt),
             "tumour": mgd.InputFile(tumour_coverage),
-            "breakpoints": mgd.InputFile(breakpoints_consensus)
+            "breakpoints": mgd.InputFile(breakpoints_consensus),
+            "sex": sex,
         }
     )
 
@@ -226,7 +228,8 @@ def create_sample_qc_workflow_normal_only(
         chromosomes,
         bins,
         mapping_qual_threshold,
-        single_node=False
+        single_node=False,
+        sex='female',
 ):
 
     workflow = pypeliner.workflow.Workflow()
@@ -261,7 +264,8 @@ def create_sample_qc_workflow_normal_only(
             chromosomes,
             mgd.OutputFile(genome_wide_plot),
         ),
-        kwargs={"normal_only":True}
+        kwargs={"normal_only":True,
+                "sex":sex,}
     )
 
     return workflow
