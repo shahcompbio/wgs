@@ -65,7 +65,7 @@ def plot_chrom_on_axes(
         )
 
     if not normal_only:
-        prepped_remxit = read_remixt.prepare_at_chrom(remixt, chrom)
+        prepped_remixt = read_remixt.prepare_at_chrom(remixt, chrom)
         prepped_snv_cn = parse_snv_cn.prepare_at_chrom(vaf_data, chrom)
         prepped_titan = read_titan.prepare_at_chrom(titan, chrom)
         prepped_somatic_calls = read_variant_calls.prepare_at_chrom(
@@ -131,8 +131,8 @@ def plot_chrom_on_axes(
         )
 
         axes[5] = remixt_plotting.plot(
-            prepped_remxit.start, prepped_remxit.major_raw,
-            prepped_remxit.minor_raw, axes[5], chrom_max
+            prepped_remixt.start, prepped_remixt.major_raw,
+            prepped_remixt.minor_raw, axes[5], chrom_max
         )
         axes[5] = snv_cn.plot_scatter(
             prepped_snv_cn.pos, prepped_snv_cn.frac_cn, axes[5])
