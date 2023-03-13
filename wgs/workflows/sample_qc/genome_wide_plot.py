@@ -137,9 +137,10 @@ def plot_chrom_on_axes(
         axes[5] = snv_cn.plot_scatter(
             prepped_snv_cn.pos, prepped_snv_cn.frac_cn, axes[5])
 
-        axes[6] = titan_plotting.plot(
-            prepped_titan.Position, prepped_titan.LogRatio,
-            prepped_titan.color, axes[6], chrom_max, anno_genes=anno_genes)
+        if prepped_titan.shape[0] > 0:
+            axes[6] = titan_plotting.plot(
+                prepped_titan.Position, prepped_titan.LogRatio,
+                prepped_titan.color, axes[6], chrom_max, anno_genes=anno_genes)
 
         axes[7] = roh_plotting.plot(
             prepped_roh.start, prepped_roh.state, axes[7], chrom_max)
