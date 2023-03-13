@@ -4,7 +4,7 @@ ADD . /app
 
 RUN apt-get update --allow-releaseinfo-change && apt install build-essential gcc samtools -y && rm -rf /var/lib/apt/lists/*
 RUN conda install -c bioconda -c dranew destruct==0.4.18 destruct_utils==0.4.20
-RUN rm -rf /opt/conda/lib/python3.7/site-packages/destruct* &&  pip install git+https://github.com/amcpherson/destruct.git@chr_fix
+RUN rm -rf /opt/conda/lib/python3.7/site-packages/destruct* &&  pip install git+https://github.com/amcpherson/destruct.git@v0.4.20
 RUN pip install -e git+https://github.com/amcpherson/blossomv.git@download_link_fix#egg=blossomv
 RUN pip install networkx==2.1 scipy
 
