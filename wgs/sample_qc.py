@@ -20,6 +20,7 @@ def sample_qc_workflow(args):
     breakpoints = inputs.get('breakpoints_consensus', None)
     somatic = inputs.get('somatic_calls', None)
     sample_id = inputs['sample_id']
+    sex = inputs['sex']
 
     chromosomes = config.refdir_data(args['refdir'])['params']['chromosomes']
 
@@ -51,6 +52,7 @@ def sample_qc_workflow(args):
                 args['bins'],
                 args['mapping_qual_threshold']
             ),
+            kwargs={'sex': sex,}
         )
         outputted_filenames = [normal_coverage, genome_wide_plot]
     else:
@@ -76,7 +78,8 @@ def sample_qc_workflow(args):
                 args['bins'],
                 args['mapping_qual_threshold']
             ),
-            kwargs={'single_node': args['single_node']}
+            kwargs={'single_node': args['single_node'],
+                    'sex': sex,}
         )
         workflow.subworkflow(
             name='generate_circos_plot',
