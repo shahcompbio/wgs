@@ -15,8 +15,8 @@ def somatic_calling_workflow(args):
 
     tumour = inputs['tumour']
     normal = inputs['normal']
-    tumour_id = inputs['tumour']
-    normal_id = inputs['normal']
+    tumour_id = inputs['tumour_id']
+    normal_id = inputs['normal_id']
 
     museq_vcf = args['output_prefix'] + '_museq_paired_annotated.vcf.gz'
     museq_maf = args['output_prefix'] + '_museq_paired_annotated.maf'
